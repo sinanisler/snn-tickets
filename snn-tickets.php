@@ -5,7 +5,7 @@
     Version: 0.4
     Requires PHP: 8.1
     Author: sinanisler
-    Author URI: https://sinanisler.com/              
+    Author URI: https://sinanisler.com/               
 */
 
 if (!defined('ABSPATH')) exit;
