@@ -711,8 +711,7 @@ HTML;
 
                 <div style="flex:2; min-width:360px; background:#fff; border:1px solid #ccd0d4; border-radius:6px; padding:16px;">
                     <h2>Send Invitations</h2>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <input type="hidden" name="action" value="snn_send_emails">
+                    <form id="snn_mailer_form">
                         <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_send); ?>">
 
                         <table class="form-table" role="presentation">
@@ -798,11 +797,14 @@ HTML;
                             <div style="margin-bottom:8px;">
                                 <strong id="snn_progress_text">Preparing...</strong>
                             </div>
-                            <div style="background:#fff; border:1px solid #ddd; height:24px; border-radius:4px; overflow:hidden;">
+                            <div style="background:#fff; border:1px solid #ddd; height:24px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
                                 <div id="snn_progress_bar" style="background:#2271b1; height:100%; width:0%; transition:width 0.3s;"></div>
                             </div>
-                            <div style="margin-top:8px; font-size:12px; color:#666;">
+                            <div style="margin-bottom:8px; font-size:12px; color:#666;">
                                 <span id="snn_progress_details">0 / 0 sent</span>
+                            </div>
+                            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:8px; max-height:200px; overflow-y:auto; font-family:monospace; font-size:11px;">
+                                <div id="snn_console_log"></div>
                             </div>
                         </div>
 
@@ -1025,13 +1027,30 @@ HTML;
             });
 
             // === EMAIL SENDING WITH PROGRESS ===
-            const form = document.querySelector('form[action*="snn_send_emails"]');
+            const form = document.getElementById('snn_mailer_form');
             const submitBtn = document.getElementById('snn_send_btn');
             const originalBtnText = submitBtn.textContent;
             const progressWrap = document.getElementById('snn_progress_wrap');
             const progressBar = document.getElementById('snn_progress_bar');
             const progressText = document.getElementById('snn_progress_text');
             const progressDetails = document.getElementById('snn_progress_details');
+            const consoleLog = document.getElementById('snn_console_log');
+
+            function log(msg, type = 'info') {
+                const time = new Date().toLocaleTimeString();
+                const colors = {
+                    info: '#333',
+                    success: '#0a7c0a',
+                    error: '#b00',
+                    warning: '#d68000'
+                };
+                const line = document.createElement('div');
+                line.style.color = colors[type] || colors.info;
+                line.style.marginBottom = '2px';
+                line.textContent = `[${time}] ${msg}`;
+                consoleLog.appendChild(line);
+                consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
 
             // Generate QR code as base64 data URI
             function generateQRCode(text) {
@@ -1050,8 +1069,11 @@ HTML;
                 submitBtn.disabled = true;
                 progressWrap.style.display = 'block';
                 progressBar.style.width = '0%';
-                progressText.textContent = 'Loading contacts...';
+                progressText.textContent = 'Preparing...';
                 progressDetails.textContent = '0 / 0 sent';
+                consoleLog.innerHTML = '';
+                
+                log('Starting email sending process...', 'info');
                 
                 const formData = new FormData(form);
                 const listId = parseInt(formData.get('list_id'));
@@ -1062,13 +1084,16 @@ HTML;
                 const sendNonce = formData.get('_wpnonce');
 
                 if (!listId || !subject || !body) {
+                    log('ERROR: Please fill all required fields', 'error');
                     alert('Please fill all required fields');
                     submitBtn.disabled = false;
-                    progressWrap.style.display = 'none';
                     return;
                 }
 
                 try {
+                    log('Fetching contacts from list...', 'info');
+                    progressText.textContent = 'Loading contacts...';
+                    
                     // Fetch contacts
                     const contactsResponse = await fetch(ajaxUrl, {
                         method: 'POST',
@@ -1090,11 +1115,14 @@ HTML;
                     const batchDelay = contactsData.data.batch_delay;
 
                     if (!contacts.length) {
+                        log('ERROR: No contacts with email found in selected list', 'error');
                         alert('No contacts with email found in selected list');
                         submitBtn.disabled = false;
-                        progressWrap.style.display = 'none';
                         return;
                     }
+
+                    log(`Found ${contacts.length} contacts with email`, 'success');
+                    log(`Batch settings: ${batchSize} emails per batch, ${batchDelay}s delay`, 'info');
 
                     let sent = 0;
                     let failed = 0;
@@ -1103,18 +1131,21 @@ HTML;
                     progressText.textContent = `Sending emails (${total} total)...`;
 
                     // Process in batches
+                    const totalBatches = Math.ceil(contacts.length / batchSize);
                     for (let i = 0; i < contacts.length; i += batchSize) {
                         const batch = contacts.slice(i, i + batchSize);
                         const batchNum = Math.floor(i / batchSize) + 1;
-                        const totalBatches = Math.ceil(contacts.length / batchSize);
                         
+                        log(`--- Batch ${batchNum}/${totalBatches} (${batch.length} emails) ---`, 'warning');
                         progressText.textContent = `Sending batch ${batchNum} of ${totalBatches}...`;
 
                         // Send batch in parallel
                         const batchPromises = batch.map(async (contact) => {
                             try {
+                                log(`Generating QR for ${contact.ticket_code}...`, 'info');
                                 const qrDataUri = generateQRCode(contact.ticket_code);
 
+                                log(`Sending to ${contact.email} (${contact.name || 'No name'})...`, 'info');
                                 const response = await fetch(ajaxUrl, {
                                     method: 'POST',
                                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1135,12 +1166,15 @@ HTML;
                                 const result = await response.json();
                                 if (result.success) {
                                     sent++;
+                                    log(`✓ Sent to ${contact.email}`, 'success');
                                 } else {
                                     failed++;
+                                    log(`✗ Failed to send to ${contact.email}: ${result.data?.message || 'Unknown error'}`, 'error');
                                 }
                             } catch (e) {
-                                console.error('Failed to send to', contact.email, e);
                                 failed++;
+                                log(`✗ Error sending to ${contact.email}: ${e.message}`, 'error');
+                                console.error('Failed to send to', contact.email, e);
                             }
 
                             // Update progress
@@ -1153,6 +1187,7 @@ HTML;
 
                         // Delay between batches
                         if (i + batchSize < contacts.length && batchDelay > 0) {
+                            log(`Waiting ${batchDelay} seconds before next batch...`, 'warning');
                             progressText.textContent = `Waiting ${batchDelay}s before next batch...`;
                             await new Promise(resolve => setTimeout(resolve, batchDelay * 1000));
                         }
@@ -1162,10 +1197,15 @@ HTML;
                     progressText.textContent = 'Complete!';
                     progressDetails.textContent = `${sent} sent, ${failed} failed / ${total} total`;
                     
-                    alert(`Sending complete!\nSent: ${sent}\nFailed: ${failed}\nTotal: ${total}`);
+                    log('=================================', 'info');
+                    log(`COMPLETE: ${sent} sent, ${failed} failed, ${total} total`, sent === total ? 'success' : 'warning');
+                    log('=================================', 'info');
+                    
+                    alert(`Sending complete!\n\n✓ Sent: ${sent}\n✗ Failed: ${failed}\n━ Total: ${total}`);
                     
                 } catch (error) {
                     console.error('Error:', error);
+                    log(`FATAL ERROR: ${error.message}`, 'error');
                     alert('An error occurred: ' + error.message);
                     progressText.textContent = 'Error occurred';
                 } finally {
@@ -1202,77 +1242,10 @@ HTML;
     }
 
     public function handle_send_emails(){
+        // This method is now deprecated - emails are sent via AJAX
+        // Redirect to mailer page if accessed directly
         $this->admin_cap_check();
-        check_admin_referer('snn_send_emails');
-
-        global $wpdb;
-
-        $list_id    = isset($_POST['list_id']) ? intval($_POST['list_id']) : 0;
-        $from_name  = isset($_POST['from_name']) ? sanitize_text_field($_POST['from_name']) : '';
-        $from_email = isset($_POST['from_email']) ? sanitize_email($_POST['from_email']) : '';
-        $subject    = isset($_POST['subject']) ? wp_unslash($_POST['subject']) : '';
-        $body_html  = isset($_POST['body']) ? wp_unslash($_POST['body']) : '';
-
-        if (!$list_id || $subject === '' || $body_html === ''){
-            wp_die('Missing required fields.');
-        }
-
-        $contacts = $wpdb->get_results($wpdb->prepare("
-            SELECT name, email, ticket_code
-            FROM {$this->table_tickets}
-            WHERE list_id = %d AND email <> ''
-        ", $list_id));
-
-        if (!$contacts) {
-            wp_redirect(add_query_arg('snn_msg', rawurlencode("No contacts with email found in the selected list."), admin_url('admin.php?page=snn-tickets-mailer')));
-            exit;
-        }
-
-        list($batch_size, $batch_delay) = $this->get_batch_settings();
-
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(0);
-        }
-        if (function_exists('ignore_user_abort')) {
-            @ignore_user_abort(true);
-        }
-
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
-        if ($from_email) {
-            $from = $from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
-            $headers[] = 'From: ' . $from;
-        }
-
-        $chunks = array_chunk($contacts, $batch_size);
-        $sent = 0;
-
-        foreach ($chunks as $i => $chunk){
-            foreach ($chunk as $c){
-                $name   = $c->name ?: 'Guest';
-                $ticket = $c->ticket_code;
-
-                $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . rawurlencode($ticket);
-
-                // NO FILTERING - use data as-is
-                $personalized = strtr($body_html, [
-                    '{name}'   => $name,
-                    '{ticket}' => $ticket,
-                    '{qr}'     => $qr_url,
-                ]);
-
-                $html = '<html><body>' . $personalized . '</body></html>';
-
-                if (wp_mail($c->email, $subject, $html, $headers)) {
-                    $sent++;
-                }
-            }
-
-            if ($i < count($chunks) - 1 && $batch_delay > 0) {
-                sleep((int)$batch_delay);
-            }
-        }
-
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Emails sent: $sent (batch size: $batch_size, delay: {$batch_delay}s)"), admin_url('admin.php?page=snn-tickets-mailer')));
+        wp_redirect(admin_url('admin.php?page=snn-tickets-mailer'));
         exit;
     }
 
