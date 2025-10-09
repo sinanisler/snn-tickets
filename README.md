@@ -3,6 +3,8 @@
 
 A WordPress plugin for simple ticket management.
 
+<img width="1721" height="889" alt="image" src="https://github.com/user-attachments/assets/80f93081-9f35-4905-821b-3270a8c602d0" />
+
 <img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/0c9d0e08-4c90-44f6-99ea-254b0a62deb1" />
 <img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/5c9e4115-63c5-4e79-85a1-e6d20b30dad4" />
 
