@@ -837,7 +837,7 @@ HTML;
         </div>
 
         <!-- Load QR Code library from CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
         <script>
         (function(){
@@ -1103,18 +1103,44 @@ HTML;
                 try {
                     // Wait for QRCode library to be available
                     await waitForQRCode();
-                    
-                    // Generate QR code as PNG data URL
-                    const qrDataUrl = await QRCode.toDataURL(ticketCode, {
-                        errorCorrectionLevel: 'M',
-                        type: 'image/png',
+
+                    // Create a temporary DOM element to hold the QR code
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.left = '-9999px';
+                    document.body.appendChild(tempDiv);
+
+                    // Generate QR code
+                    const qr = new QRCode(tempDiv, {
+                        text: ticketCode,
                         width: 300,
-                        margin: 1,
-                        color: {
-                            dark: '#000000',
-                            light: '#FFFFFF'
-                        }
+                        height: 300,
+                        colorDark: '#000000',
+                        colorLight: '#FFFFFF',
+                        correctLevel: QRCode.CorrectLevel.M
                     });
+
+                    // Wait for QR code to render
+                    await new Promise(resolve => setTimeout(resolve, 200));
+
+                    // Try to get data URL from <img> or <canvas>
+                    let qrDataUrl = null;
+                    const img = tempDiv.querySelector('img');
+                    if (img && img.src) {
+                        qrDataUrl = img.src;
+                    } else {
+                        const canvas = tempDiv.querySelector('canvas');
+                        if (canvas) {
+                            qrDataUrl = canvas.toDataURL('image/png');
+                        }
+                    }
+
+                    // Clean up
+                    tempDiv.remove();
+
+                    if (!qrDataUrl) {
+                        throw new Error('Failed to generate QR code image');
+                    }
 
                     // Upload to server
                     const uploadResponse = await fetch(ajaxUrl, {
@@ -1129,7 +1155,7 @@ HTML;
                     });
 
                     const uploadResult = await uploadResponse.json();
-                    
+
                     if (!uploadResult.success) {
                         throw new Error(uploadResult.data?.message || 'Upload failed');
                     }
