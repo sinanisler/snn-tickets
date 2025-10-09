@@ -3,7 +3,7 @@
 
 WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
 
-<img width="100%" height="auto" alt="image" src="https://github.com/user-attachments/assets/80f93081-9f35-4905-821b-3270a8c602d0" />
+<img width="100%" height="auto" alt="image" src="https://github.com/user-attachments/assets/0c5a3ff3-7f7f-4192-bfea-0dde2fc77771" />
 
 <img width="100%" height="auto" alt="image" src="https://github.com/user-attachments/assets/0c9d0e08-4c90-44f6-99ea-254b0a62deb1" />
 
