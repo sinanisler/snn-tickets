@@ -1072,9 +1072,38 @@ HTML;
                 consoleLog.scrollTop = consoleLog.scrollHeight;
             }
 
+            // Wait for QRCode library to be available
+            function waitForQRCode() {
+                return new Promise((resolve) => {
+                    if (typeof QRCode !== 'undefined') {
+                        resolve();
+                        return;
+                    }
+                    
+                    const checkInterval = setInterval(() => {
+                        if (typeof QRCode !== 'undefined') {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        if (typeof QRCode === 'undefined') {
+                            throw new Error('QRCode library failed to load');
+                        }
+                        resolve();
+                    }, 10000);
+                });
+            }
+
             // Generate QR code and upload to server
             async function generateAndUploadQR(ticketCode, sendNonce) {
                 try {
+                    // Wait for QRCode library to be available
+                    await waitForQRCode();
+                    
                     // Generate QR code as PNG data URL
                     const qrDataUrl = await QRCode.toDataURL(ticketCode, {
                         errorCorrectionLevel: 'M',
@@ -1121,6 +1150,18 @@ HTML;
                 consoleLog.innerHTML = '';
                 
                 log('Starting email sending process...', 'info');
+                
+                // Check if QRCode library is loaded
+                try {
+                    log('Checking QR Code library...', 'info');
+                    await waitForQRCode();
+                    log('QR Code library loaded successfully', 'success');
+                } catch (e) {
+                    log('ERROR: QR Code library failed to load. Please refresh the page and try again.', 'error');
+                    alert('QR Code library failed to load. Please refresh the page and try again.');
+                    submitBtn.disabled = false;
+                    return;
+                }
                 
                 const formData = new FormData(form);
                 const listId = parseInt(formData.get('list_id'));
