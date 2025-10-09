@@ -20,7 +20,7 @@ class SNN_Tickets_Plugin {
     private $opt_batch_delay_key = 'snn_tickets_mailer_batch_delay';
     private $opt_email_templates_key = 'snn_tickets_email_templates';
     private $default_batch_size = 10;
-    private $default_batch_delay = 1;
+    private $default_batch_delay = 2;
 
     public static function instance(){
         if (self::$instance === null) {
@@ -47,6 +47,8 @@ class SNN_Tickets_Plugin {
         // Mailer
         add_action('admin_post_snn_send_emails',           [$this, 'handle_send_emails']);
         add_action('admin_post_snn_save_mailer_settings',  [$this, 'handle_save_mailer_settings']);
+        add_action('wp_ajax_snn_get_list_contacts',        [$this, 'ajax_get_list_contacts']);
+        add_action('wp_ajax_snn_send_single_email',        [$this, 'ajax_send_single_email']);
 
         // AJAX validate (public)
         add_action('wp_ajax_snn_validate_ticket',       [$this, 'ajax_validate_ticket']);
@@ -770,36 +772,50 @@ HTML;
                                             </div>
                                         </div>
                                     </div>
-                                    <?php
-                                    $editor_id = 'snn_body';
-                                    $settings = [
-                                        'textarea_name' => 'body',
-                                        'editor_height' => 220,
-                                        'media_buttons' => false,
-                                        'teeny' => true,
-                                        'quicktags' => true,
-                                    ];
-                                    wp_editor($default_body, $editor_id, $settings);
-                                    ?>
+                                    <div style="margin-bottom:8px;">
+                                        <button type="button" class="button snn-html-btn" data-tag="<p>|</p>">P</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<b>|</b>">B</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<i>|</i>">I</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<br>">BR</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<a href=&quot;&quot;>|</a>">Link</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<strong>|</strong>">Strong</button>
+                                        <button type="button" class="button snn-html-btn" data-tag="<em>|</em>">Em</button>
+                                    </div>
+                                    <textarea id="snn_body" name="body" rows="12" style="width:100%; font-family:monospace; font-size:13px;"><?php echo esc_textarea($default_body); ?></textarea>
                                     <p class="description">
                                         Available tags: {name}, {ticket}, {qr}.<br>
-                                        {qr} will be replaced with a QR image URL for the ticket code.
+                                        {qr} will be replaced with a QR image for the ticket code.
                                     </p>
                                 </td>
                             </tr>
                         </table>
 
                         <p>
-                            <button type="submit" class="button button-primary">Send Emails</button>
+                            <button type="submit" class="button button-primary" id="snn_send_btn">Send Emails</button>
                         </p>
 
+                        <div id="snn_progress_wrap" style="display:none; margin-top:16px; background:#f9f9f9; border:1px solid #ddd; padding:12px; border-radius:4px;">
+                            <div style="margin-bottom:8px;">
+                                <strong id="snn_progress_text">Preparing...</strong>
+                            </div>
+                            <div style="background:#fff; border:1px solid #ddd; height:24px; border-radius:4px; overflow:hidden;">
+                                <div id="snn_progress_bar" style="background:#2271b1; height:100%; width:0%; transition:width 0.3s;"></div>
+                            </div>
+                            <div style="margin-top:8px; font-size:12px; color:#666;">
+                                <span id="snn_progress_details">0 / 0 sent</span>
+                            </div>
+                        </div>
+
                         <p class="description" style="max-width:800px;">
-                            Sending uses WordPress mailer. Current batch settings: <?php echo esc_html($batch_size); ?> per batch, <?php echo esc_html($batch_delay); ?> second(s) between batches. For very large lists, sending may take time; keep this page open until it finishes.
+                            Sending uses WordPress mailer. Current batch settings: <?php echo esc_html($batch_size); ?> per batch, <?php echo esc_html($batch_delay); ?> second(s) between batches. QR codes are generated offline for privacy and reliability.
                         </p>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Load QR Code library -->
+        <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
         <script>
         (function(){
@@ -812,9 +828,38 @@ HTML;
             const newBtn = document.getElementById('snn_new_template');
             const templateNameInput = document.getElementById('snn_template_name');
             const subjectInput = document.getElementById('snn_subject');
+            const bodyTextarea = document.getElementById('snn_body');
             const statusEl = document.getElementById('snn_template_status');
 
             let currentTemplateName = '';
+
+            // HTML Button handlers
+            document.querySelectorAll('.snn-html-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tag = btn.getAttribute('data-tag');
+                    const textarea = bodyTextarea;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = textarea.value;
+                    const selected = text.substring(start, end);
+                    
+                    let insert = tag.replace('|', selected);
+                    if (tag.includes('|') && !selected) {
+                        insert = tag.replace('|', '');
+                    }
+                    
+                    textarea.value = text.substring(0, start) + insert + text.substring(end);
+                    
+                    // Set cursor position
+                    if (tag.includes('|')) {
+                        const cursorPos = start + tag.indexOf('|') + selected.length;
+                        textarea.setSelectionRange(cursorPos, cursorPos);
+                    } else {
+                        textarea.setSelectionRange(start + insert.length, start + insert.length);
+                    }
+                    textarea.focus();
+                });
+            });
 
             function showStatus(msg, type = 'info') {
                 statusEl.style.display = 'inline-block';
@@ -826,12 +871,11 @@ HTML;
                 }, 3000);
             }
 
-            // When selecting a template, automatically load it and prepare for editing
+            // Template selection
             templateList.addEventListener('change', async () => {
                 const selectedName = templateList.value;
                 
                 if (!selectedName) {
-                    // No template selected - reset to new template mode
                     currentTemplateName = '';
                     templateNameInput.value = '';
                     templateNameInput.placeholder = 'Template name';
@@ -841,7 +885,6 @@ HTML;
                     return;
                 }
 
-                // Load the selected template
                 const fd = new FormData();
                 fd.append('action', 'snn_load_email_template');
                 fd.append('nonce', nonce);
@@ -851,16 +894,9 @@ HTML;
                     const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
                     const json = await res.json();
                     if (json.success) {
-                        // Load content into editor
                         subjectInput.value = json.data.subject || '';
-                        if (window.tinyMCE && tinyMCE.get('snn_body')) {
-                            tinyMCE.get('snn_body').setContent(json.data.body || '');
-                        } else {
-                            const textarea = document.getElementById('snn_body');
-                            if (textarea) textarea.value = json.data.body || '';
-                        }
+                        bodyTextarea.value = json.data.body || '';
 
-                        // Update UI for editing mode
                         currentTemplateName = selectedName;
                         templateNameInput.value = selectedName;
                         templateNameInput.placeholder = 'Template name';
@@ -878,7 +914,7 @@ HTML;
                 }
             });
 
-            // Save or update template
+            // Save template
             saveBtn.addEventListener('click', async () => {
                 const templateName = templateNameInput.value.trim();
                 if (!templateName) {
@@ -887,13 +923,7 @@ HTML;
                 }
 
                 const subject = subjectInput.value;
-                let body = '';
-                if (window.tinyMCE && tinyMCE.get('snn_body')) {
-                    body = tinyMCE.get('snn_body').getContent();
-                } else {
-                    const textarea = document.getElementById('snn_body');
-                    if (textarea) body = textarea.value;
-                }
+                const body = bodyTextarea.value;
 
                 const isUpdate = (templateName === currentTemplateName);
 
@@ -908,7 +938,6 @@ HTML;
                     const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
                     const json = await res.json();
                     if (json.success) {
-                        // Update dropdown if this is a new template
                         if (!isUpdate) {
                             const existingOption = Array.from(templateList.options).find(opt => opt.value === templateName);
                             if (!existingOption) {
@@ -917,7 +946,6 @@ HTML;
                             }
                         }
                         
-                        // Select the saved template
                         templateList.value = templateName;
                         currentTemplateName = templateName;
                         saveBtn.textContent = 'Update Template';
@@ -951,11 +979,9 @@ HTML;
                     const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
                     const json = await res.json();
                     if (json.success) {
-                        // Remove from dropdown
                         const option = Array.from(templateList.options).find(opt => opt.value === currentTemplateName);
                         if (option) option.remove();
                         
-                        // Reset UI
                         templateList.value = '';
                         currentTemplateName = '';
                         templateNameInput.value = '';
@@ -974,7 +1000,7 @@ HTML;
                 }
             });
 
-            // New template button - clear form for creating new template
+            // New template
             newBtn.addEventListener('click', () => {
                 templateList.value = '';
                 currentTemplateName = '';
@@ -986,7 +1012,7 @@ HTML;
                 showStatus('Ready to create new template', 'info');
             });
 
-            // Update save button text when template name changes
+            // Update save button text
             templateNameInput.addEventListener('input', () => {
                 const newName = templateNameInput.value.trim();
                 if (currentTemplateName && newName !== currentTemplateName) {
@@ -996,6 +1022,161 @@ HTML;
                 } else {
                     saveBtn.textContent = 'Save as Template';
                 }
+            });
+
+            // === EMAIL SENDING WITH PROGRESS ===
+            const form = document.querySelector('form[action*="snn_send_emails"]');
+            const submitBtn = document.getElementById('snn_send_btn');
+            const originalBtnText = submitBtn.textContent;
+            const progressWrap = document.getElementById('snn_progress_wrap');
+            const progressBar = document.getElementById('snn_progress_bar');
+            const progressText = document.getElementById('snn_progress_text');
+            const progressDetails = document.getElementById('snn_progress_details');
+
+            // Generate QR code as base64 data URI
+            function generateQRCode(text) {
+                try {
+                    const qr = qrcode(0, 'M');
+                    qr.addData(text);
+                    qr.make();
+                    return qr.createDataURL(4, 0);
+                } catch (e) {
+                    console.error('QR generation failed:', e);
+                    return '';
+                }
+            }
+
+            async function sendEmailsBatch() {
+                submitBtn.disabled = true;
+                progressWrap.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Loading contacts...';
+                progressDetails.textContent = '0 / 0 sent';
+                
+                const formData = new FormData(form);
+                const listId = parseInt(formData.get('list_id'));
+                const fromName = formData.get('from_name');
+                const fromEmail = formData.get('from_email');
+                const subject = formData.get('subject');
+                const body = bodyTextarea.value;
+                const sendNonce = formData.get('_wpnonce');
+
+                if (!listId || !subject || !body) {
+                    alert('Please fill all required fields');
+                    submitBtn.disabled = false;
+                    progressWrap.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    // Fetch contacts
+                    const contactsResponse = await fetch(ajaxUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: new URLSearchParams({
+                            action: 'snn_get_list_contacts',
+                            nonce: sendNonce,
+                            list_id: listId
+                        })
+                    });
+                    
+                    const contactsData = await contactsResponse.json();
+                    if (!contactsData.success) {
+                        throw new Error('Failed to load contacts');
+                    }
+
+                    const contacts = contactsData.data.contacts;
+                    const batchSize = contactsData.data.batch_size;
+                    const batchDelay = contactsData.data.batch_delay;
+
+                    if (!contacts.length) {
+                        alert('No contacts with email found in selected list');
+                        submitBtn.disabled = false;
+                        progressWrap.style.display = 'none';
+                        return;
+                    }
+
+                    let sent = 0;
+                    let failed = 0;
+                    const total = contacts.length;
+
+                    progressText.textContent = `Sending emails (${total} total)...`;
+
+                    // Process in batches
+                    for (let i = 0; i < contacts.length; i += batchSize) {
+                        const batch = contacts.slice(i, i + batchSize);
+                        const batchNum = Math.floor(i / batchSize) + 1;
+                        const totalBatches = Math.ceil(contacts.length / batchSize);
+                        
+                        progressText.textContent = `Sending batch ${batchNum} of ${totalBatches}...`;
+
+                        // Send batch in parallel
+                        const batchPromises = batch.map(async (contact) => {
+                            try {
+                                const qrDataUri = generateQRCode(contact.ticket_code);
+
+                                const response = await fetch(ajaxUrl, {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                    body: new URLSearchParams({
+                                        action: 'snn_send_single_email',
+                                        nonce: sendNonce,
+                                        name: contact.name,
+                                        email: contact.email,
+                                        ticket: contact.ticket_code,
+                                        subject: subject,
+                                        body: body,
+                                        qr_base64: qrDataUri,
+                                        from_name: fromName,
+                                        from_email: fromEmail
+                                    })
+                                });
+
+                                const result = await response.json();
+                                if (result.success) {
+                                    sent++;
+                                } else {
+                                    failed++;
+                                }
+                            } catch (e) {
+                                console.error('Failed to send to', contact.email, e);
+                                failed++;
+                            }
+
+                            // Update progress
+                            const progress = Math.round(((sent + failed) / total) * 100);
+                            progressBar.style.width = progress + '%';
+                            progressDetails.textContent = `${sent} sent, ${failed} failed / ${total} total`;
+                        });
+
+                        await Promise.all(batchPromises);
+
+                        // Delay between batches
+                        if (i + batchSize < contacts.length && batchDelay > 0) {
+                            progressText.textContent = `Waiting ${batchDelay}s before next batch...`;
+                            await new Promise(resolve => setTimeout(resolve, batchDelay * 1000));
+                        }
+                    }
+
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Complete!';
+                    progressDetails.textContent = `${sent} sent, ${failed} failed / ${total} total`;
+                    
+                    alert(`Sending complete!\nSent: ${sent}\nFailed: ${failed}\nTotal: ${total}`);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred: ' + error.message);
+                    progressText.textContent = 'Error occurred';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                sendEmailsBatch();
             });
         })();
         </script>
@@ -1029,8 +1210,7 @@ HTML;
         $list_id    = isset($_POST['list_id']) ? intval($_POST['list_id']) : 0;
         $from_name  = isset($_POST['from_name']) ? sanitize_text_field($_POST['from_name']) : '';
         $from_email = isset($_POST['from_email']) ? sanitize_email($_POST['from_email']) : '';
-        $subject    = isset($_POST['subject']) ? wp_strip_all_tags($_POST['subject']) : '';
-        // Allow all HTML from the editor without kses filtering
+        $subject    = isset($_POST['subject']) ? wp_unslash($_POST['subject']) : '';
         $body_html  = isset($_POST['body']) ? wp_unslash($_POST['body']) : '';
 
         if (!$list_id || $subject === '' || $body_html === ''){
@@ -1050,7 +1230,6 @@ HTML;
 
         list($batch_size, $batch_delay) = $this->get_batch_settings();
 
-        // Attempt to prevent timeouts for longer sends (may be disabled on some hosts)
         if (function_exists('set_time_limit')) {
             @set_time_limit(0);
         }
@@ -1058,7 +1237,6 @@ HTML;
             @ignore_user_abort(true);
         }
 
-        // Build headers
         $headers = ['Content-Type: text/html; charset=UTF-8'];
         if ($from_email) {
             $from = $from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
@@ -1075,10 +1253,11 @@ HTML;
 
                 $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . rawurlencode($ticket);
 
+                // NO FILTERING - use data as-is
                 $personalized = strtr($body_html, [
-                    '{name}'   => esc_html($name),
-                    '{ticket}' => esc_html($ticket),
-                    '{qr}'     => esc_url($qr_url),
+                    '{name}'   => $name,
+                    '{ticket}' => $ticket,
+                    '{qr}'     => $qr_url,
                 ]);
 
                 $html = '<html><body>' . $personalized . '</body></html>';
@@ -1088,7 +1267,6 @@ HTML;
                 }
             }
 
-            // Delay between batches, except after the last one
             if ($i < count($chunks) - 1 && $batch_delay > 0) {
                 sleep((int)$batch_delay);
             }
@@ -1203,9 +1381,7 @@ HTML;
         }
 
         $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-        // Allow all HTML tags in subject - no stripping
         $subject = isset($_POST['subject']) ? wp_unslash($_POST['subject']) : '';
-        // Allow all HTML tags in body - no stripping
         $body = isset($_POST['body']) ? wp_unslash($_POST['body']) : '';
 
         if (!$name) {
@@ -1243,7 +1419,6 @@ HTML;
             wp_send_json_error(['message' => 'Template not found.'], 404);
         }
 
-        // Return template data exactly as stored - no HTML filtering
         wp_send_json_success($templates[$name]);
     }
 
@@ -1270,6 +1445,83 @@ HTML;
         update_option($this->opt_email_templates_key, $templates);
 
         wp_send_json_success(['message' => 'Template deleted successfully.']);
+    }
+
+    public function ajax_get_list_contacts(){
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+        
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
+            wp_send_json_error(['message' => 'Invalid nonce'], 403);
+        }
+
+        $list_id = isset($_POST['list_id']) ? intval($_POST['list_id']) : 0;
+        
+        if (!$list_id) {
+            wp_send_json_error(['message' => 'Invalid list ID'], 400);
+        }
+
+        global $wpdb;
+        $contacts = $wpdb->get_results($wpdb->prepare("
+            SELECT name, email, ticket_code
+            FROM {$this->table_tickets}
+            WHERE list_id = %d AND email <> ''
+        ", $list_id), ARRAY_A);
+
+        list($batch_size, $batch_delay) = $this->get_batch_settings();
+
+        wp_send_json_success([
+            'contacts' => $contacts,
+            'batch_size' => $batch_size,
+            'batch_delay' => $batch_delay
+        ]);
+    }
+
+    public function ajax_send_single_email(){
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+        
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
+            wp_send_json_error(['message' => 'Invalid nonce'], 403);
+        }
+
+        $name       = sanitize_text_field($_POST['name'] ?? '');
+        $email      = sanitize_email($_POST['email'] ?? '');
+        $ticket     = sanitize_text_field($_POST['ticket'] ?? '');
+        $subject    = wp_unslash($_POST['subject'] ?? '');
+        $body_html  = wp_unslash($_POST['body'] ?? '');
+        $qr_base64  = $_POST['qr_base64'] ?? '';
+        $from_name  = sanitize_text_field($_POST['from_name'] ?? '');
+        $from_email = sanitize_email($_POST['from_email'] ?? '');
+
+        if (!$email || !$subject || !$body_html) {
+            wp_send_json_error(['message' => 'Missing required fields'], 400);
+        }
+
+        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        if ($from_email) {
+            $from = $from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
+            $headers[] = 'From: ' . $from;
+        }
+
+        // Replace placeholders - NO FILTERING
+        $personalized = strtr($body_html, [
+            '{name}'   => $name ?: 'Guest',
+            '{ticket}' => $ticket,
+            '{qr}'     => $qr_base64,
+        ]);
+
+        $html = '<html><body>' . $personalized . '</body></html>';
+
+        $sent = wp_mail($email, $subject, $html, $headers);
+
+        if ($sent) {
+            wp_send_json_success(['message' => 'Email sent']);
+        } else {
+            wp_send_json_error(['message' => 'Failed to send email'], 500);
+        }
     }
 
     public function shortcode_scan_page($atts){
