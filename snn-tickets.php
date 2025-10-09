@@ -56,6 +56,9 @@ class SNN_Tickets_Plugin {
 
         // AJAX inline update (admin)
         add_action('wp_ajax_snn_update_ticket_field',   [$this, 'ajax_update_ticket_field']);
+        
+        // AJAX upload QR image
+        add_action('wp_ajax_snn_upload_qr_image',       [$this, 'ajax_upload_qr_image']);
 
         // AJAX template management
         add_action('wp_ajax_snn_save_email_template',   [$this, 'ajax_save_email_template']);
@@ -826,12 +829,15 @@ HTML;
                         </div>
 
                         <p class="description" style="max-width:800px;">
-                            Sending uses WordPress mailer. Current batch settings: <?php echo esc_html($batch_size); ?> per batch, <?php echo esc_html($batch_delay); ?> second(s) between batches. QR codes are generated and saved as image files for maximum email compatibility.
+                            Sending uses WordPress mailer. Current batch settings: <?php echo esc_html($batch_size); ?> per batch, <?php echo esc_html($batch_delay); ?> second(s) between batches. QR codes are generated in your browser (offline) and saved as image files for maximum email compatibility.
                         </p>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Load QR Code library from CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
         <script>
         (function(){
@@ -1066,6 +1072,46 @@ HTML;
                 consoleLog.scrollTop = consoleLog.scrollHeight;
             }
 
+            // Generate QR code and upload to server
+            async function generateAndUploadQR(ticketCode, sendNonce) {
+                try {
+                    // Generate QR code as PNG data URL
+                    const qrDataUrl = await QRCode.toDataURL(ticketCode, {
+                        errorCorrectionLevel: 'M',
+                        type: 'image/png',
+                        width: 300,
+                        margin: 1,
+                        color: {
+                            dark: '#000000',
+                            light: '#FFFFFF'
+                        }
+                    });
+
+                    // Upload to server
+                    const uploadResponse = await fetch(ajaxUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: new URLSearchParams({
+                            action: 'snn_upload_qr_image',
+                            nonce: sendNonce,
+                            ticket_code: ticketCode,
+                            image_data: qrDataUrl
+                        })
+                    });
+
+                    const uploadResult = await uploadResponse.json();
+                    
+                    if (!uploadResult.success) {
+                        throw new Error(uploadResult.data?.message || 'Upload failed');
+                    }
+
+                    return uploadResult.data.url;
+                } catch (e) {
+                    console.error('QR generation/upload error:', e);
+                    throw e;
+                }
+            }
+
             async function sendEmailsBatch() {
                 submitBtn.disabled = true;
                 progressWrap.style.display = 'block';
@@ -1143,7 +1189,11 @@ HTML;
                         // Send batch in parallel
                         const batchPromises = batch.map(async (contact) => {
                             try {
-                                log(`Sending to ${contact.email} (${contact.name || 'No name'})...`, 'info');
+                                // Generate and upload QR code
+                                log(`Generating QR for ${contact.ticket_code}...`, 'info');
+                                const qrUrl = await generateAndUploadQR(contact.ticket_code, sendNonce);
+                                
+                                log(`Sending email to ${contact.email} (${contact.name || 'No name'})...`, 'info');
                                 const response = await fetch(ajaxUrl, {
                                     method: 'POST',
                                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1155,6 +1205,7 @@ HTML;
                                         ticket: contact.ticket_code,
                                         subject: subject,
                                         body: body,
+                                        qr_url: qrUrl,
                                         from_name: fromName,
                                         from_email: fromEmail
                                     })
@@ -1200,7 +1251,7 @@ HTML;
                     log(`COMPLETE: ${sent} sent, ${failed} failed, ${total} total`, sent === total ? 'success' : 'warning');
                     log('=================================', 'info');
                     
-                    alert(`Sending complete!\n\n✓ Sent: ${sent}\n✗ Failed: ${failed}\n━ Total: ${total}`);
+                    // alert(`Sending complete!\n\n✓ Sent: ${sent}\n✗ Failed: ${failed}\n━ Total: ${total}`);
                     
                 } catch (error) {
                     console.error('Error:', error);
@@ -1464,19 +1515,12 @@ HTML;
         $ticket     = sanitize_text_field($_POST['ticket'] ?? '');
         $subject    = wp_unslash($_POST['subject'] ?? '');
         $body_html  = wp_unslash($_POST['body'] ?? '');
+        $qr_url     = esc_url_raw($_POST['qr_url'] ?? '');
         $from_name  = sanitize_text_field($_POST['from_name'] ?? '');
         $from_email = sanitize_email($_POST['from_email'] ?? '');
 
-        if (!$email || !$subject || !$body_html || !$ticket) {
+        if (!$email || !$subject || !$body_html || !$ticket || !$qr_url) {
             wp_send_json_error(['message' => 'Missing required fields'], 400);
-        }
-
-        // Generate QR code and save as file
-        $qr_url = $this->generate_and_save_qr($ticket);
-        
-        if (!$qr_url) {
-            error_log("SNN Tickets: Failed to generate QR code for ticket $ticket");
-            wp_send_json_error(['message' => 'Failed to generate QR code'], 500);
         }
 
         $headers = ['Content-Type: text/html; charset=UTF-8'];
@@ -1504,8 +1548,23 @@ HTML;
         }
     }
 
-    private function generate_and_save_qr($ticket_code){
-        // Create QR code directory if it doesn't exist
+    public function ajax_upload_qr_image(){
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+        
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
+            wp_send_json_error(['message' => 'Invalid nonce'], 403);
+        }
+
+        $ticket_code = sanitize_text_field($_POST['ticket_code'] ?? '');
+        $image_data  = $_POST['image_data'] ?? '';
+
+        if (!$ticket_code || !$image_data) {
+            wp_send_json_error(['message' => 'Missing ticket code or image data'], 400);
+        }
+
+        // Check if QR already exists
         $upload_dir = wp_upload_dir();
         $qr_dir = $upload_dir['basedir'] . '/snn-tickets-qr';
         
@@ -1517,50 +1576,29 @@ HTML;
         $filepath = $qr_dir . '/' . $filename;
         $fileurl = $upload_dir['baseurl'] . '/snn-tickets-qr/' . $filename;
 
-        // Check if file already exists
+        // If file already exists, return existing URL
         if (file_exists($filepath)) {
-            return $fileurl;
+            wp_send_json_success(['url' => $fileurl, 'cached' => true]);
         }
 
-        // Generate QR code using phpqrcode library
-        // We'll include a simple QR code generator inline
-        try {
-            $this->create_qr_png($ticket_code, $filepath);
+        // Decode base64 image data
+        if (preg_match('/^data:image\/png;base64,(.+)$/', $image_data, $matches)) {
+            $image_binary = base64_decode($matches[1]);
             
-            if (file_exists($filepath)) {
-                return $fileurl;
+            if ($image_binary === false) {
+                wp_send_json_error(['message' => 'Invalid base64 data'], 400);
             }
-        } catch (Exception $e) {
-            error_log("SNN Tickets: QR generation error - " . $e->getMessage());
-        }
 
-        return false;
-    }
+            $result = file_put_contents($filepath, $image_binary);
+            
+            if ($result === false) {
+                wp_send_json_error(['message' => 'Failed to save QR image'], 500);
+            }
 
-    private function create_qr_png($text, $filepath){
-        // Simple QR Code generation using PHP GD
-        // For better QR codes, we'll use a more robust approach
-        
-        // Create a simple data matrix for QR code
-        // Using chillerlan/php-qrcode approach inline
-        
-        // For now, let's use a web service fallback or inline library
-        // Using Google Charts API as a reliable fallback
-        $qr_url = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' . urlencode($text) . '&choe=UTF-8';
-        
-        $image_data = @file_get_contents($qr_url);
-        
-        if ($image_data === false) {
-            throw new Exception('Failed to fetch QR code from service');
+            wp_send_json_success(['url' => $fileurl, 'cached' => false]);
+        } else {
+            wp_send_json_error(['message' => 'Invalid image data format'], 400);
         }
-        
-        $result = file_put_contents($filepath, $image_data);
-        
-        if ($result === false) {
-            throw new Exception('Failed to save QR code file');
-        }
-        
-        return true;
     }
 
     public function shortcode_scan_page($atts){
