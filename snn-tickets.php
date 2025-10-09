@@ -668,13 +668,13 @@ class SNN_Tickets_Plugin {
 
         $default_subject = 'Your Ticket to Our Event';
         $default_body = <<<HTML
-<p>Hi {name},</p><br>
+<p>Hi {name},</p>
 
-<p>We're excited to invite you! Below is your unique ticket QR code. Please bring it to the event.</p><br>
+<p>We're excited to invite you! Below is your unique ticket QR code. Please bring it to the event.</p>
 
-<p><img alt="Your Ticket QR" src="{qr}" width="200" height="200" style="display:block;"/></p><br>
+<p style="text-align:center;"><img alt="Your Ticket QR" src="{qr}" width="200" height="200" style="display:block; margin:0 auto;"/></p>
 
-<p>Your ticket code: <strong>{ticket}</strong></p><br>
+<p>Your ticket code: <strong>{ticket}</strong></p>
 
 <p>See you soon!</p>
 
@@ -1058,9 +1058,12 @@ HTML;
                     const qr = qrcode(0, 'M');
                     qr.addData(text);
                     qr.make();
-                    return qr.createDataURL(4, 0);
+                    const dataUrl = qr.createDataURL(4, 0);
+                    console.log('QR generated, length:', dataUrl ? dataUrl.length : 0);
+                    return dataUrl;
                 } catch (e) {
                     console.error('QR generation failed:', e);
+                    log('ERROR: QR generation failed - ' + e.message, 'error');
                     return '';
                 }
             }
@@ -1144,6 +1147,14 @@ HTML;
                             try {
                                 log(`Generating QR for ${contact.ticket_code}...`, 'info');
                                 const qrDataUri = generateQRCode(contact.ticket_code);
+                                
+                                if (!qrDataUri) {
+                                    log(`ERROR: Failed to generate QR for ${contact.ticket_code}`, 'error');
+                                    failed++;
+                                    return;
+                                }
+                                
+                                console.log('QR Data URI preview:', qrDataUri.substring(0, 100) + '...');
 
                                 log(`Sending to ${contact.email} (${contact.name || 'No name'})...`, 'info');
                                 const response = await fetch(ajaxUrl, {
@@ -1169,7 +1180,9 @@ HTML;
                                     log(`✓ Sent to ${contact.email}`, 'success');
                                 } else {
                                     failed++;
-                                    log(`✗ Failed to send to ${contact.email}: ${result.data?.message || 'Unknown error'}`, 'error');
+                                    const errorMsg = result.data?.message || 'Unknown error';
+                                    log(`✗ Failed to send to ${contact.email}: ${errorMsg}`, 'error');
+                                    console.error('Server response:', result);
                                 }
                             } catch (e) {
                                 failed++;
@@ -1465,12 +1478,19 @@ HTML;
         $ticket     = sanitize_text_field($_POST['ticket'] ?? '');
         $subject    = wp_unslash($_POST['subject'] ?? '');
         $body_html  = wp_unslash($_POST['body'] ?? '');
-        $qr_base64  = $_POST['qr_base64'] ?? '';
+        // Don't sanitize the QR data URI - it's a base64 image
+        $qr_base64  = isset($_POST['qr_base64']) ? $_POST['qr_base64'] : '';
         $from_name  = sanitize_text_field($_POST['from_name'] ?? '');
         $from_email = sanitize_email($_POST['from_email'] ?? '');
 
         if (!$email || !$subject || !$body_html) {
             wp_send_json_error(['message' => 'Missing required fields'], 400);
+        }
+
+        // Validate QR base64 data
+        if (empty($qr_base64) || substr($qr_base64, 0, 11) !== 'data:image/') {
+            error_log("SNN Tickets: QR base64 is empty or invalid for $email. Length: " . strlen($qr_base64));
+            wp_send_json_error(['message' => 'Invalid QR code data'], 400);
         }
 
         $headers = ['Content-Type: text/html; charset=UTF-8'];
@@ -1493,6 +1513,7 @@ HTML;
         if ($sent) {
             wp_send_json_success(['message' => 'Email sent']);
         } else {
+            error_log("SNN Tickets: Failed to send email to $email");
             wp_send_json_error(['message' => 'Failed to send email'], 500);
         }
     }
