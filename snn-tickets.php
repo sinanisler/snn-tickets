@@ -1,9 +1,11 @@
 <?php
 /*
-Plugin Name: SNN Tickets
-Description: Generate tickets, import via CSV, email invites with QR codes (with batching), and scan/validate tickets from a public page via shortcode.
-Version: 0.1
-Author: geopard.digital
+    Plugin Name: SNN Tickets
+    Description: Generate tickets, import via CSV, email invites with QR codes (with batching), and scan/validate tickets from a public page via shortcode.
+    Version: 0.1
+    Requires PHP: 8.1
+    Author: sinanisler
+    Author URI: https://sinanisler.com/
 */
 
 if (!defined('ABSPATH')) exit;
