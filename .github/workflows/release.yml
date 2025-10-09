@@ -42,7 +42,10 @@ jobs:
 
       - name: Create zip file
         run: |
-          zip -r snn-tickets.zip . -x '*.git*' '*.github*'
+          mkdir -p snn-tickets
+          rsync -av --exclude='.git' --exclude='.github' --exclude='snn-tickets' ./ snn-tickets/
+          zip -r snn-tickets.zip snn-tickets
+          rm -rf snn-tickets
 
       - name: Create GitHub Release
         if: contains(github.event.head_commit.message, 'release')
