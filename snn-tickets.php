@@ -314,7 +314,7 @@ class SNN_Tickets_Plugin {
         return wp_kses_post($html);
     }
 
-    private function generate_ticket_code($length = 10){
+    private function generate_ticket_code($length = 8){
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $max = strlen($chars) - 1;
         $code = '';
@@ -324,7 +324,7 @@ class SNN_Tickets_Plugin {
         return $code;
     }
 
-    private function unique_ticket_code($length = 10){
+    private function unique_ticket_code($length = 8){
         global $wpdb;
         do {
             $code = $this->generate_ticket_code($length);
@@ -344,7 +344,7 @@ class SNN_Tickets_Plugin {
 
     private function insert_ticket($list_id, $name, $email, $code = null){
         global $wpdb;
-        if (!$code) $code = $this->unique_ticket_code(10);
+        if (!$code) $code = $this->unique_ticket_code(8);
         $wpdb->insert($this->table_tickets, [
             'list_id'        => $list_id,
             'ticket_code'    => $code,
