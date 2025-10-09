@@ -118,9 +118,18 @@ class SNN_Tickets_Plugin {
             'Tickets',
             'manage_options',
             'snn-tickets',
-            [$this, 'render_generator_page'],
+            [$this, 'render_dashboard_page'],
             'dashicons-tickets',
             26
+        );
+
+        add_submenu_page(
+            'snn-tickets',
+            'Dashboard',
+            'Dashboard',
+            'manage_options',
+            'snn-tickets',
+            [$this, 'render_dashboard_page']
         );
 
         add_submenu_page(
@@ -128,7 +137,7 @@ class SNN_Tickets_Plugin {
             'Tickets Generator',
             'Tickets Generator',
             'manage_options',
-            'snn-tickets',
+            'snn-tickets-generator',
             [$this, 'render_generator_page']
         );
 
@@ -146,6 +155,159 @@ class SNN_Tickets_Plugin {
         if (!current_user_can('manage_options')) {
             wp_die('Insufficient permissions');
         }
+    }
+
+    public function render_dashboard_page(){
+        $this->admin_cap_check();
+        global $wpdb;
+
+        // Get statistics
+        $total_lists = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_lists}");
+        $total_tickets = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_tickets}");
+        $total_validated = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_tickets} WHERE validate_count > 0");
+        $total_with_email = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_tickets} WHERE email <> ''");
+        
+        // Get email templates count
+        $email_templates = get_option($this->opt_email_templates_key, []);
+        $total_templates = is_array($email_templates) ? count($email_templates) : 0;
+
+        // Recent activity
+        $recent_tickets = $wpdb->get_results("
+            SELECT t.name, t.email, t.ticket_code, t.created_at, l.name as list_name
+            FROM {$this->table_tickets} t
+            LEFT JOIN {$this->table_lists} l ON l.id = t.list_id
+            ORDER BY t.created_at DESC
+            LIMIT 5
+        ");
+
+        ?>
+        <div class="wrap">
+            <h1 style="margin-bottom: 20px;">🎫 SNN Tickets - Dashboard</h1>
+
+            <!-- Statistics Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Lists</div>
+                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_lists); ?></div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Tickets</div>
+                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_tickets); ?></div>
+                </div>
+                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Validated Tickets</div>
+                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_validated); ?></div>
+                </div>
+                <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">With Email</div>
+                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_with_email); ?></div>
+                </div>
+                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Email Templates</div>
+                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_templates); ?></div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+                
+                <!-- How It Works -->
+                <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h2 style="margin-top: 0; color: #2c3e50;">📚 How It Works</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #667eea; font-size: 16px; margin-bottom: 8px;">1. Generate or Import Tickets</h3>
+                        <p style="color: #555; line-height: 1.6; margin: 0;">Create random tickets or import from CSV files. Each ticket gets a unique QR code for validation.</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #f5576c; font-size: 16px; margin-bottom: 8px;">2. Send Email Invitations</h3>
+                        <p style="color: #555; line-height: 1.6; margin: 0;">Send personalized emails with QR codes to ticket holders. Supports batch sending with customizable templates.</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #00f2fe; font-size: 16px; margin-bottom: 8px;">3. Scan & Validate</h3>
+                        <p style="color: #555; line-height: 1.6; margin: 0;">Use the public scanning page to validate tickets in real-time using QR codes or manual entry.</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <strong style="color: #2c3e50;">Quick Actions:</strong>
+                        <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #555;">
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Create Tickets</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Send Emails</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Shortcode & Scanning -->
+                <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h2 style="margin-top: 0; color: #2c3e50;">🔍 Scanning System</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Public Scan Page Shortcode</h3>
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; border: 1px solid #dee2e6; position: relative;">
+                            <code style="color: #e83e8c; font-size: 14px;">[tickets_scan_page]</code>
+                            <button onclick="navigator.clipboard.writeText('[tickets_scan_page]')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); padding: 4px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Copy</button>
+                        </div>
+                        <p style="color: #666; font-size: 13px; margin-top: 8px;">Add this shortcode to any page or post to create a public ticket scanning interface.</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #f5576c; font-size: 16px; margin-bottom: 8px;">Scan Features</h3>
+                        <ul style="color: #555; line-height: 1.8; margin: 0; padding-left: 20px;">
+                            <li>QR Code scanning via camera</li>
+                            <li>Manual ticket code entry</li>
+                            <li>Real-time validation feedback</li>
+                            <li>Validation count tracking</li>
+                            <li>Timestamp recording</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #fff3cd; padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong style="color: #856404;">💡 Tip:</strong>
+                        <p style="margin: 8px 0 0 0; color: #856404; font-size: 14px;">Create a dedicated page called "Ticket Scanner" and add the shortcode for your event staff to validate tickets.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tickets -->
+            <?php if ($recent_tickets): ?>
+            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="margin-top: 0; color: #2c3e50;">🕐 Recent Tickets</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Ticket Code</th>
+                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Name</th>
+                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Email</th>
+                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">List</th>
+                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recent_tickets as $ticket): ?>
+                        <tr style="border-bottom: 1px solid #f1f3f5;">
+                            <td style="padding: 12px; font-family: monospace; color: #667eea; font-weight: 600;"><?php echo esc_html($ticket->ticket_code); ?></td>
+                            <td style="padding: 12px; color: #495057;"><?php echo esc_html($ticket->name ?: '-'); ?></td>
+                            <td style="padding: 12px; color: #6c757d; font-size: 13px;"><?php echo esc_html($ticket->email ?: '-'); ?></td>
+                            <td style="padding: 12px; color: #495057;"><?php echo esc_html($ticket->list_name ?: '-'); ?></td>
+                            <td style="padding: 12px; color: #6c757d; font-size: 13px;"><?php echo esc_html(date_i18n('M j, Y H:i', strtotime($ticket->created_at))); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <div style="background: white; padding: 48px 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🎫</div>
+                <h3 style="color: #6c757d; margin: 0 0 8px 0;">No tickets yet</h3>
+                <p style="color: #adb5bd; margin: 0 0 20px 0;">Get started by creating your first ticket list!</p>
+                <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>" class="button button-primary" style="padding: 12px 24px; font-size: 14px;">Create Your First Tickets</a>
+            </div>
+            <?php endif; ?>
+
+        </div>
+        <?php
     }
 
     private function esc_textarea_keep_basic($html){
