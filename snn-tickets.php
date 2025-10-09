@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Tickets
+Plugin Name: SNN Tickets
 Description: Generate tickets, import via CSV, email invites with QR codes (with batching), and scan/validate tickets from a public page via shortcode.
 Version: 0.1
 Author: geopard.digital
