@@ -3,6 +3,11 @@
 
 A WordPress plugin for simple ticket management.
 
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/0c9d0e08-4c90-44f6-99ea-254b0a62deb1" />
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/5c9e4115-63c5-4e79-85a1-e6d20b30dad4" />
+
+
+
 ## Features
 - Create and manage support tickets from the WordPress dashboard
 - Admin and user ticket views
