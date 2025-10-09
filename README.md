@@ -22,6 +22,3 @@ A WordPress plugin for simple ticket management.
 - Access the ticket system from the WordPress admin menu.
 - Configure settings as needed for your workflow.
 - Users and admins interact with tickets through the provided interface.
-
-## License
-MIT
