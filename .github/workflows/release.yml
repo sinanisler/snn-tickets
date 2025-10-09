@@ -41,7 +41,7 @@ jobs:
           name: "Release v${{ env.new_version }}"
           body: "Release v${{ env.new_version }} of the plugin."
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Pre-release
         if: contains(github.event.head_commit.message, 'alphatag')
