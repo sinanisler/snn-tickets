@@ -714,7 +714,7 @@ class SNN_Tickets_Plugin {
             $this->insert_ticket($list_id, '', '', $this->unique_ticket_code($length));
         }
 
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Generated $count tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets')));
+        wp_redirect(add_query_arg('snn_msg', rawurlencode("Generated $count tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-generator')));
         exit;
     }
 
@@ -758,7 +758,7 @@ class SNN_Tickets_Plugin {
         }
         fclose($handle);
 
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Imported $count contacts and generated tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets')));
+        wp_redirect(add_query_arg('snn_msg', rawurlencode("Imported $count contacts and generated tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-generator')));
         exit;
     }
 
@@ -803,9 +803,9 @@ class SNN_Tickets_Plugin {
         $list_deleted = $wpdb->delete($this->table_lists, ['id' => $list_id], ['%d']);
 
         if ($list_deleted) {
-            wp_redirect(add_query_arg('snn_msg', rawurlencode("Deleted list '{$list->name}' and {$tickets_deleted} tickets"), admin_url('admin.php?page=snn-tickets')));
+            wp_redirect(add_query_arg('snn_msg', rawurlencode("Deleted list '{$list->name}' and {$tickets_deleted} tickets"), admin_url('admin.php?page=snn-tickets-generator')));
         } else {
-            wp_redirect(add_query_arg('snn_msg', rawurlencode("Failed to delete list"), admin_url('admin.php?page=snn-tickets')));
+            wp_redirect(add_query_arg('snn_msg', rawurlencode("Failed to delete list"), admin_url('admin.php?page=snn-tickets-generator')));
         }
         exit;
     }
