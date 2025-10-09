@@ -193,8 +193,8 @@ class SNN_Tickets_Plugin {
                 <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Tickets</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_tickets); ?></div>
-                </div>
-                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    background: #000;
+                    color: #fff;
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Validated Tickets</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_validated); ?></div>
                 </div>
