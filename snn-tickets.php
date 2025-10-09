@@ -186,23 +186,23 @@ class SNN_Tickets_Plugin {
 
             <!-- Statistics Cards -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Lists</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_lists); ?></div>
                 </div>
-                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Tickets</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_tickets); ?></div>
-                    background: #000;
-                    color: #fff;
+                </div>
+                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Validated Tickets</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_validated); ?></div>
                 </div>
-                <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">With Email</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_with_email); ?></div>
                 </div>
-                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Email Templates</div>
                     <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_templates); ?></div>
                 </div>
