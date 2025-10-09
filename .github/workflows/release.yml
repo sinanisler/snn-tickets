@@ -38,7 +38,7 @@ jobs:
         with:
           files: snn-tickets.zip
           tag_name: "v${{ env.new_version }}"
-          release_name: "Release v${{ env.new_version }}"
+          name: "Release v${{ env.new_version }}"
           body: "Release v${{ env.new_version }} of the plugin."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
           prerelease: true
           files: snn-tickets.zip
           tag_name: "pre-v${{ env.version }}"
-          release_name: "Pre-release v${{ env.version }}"
+          name: "Pre-release v${{ env.version }}"
           body: "Pre-release v${{ env.version }} of the plugin."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
