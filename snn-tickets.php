@@ -143,6 +143,15 @@ class SNN_Tickets_Plugin {
 
         add_submenu_page(
             'snn-tickets',
+            'Ticket Lists',
+            'Ticket Lists',
+            'manage_options',
+            'snn-tickets-lists',
+            [$this, 'render_lists_page']
+        );
+
+        add_submenu_page(
+            'snn-tickets',
             'Tickets Mailer',
             'Tickets Mailer',
             'manage_options',
@@ -530,24 +539,8 @@ class SNN_Tickets_Plugin {
 
     public function render_generator_page(){
         $this->admin_cap_check();
-        global $wpdb;
-
-        $lists = $wpdb->get_results("
-            SELECT l.*, 
-                   COUNT(t.id) AS total_tickets,
-                   SUM(CASE WHEN t.email <> '' THEN 1 ELSE 0 END) AS total_with_email
-            FROM {$this->table_lists} l
-            LEFT JOIN {$this->table_tickets} t ON t.list_id = l.id
-            GROUP BY l.id
-            ORDER BY l.id DESC
-        ");
 
         $nonce_generate = wp_create_nonce('snn_generate_tickets');
-        $nonce_delete   = wp_create_nonce('snn_delete_list');
-
-        $update_nonce = wp_create_nonce('snn_update_ticket');
-        $ajax_url     = admin_url('admin-ajax.php');
-
         $now_placeholder = date_i18n('Y-m-d H:i', current_time('timestamp'));
         ?>
         <style>
@@ -576,6 +569,71 @@ class SNN_Tickets_Plugin {
             }
             .snn-gen-accordion-content {
                 padding: 20px;
+            }
+        </style>
+
+        <div class="wrap snn-gen-container">
+            <h1>Tickets Generator</h1>
+
+            <?php if (isset($_GET['snn_msg'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
+            <?php endif; ?>
+
+            <details class="snn-gen-accordion" open>
+                <summary>Generate Random Tickets</summary>
+                <div class="snn-gen-accordion-content">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <input type="hidden" name="action" value="snn_generate_tickets">
+                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_generate); ?>">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="snn_list_name">List Name</label></th>
+                                <td><input type="text" id="snn_list_name" name="list_name" class="regular-text" placeholder="Generated <?php echo esc_attr($now_placeholder); ?>"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="snn_count">How many?</label></th>
+                                <td><input type="number" id="snn_count" name="count" value="10" min="1" max="5000"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="snn_len">Ticket length</label></th>
+                                <td><input type="number" id="snn_len" name="length" value="10" min="6" max="64"></td>
+                            </tr>
+                        </table>
+                        <p><button type="submit" class="button button-primary">Generate</button></p>
+                        <p class="description">Generates uppercase alphanumeric codes. A new list will be created.</p>
+                    </form>
+                </div>
+            </details>
+
+            <p class="description">
+                After generating tickets, view and manage them in the <a href="<?php echo admin_url('admin.php?page=snn-tickets-lists'); ?>">Ticket Lists</a> page.
+            </p>
+        </div>
+        <?php
+    }
+
+    public function render_lists_page(){
+        $this->admin_cap_check();
+        global $wpdb;
+
+        $lists = $wpdb->get_results("
+            SELECT l.*, 
+                   COUNT(t.id) AS total_tickets,
+                   SUM(CASE WHEN t.email <> '' THEN 1 ELSE 0 END) AS total_with_email
+            FROM {$this->table_lists} l
+            LEFT JOIN {$this->table_tickets} t ON t.list_id = l.id
+            GROUP BY l.id
+            ORDER BY l.id DESC
+        ");
+
+        $nonce_delete   = wp_create_nonce('snn_delete_list');
+        $update_nonce = wp_create_nonce('snn_update_ticket');
+        $ajax_url     = admin_url('admin-ajax.php');
+
+        ?>
+        <style>
+            .snn-lists-container {
+                max-width: 1200px;
             }
             .snn-list-item {
                 margin-bottom: 12px;
@@ -654,40 +712,13 @@ class SNN_Tickets_Plugin {
             }
         </style>
 
-        <div class="wrap snn-gen-container">
-            <h1>Tickets Generator</h1>
+        <div class="wrap snn-lists-container">
+            <h1>Ticket Lists</h1>
 
             <?php if (isset($_GET['snn_msg'])): ?>
                 <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
             <?php endif; ?>
 
-            <details class="snn-gen-accordion">
-                <summary>Generate Random Tickets</summary>
-                <div class="snn-gen-accordion-content">
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <input type="hidden" name="action" value="snn_generate_tickets">
-                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_generate); ?>">
-                        <table class="form-table" role="presentation">
-                            <tr>
-                                <th scope="row"><label for="snn_list_name">List Name</label></th>
-                                <td><input type="text" id="snn_list_name" name="list_name" class="regular-text" placeholder="Generated <?php echo esc_attr($now_placeholder); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_count">How many?</label></th>
-                                <td><input type="number" id="snn_count" name="count" value="10" min="1" max="5000"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_len">Ticket length</label></th>
-                                <td><input type="number" id="snn_len" name="length" value="10" min="6" max="64"></td>
-                            </tr>
-                        </table>
-                        <p><button type="submit" class="button button-primary">Generate</button></p>
-                        <p class="description">Generates uppercase alphanumeric codes. A new list will be created.</p>
-                    </form>
-                </div>
-            </details>
-
-            <h2>Ticket Lists</h2>
             <p class="description">Click to expand/collapse each list. Click Name or Email to edit inline. Press Enter or click outside to save. Use Esc to cancel.</p>
 
             <div id="snn-lists" data-ajax-url="<?php echo esc_attr($ajax_url); ?>" data-update-nonce="<?php echo esc_attr($update_nonce); ?>">
@@ -762,7 +793,7 @@ class SNN_Tickets_Plugin {
                         </details>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p>No lists yet. Generate or <a href="<?php echo admin_url('admin.php?page=snn-tickets-csv-import'); ?>">import from CSV</a> to get started.</p>
+                    <p>No lists yet. <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Generate</a> or <a href="<?php echo admin_url('admin.php?page=snn-tickets-csv-import'); ?>">import from CSV</a> to get started.</p>
                 <?php endif; ?>
             </div>
         </div>
@@ -1010,7 +1041,7 @@ class SNN_Tickets_Plugin {
                             <button type="submit" class="button button-primary">Import and Generate Tickets</button>
                         </p>
                         
-                        <p class="description">Each person in the CSV will receive a unique ticket code. The list will be created and you can view it in the Tickets Generator page.</p>
+                        <p class="description">Each person in the CSV will receive a unique ticket code. The list will be created and you can view it in the Ticket Lists page.</p>
                     </form>
                 </div>
 
@@ -1020,7 +1051,7 @@ class SNN_Tickets_Plugin {
                     <ul>
                         <li>A new ticket list will be created with your specified name</li>
                         <li>Each contact will have a unique ticket code generated</li>
-                        <li>View and manage tickets in the <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Tickets Generator</a> page</li>
+                        <li>View and manage tickets in the <a href="<?php echo admin_url('admin.php?page=snn-tickets-lists'); ?>">Ticket Lists</a> page</li>
                         <li>Send email invitations from the <a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Tickets Mailer</a> page</li>
                     </ul>
                 </div>
@@ -1044,7 +1075,7 @@ class SNN_Tickets_Plugin {
             $this->insert_ticket($list_id, '', '', $this->unique_ticket_code($length));
         }
 
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Generated $count tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-generator')));
+        wp_redirect(add_query_arg('snn_msg', rawurlencode("Generated $count tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-lists')));
         exit;
     }
 
@@ -1133,9 +1164,9 @@ class SNN_Tickets_Plugin {
         $list_deleted = $wpdb->delete($this->table_lists, ['id' => $list_id], ['%d']);
 
         if ($list_deleted) {
-            wp_redirect(add_query_arg('snn_msg', rawurlencode("Deleted list '{$list->name}' and {$tickets_deleted} tickets"), admin_url('admin.php?page=snn-tickets-generator')));
+            wp_redirect(add_query_arg('snn_msg', rawurlencode("Deleted list '{$list->name}' and {$tickets_deleted} tickets"), admin_url('admin.php?page=snn-tickets-lists')));
         } else {
-            wp_redirect(add_query_arg('snn_msg', rawurlencode("Failed to delete list"), admin_url('admin.php?page=snn-tickets-generator')));
+            wp_redirect(add_query_arg('snn_msg', rawurlencode("Failed to delete list"), admin_url('admin.php?page=snn-tickets-lists')));
         }
         exit;
     }
