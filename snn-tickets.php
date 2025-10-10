@@ -1460,8 +1460,8 @@ HTML;
             </div>
         </div>
 
-        <!-- Load QR Code library from CDN -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Load QR Code library from local file -->
+    <script src="<?php echo plugin_dir_url(__FILE__); ?>src/qrcode.min.js"></script>
 
         <script>
         (function(){
