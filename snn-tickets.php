@@ -2,7 +2,7 @@
 /*
     Plugin Name: SNN Tickets
     Description: Generate tickets, import via CSV, email invites with QR codes (with batching), and scan/validate tickets from a public page via shortcode.
-    Version: 0.14
+    Version: 0.15
     Requires PHP: 8.1
     Author: sinanisler
     Author URI: https://sinanisler.com/                       
