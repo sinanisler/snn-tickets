@@ -225,12 +225,10 @@ class SNN_Tickets_Plugin {
                 background: #fff;
                 padding: 24px;
                 border-radius: 4px;
-                border: 1px solid #000;
             }
             .snn-card h2 {
                 margin-top: 0;
                 color: #000;
-                border-bottom: 2px solid #000;
                 padding-bottom: 10px;
             }
             .snn-card h3 {
@@ -250,7 +248,6 @@ class SNN_Tickets_Plugin {
                 background: #f5f5f5;
                 padding: 16px;
                 border-radius: 4px;
-                border-left: 4px solid #000;
             }
             .snn-info-box strong {
                 color: #000;
@@ -268,7 +265,6 @@ class SNN_Tickets_Plugin {
                 background: #f5f5f5;
                 padding: 12px;
                 border-radius: 4px;
-                border: 1px solid #000;
                 position: relative;
                 font-family: monospace;
             }
@@ -303,7 +299,6 @@ class SNN_Tickets_Plugin {
                 background: #fffef0;
                 padding: 16px;
                 border-radius: 4px;
-                border-left: 4px solid #000;
             }
             .snn-tip-box strong {
                 color: #000;
@@ -319,7 +314,6 @@ class SNN_Tickets_Plugin {
             }
             .snn-recent-table thead tr {
                 background: #f5f5f5;
-                border-bottom: 2px solid #000;
             }
             .snn-recent-table th {
                 padding: 12px;
@@ -330,7 +324,6 @@ class SNN_Tickets_Plugin {
             .snn-recent-table td {
                 padding: 12px;
                 color: #000;
-                border-bottom: 1px solid #ddd;
             }
             .snn-recent-table .ticket-code {
                 font-family: monospace;
@@ -343,7 +336,6 @@ class SNN_Tickets_Plugin {
                 background: #fff;
                 padding: 48px 24px;
                 border-radius: 4px;
-                border: 1px solid #000;
                 text-align: center;
             }
             .snn-empty-icon {
