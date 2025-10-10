@@ -149,6 +149,15 @@ class SNN_Tickets_Plugin {
             'snn-tickets-mailer',
             [$this, 'render_mailer_page']
         );
+
+        add_submenu_page(
+            'snn-tickets',
+            'CSV Import',
+            'CSV Import',
+            'manage_options',
+            'snn-tickets-csv-import',
+            [$this, 'render_csv_import_page']
+        );
     }
 
     private function admin_cap_check(){
@@ -181,80 +190,251 @@ class SNN_Tickets_Plugin {
         ");
 
         ?>
-        <div class="wrap">
-            <h1 style="margin-bottom: 20px;">🎫 SNN Tickets - Dashboard</h1>
+        <style>
+            .snn-dashboard-container {
+                max-width: 1400px;
+            }
+            .snn-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            .snn-stat-card {
+                background: #000;
+                color: #fff;
+                padding: 24px;
+                border-radius: 4px;
+            }
+            .snn-stat-label {
+                font-size: 14px;
+                opacity: 0.9;
+                margin-bottom: 8px;
+            }
+            .snn-stat-value {
+                font-size: 36px;
+                font-weight: bold;
+            }
+            .snn-main-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                margin-bottom: 30px;
+            }
+            .snn-card {
+                background: #fff;
+                padding: 24px;
+                border-radius: 4px;
+                border: 1px solid #000;
+            }
+            .snn-card h2 {
+                margin-top: 0;
+                color: #000;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            .snn-card h3 {
+                color: #000;
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+            .snn-section {
+                margin-bottom: 20px;
+            }
+            .snn-section p {
+                color: #000;
+                line-height: 1.6;
+                margin: 0;
+            }
+            .snn-info-box {
+                background: #f5f5f5;
+                padding: 16px;
+                border-radius: 4px;
+                border-left: 4px solid #000;
+            }
+            .snn-info-box strong {
+                color: #000;
+            }
+            .snn-info-box ul {
+                margin: 8px 0 0 0;
+                padding-left: 20px;
+                color: #000;
+            }
+            .snn-info-box a {
+                color: #000;
+                text-decoration: underline;
+            }
+            .snn-shortcode-box {
+                background: #f5f5f5;
+                padding: 12px;
+                border-radius: 4px;
+                border: 1px solid #000;
+                position: relative;
+                font-family: monospace;
+            }
+            .snn-shortcode-code {
+                color: #000;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .snn-copy-btn {
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 4px 12px;
+                background: #000;
+                color: #fff;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            .snn-copy-btn:hover {
+                background: #333;
+            }
+            .snn-feature-list {
+                color: #000;
+                line-height: 1.8;
+                margin: 0;
+                padding-left: 20px;
+            }
+            .snn-tip-box {
+                background: #fffef0;
+                padding: 16px;
+                border-radius: 4px;
+                border-left: 4px solid #000;
+            }
+            .snn-tip-box strong {
+                color: #000;
+            }
+            .snn-tip-box p {
+                margin: 8px 0 0 0;
+                color: #000;
+                font-size: 14px;
+            }
+            .snn-recent-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .snn-recent-table thead tr {
+                background: #f5f5f5;
+                border-bottom: 2px solid #000;
+            }
+            .snn-recent-table th {
+                padding: 12px;
+                text-align: left;
+                color: #000;
+                font-weight: 600;
+            }
+            .snn-recent-table td {
+                padding: 12px;
+                color: #000;
+                border-bottom: 1px solid #ddd;
+            }
+            .snn-recent-table .ticket-code {
+                font-family: monospace;
+                font-weight: 600;
+            }
+            .snn-recent-table .ticket-date {
+                font-size: 13px;
+            }
+            .snn-empty-state {
+                background: #fff;
+                padding: 48px 24px;
+                border-radius: 4px;
+                border: 1px solid #000;
+                text-align: center;
+            }
+            .snn-empty-icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+            .snn-empty-state h3 {
+                color: #000;
+                margin: 0 0 8px 0;
+            }
+            .snn-empty-state p {
+                color: #666;
+                margin: 0 0 20px 0;
+            }
+            @media (max-width: 768px) {
+                .snn-main-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
 
-            <!-- Statistics Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Lists</div>
-                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_lists); ?></div>
+        <div class="wrap snn-dashboard-container">
+            <h1>🎫 SNN Tickets - Dashboard</h1>
+
+            <div class="snn-stats-grid">
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">Total Lists</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_lists); ?></div>
                 </div>
-                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Tickets</div>
-                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_tickets); ?></div>
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">Total Tickets</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_tickets); ?></div>
                 </div>
-                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Validated Tickets</div>
-                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_validated); ?></div>
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">Validated Tickets</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_validated); ?></div>
                 </div>
-                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">With Email</div>
-                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_with_email); ?></div>
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">With Email</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_with_email); ?></div>
                 </div>
-                <div style="background: #000000; color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Email Templates</div>
-                    <div style="font-size: 36px; font-weight: bold;"><?php echo number_format($total_templates); ?></div>
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">Email Templates</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_templates); ?></div>
                 </div>
             </div>
 
-            <!-- Main Content -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
-                
-                <!-- How It Works -->
-                <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h2 style="margin-top: 0; color: #2c3e50;">📚 How It Works</h2>
+            <div class="snn-main-grid">
+                <div class="snn-card">
+                    <h2>📚 How It Works</h2>
                     
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #667eea; font-size: 16px; margin-bottom: 8px;">1. Generate or Import Tickets</h3>
-                        <p style="color: #555; line-height: 1.6; margin: 0;">Create random tickets or import from CSV files. Each ticket gets a unique QR code for validation.</p>
+                    <div class="snn-section">
+                        <h3>1. Generate or Import Tickets</h3>
+                        <p>Create random tickets or import from CSV files. Each ticket gets a unique QR code for validation.</p>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #f5576c; font-size: 16px; margin-bottom: 8px;">2. Send Email Invitations</h3>
-                        <p style="color: #555; line-height: 1.6; margin: 0;">Send personalized emails with QR codes to ticket holders. Supports batch sending with customizable templates.</p>
+                    <div class="snn-section">
+                        <h3>2. Send Email Invitations</h3>
+                        <p>Send personalized emails with QR codes to ticket holders. Supports batch sending with customizable templates.</p>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #00f2fe; font-size: 16px; margin-bottom: 8px;">3. Scan & Validate</h3>
-                        <p style="color: #555; line-height: 1.6; margin: 0;">Use the public scanning page to validate tickets in real-time using QR codes or manual entry.</p>
+                    <div class="snn-section">
+                        <h3>3. Scan & Validate</h3>
+                        <p>Use the public scanning page to validate tickets in real-time using QR codes or manual entry.</p>
                     </div>
 
-                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
-                        <strong style="color: #2c3e50;">Quick Actions:</strong>
-                        <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #555;">
+                    <div class="snn-info-box">
+                        <strong>Quick Actions:</strong>
+                        <ul>
                             <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Create Tickets</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-csv-import'); ?>">Import from CSV</a></li>
                             <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Send Emails</a></li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- Shortcode & Scanning -->
-                <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h2 style="margin-top: 0; color: #2c3e50;">🔍 Scanning System</h2>
+                <div class="snn-card">
+                    <h2>🔍 Scanning System</h2>
                     
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #667eea; font-size: 16px; margin-bottom: 12px;">Public Scan Page Shortcode</h3>
-                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; border: 1px solid #dee2e6; position: relative;">
-                            <code style="color: #e83e8c; font-size: 14px;">[tickets_scan_page]</code>
-                            <button onclick="navigator.clipboard.writeText('[tickets_scan_page]')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); padding: 4px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Copy</button>
+                    <div class="snn-section">
+                        <h3>Public Scan Page Shortcode</h3>
+                        <div class="snn-shortcode-box">
+                            <code class="snn-shortcode-code">[tickets_scan_page]</code>
+                            <button onclick="navigator.clipboard.writeText('[tickets_scan_page]')" class="snn-copy-btn">Copy</button>
                         </div>
-                        <p style="color: #666; font-size: 13px; margin-top: 8px;">Add this shortcode to any page or post to create a public ticket scanning interface.</p>
+                        <p class="description" style="margin-top: 8px; color: #666;">Add this shortcode to any page or post to create a public ticket scanning interface.</p>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #f5576c; font-size: 16px; margin-bottom: 8px;">Scan Features</h3>
-                        <ul style="color: #555; line-height: 1.8; margin: 0; padding-left: 20px;">
+                    <div class="snn-section">
+                        <h3>Scan Features</h3>
+                        <ul class="snn-feature-list">
                             <li>QR Code scanning via camera</li>
                             <li>Manual ticket code entry</li>
                             <li>Real-time validation feedback</li>
@@ -263,46 +443,45 @@ class SNN_Tickets_Plugin {
                         </ul>
                     </div>
 
-                    <div style="background: #fff3cd; padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107;">
-                        <strong style="color: #856404;">💡 Tip:</strong>
-                        <p style="margin: 8px 0 0 0; color: #856404; font-size: 14px;">Create a dedicated page called "Ticket Scanner" and add the shortcode for your event staff to validate tickets.</p>
+                    <div class="snn-tip-box">
+                        <strong>💡 Tip:</strong>
+                        <p>Create a dedicated page called "Ticket Scanner" and add the shortcode for your event staff to validate tickets.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Tickets -->
             <?php if ($recent_tickets): ?>
-            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <h2 style="margin-top: 0; color: #2c3e50;">🕐 Recent Tickets</h2>
-                <table style="width: 100%; border-collapse: collapse;">
+            <div class="snn-card">
+                <h2>🕐 Recent Tickets</h2>
+                <table class="snn-recent-table">
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Ticket Code</th>
-                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Name</th>
-                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Email</th>
-                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">List</th>
-                            <th style="padding: 12px; text-align: left; color: #495057; font-weight: 600;">Created</th>
+                        <tr>
+                            <th>Ticket Code</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>List</th>
+                            <th>Created</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($recent_tickets as $ticket): ?>
-                        <tr style="border-bottom: 1px solid #f1f3f5;">
-                            <td style="padding: 12px; font-family: monospace; color: #667eea; font-weight: 600;"><?php echo esc_html($ticket->ticket_code); ?></td>
-                            <td style="padding: 12px; color: #495057;"><?php echo esc_html($ticket->name ?: '-'); ?></td>
-                            <td style="padding: 12px; color: #6c757d; font-size: 13px;"><?php echo esc_html($ticket->email ?: '-'); ?></td>
-                            <td style="padding: 12px; color: #495057;"><?php echo esc_html($ticket->list_name ?: '-'); ?></td>
-                            <td style="padding: 12px; color: #6c757d; font-size: 13px;"><?php echo esc_html(date_i18n('M j, Y H:i', strtotime($ticket->created_at))); ?></td>
+                        <tr>
+                            <td class="ticket-code"><?php echo esc_html($ticket->ticket_code); ?></td>
+                            <td><?php echo esc_html($ticket->name ?: '-'); ?></td>
+                            <td class="ticket-date"><?php echo esc_html($ticket->email ?: '-'); ?></td>
+                            <td><?php echo esc_html($ticket->list_name ?: '-'); ?></td>
+                            <td class="ticket-date"><?php echo esc_html(date_i18n('M j, Y H:i', strtotime($ticket->created_at))); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
             <?php else: ?>
-            <div style="background: white; padding: 48px 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-                <div style="font-size: 48px; margin-bottom: 16px;">🎫</div>
-                <h3 style="color: #6c757d; margin: 0 0 8px 0;">No tickets yet</h3>
-                <p style="color: #adb5bd; margin: 0 0 20px 0;">Get started by creating your first ticket list!</p>
-                <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>" class="button button-primary" style="padding: 12px 24px; font-size: 14px;">Create Your First Tickets</a>
+            <div class="snn-empty-state">
+                <div class="snn-empty-icon">🎫</div>
+                <h3>No tickets yet</h3>
+                <p>Get started by creating your first ticket list!</p>
+                <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>" class="button button-primary">Create Your First Tickets</a>
             </div>
             <?php endif; ?>
 
@@ -372,26 +551,131 @@ class SNN_Tickets_Plugin {
         ");
 
         $nonce_generate = wp_create_nonce('snn_generate_tickets');
-        $nonce_import   = wp_create_nonce('snn_import_csv');
         $nonce_delete   = wp_create_nonce('snn_delete_list');
 
         $update_nonce = wp_create_nonce('snn_update_ticket');
         $ajax_url     = admin_url('admin-ajax.php');
 
-        $template_url = admin_url('admin-post.php?action=snn_csv_template');
-
         $now_placeholder = date_i18n('Y-m-d H:i', current_time('timestamp'));
         ?>
-        <div class="wrap">
-            <h1>Tickets - Generator</h1>
+        <style>
+            .snn-gen-container {
+                max-width: 1200px;
+            }
+            .snn-gen-accordion {
+                background: #fff;
+                border: 1px solid #000;
+                border-radius: 4px;
+                margin-bottom: 20px;
+            }
+            .snn-gen-accordion summary {
+                cursor: pointer;
+                padding: 16px;
+                font-weight: 600;
+                color: #000;
+                background: #f5f5f5;
+                border-bottom: 1px solid #000;
+                user-select: none;
+            }
+            .snn-gen-accordion summary:hover {
+                background: #e5e5e5;
+            }
+            .snn-gen-accordion[open] summary {
+                background: #000;
+                color: #fff;
+            }
+            .snn-gen-accordion-content {
+                padding: 20px;
+            }
+            .snn-list-item {
+                margin-bottom: 12px;
+                background: #fff;
+                border: 1px solid #000;
+                border-radius: 4px;
+            }
+            .snn-list-item summary {
+                cursor: pointer;
+                padding: 12px 16px;
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                user-select: none;
+            }
+            .snn-list-item summary:hover {
+                background: #f5f5f5;
+            }
+            .snn-list-title {
+                color: #000;
+            }
+            .snn-list-meta {
+                opacity: 0.7;
+                font-weight: normal;
+                font-size: 14px;
+                color: #000;
+            }
+            .snn-list-content {
+                padding: 0 16px 16px 16px;
+            }
+            .snn-table-wrap {
+                max-height: 380px;
+                overflow: auto;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            .snn-inline-edit {
+                display: inline-block;
+                min-width: 120px;
+                padding: 2px 4px;
+                border-radius: 3px;
+                transition: background-color .15s, box-shadow .15s;
+                outline: none;
+            }
+            .snn-inline-edit:focus {
+                background: #f5f5f5;
+                box-shadow: 0 0 0 2px #00000033;
+            }
+            .snn-inline-saving {
+                background: #f5f5f5 !important;
+                box-shadow: 0 0 0 2px #00000066 !important;
+            }
+            .snn-inline-ok {
+                background: #f5f5f5;
+                box-shadow: 0 0 0 2px #00000066;
+                animation: snn-fade-ok 1.2s ease forwards;
+            }
+            @keyframes snn-fade-ok {
+                0% { background: #f5f5f5; }
+                100% { background: transparent; box-shadow: none; }
+            }
+            .snn-inline-error {
+                background: #ffebeb;
+                box-shadow: 0 0 0 2px #ff000066;
+            }
+            .snn-delete-btn {
+                background: #000;
+                color: #fff;
+                border: 1px solid #000;
+                padding: 4px 12px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 13px;
+            }
+            .snn-delete-btn:hover {
+                background: #333;
+            }
+        </style>
+
+        <div class="wrap snn-gen-container">
+            <h1>Tickets Generator</h1>
 
             <?php if (isset($_GET['snn_msg'])): ?>
                 <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
             <?php endif; ?>
 
-            <div id="snn-generator" style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-                <div style="flex:1; min-width:320px; background:#fff; padding:16px; border:1px solid #ccd0d4; border-radius:6px;">
-                    <h2>Generate Random Tickets</h2>
+            <details class="snn-gen-accordion">
+                <summary>Generate Random Tickets</summary>
+                <div class="snn-gen-accordion-content">
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <input type="hidden" name="action" value="snn_generate_tickets">
                         <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_generate); ?>">
@@ -413,37 +697,9 @@ class SNN_Tickets_Plugin {
                         <p class="description">Generates uppercase alphanumeric codes. A new list will be created.</p>
                     </form>
                 </div>
+            </details>
 
-                <div style="flex:1; min-width:320px; background:#fff; padding:16px; border:1px solid #ccd0d4; border-radius:6px;">
-                    <h2>Import from CSV</h2>
-                    <p>Upload a CSV with columns: Name,Email (header row required).</p>
-                    <p><a class="button" href="<?php echo esc_url($template_url); ?>">Download CSV Template</a></p>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
-                        <input type="hidden" name="action" value="snn_import_csv">
-                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_import); ?>">
-                        <table class="form-table" role="presentation">
-                            <tr>
-                                <th scope="row"><label for="snn_import_list_name">List Name</label></th>
-                                <td><input type="text" id="snn_import_list_name" name="list_name" class="regular-text" placeholder="Imported <?php echo esc_attr($now_placeholder); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_csv_file">CSV File</label></th>
-                                <td><input type="file" id="snn_csv_file" name="csv_file" accept=".csv" required></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_ticket_length">Ticket length</label></th>
-                                <td><input type="number" id="snn_ticket_length" name="length" value="10" min="6" max="64"></td>
-                            </tr>
-                        </table>
-                        <p><button type="submit" class="button button-primary">Import and Generate</button></p>
-                        <p class="description">Each person will receive a unique ticket code.</p>
-                    </form>
-                </div>
-            </div>
-
-            <hr>
-
-            <h2>Lists</h2>
+            <h2>Ticket Lists</h2>
             <p class="description">Click to expand/collapse each list. Click Name or Email to edit inline. Press Enter or click outside to save. Use Esc to cancel.</p>
 
             <div id="snn-lists" data-ajax-url="<?php echo esc_attr($ajax_url); ?>" data-update-nonce="<?php echo esc_attr($update_nonce); ?>">
@@ -456,11 +712,11 @@ class SNN_Tickets_Plugin {
                             ORDER BY id ASC
                         ", $list->id));
                         ?>
-                        <details style="margin-bottom:12px; background:#fff; border:1px solid #ccd0d4; border-radius:6px;">
-                            <summary style="cursor:pointer; padding:12px 16px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-                                <span>
+                        <details class="snn-list-item">
+                            <summary>
+                                <span class="snn-list-title">
                                     <?php echo esc_html($list->name); ?>
-                                    <span style="opacity:0.7; font-weight:normal;">
+                                    <span class="snn-list-meta">
                                         &nbsp;• Created <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($list->created_at))); ?>
                                         &nbsp;• Tickets: <?php echo esc_html((int)$list->total_tickets); ?>
                                         &nbsp;• With email: <?php echo esc_html((int)$list->total_with_email); ?>
@@ -470,11 +726,11 @@ class SNN_Tickets_Plugin {
                                     <input type="hidden" name="action" value="snn_delete_list">
                                     <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_delete); ?>">
                                     <input type="hidden" name="list_id" value="<?php echo esc_attr($list->id); ?>">
-                                    <button type="submit" class="button button-small" style="background:#dc3232; color:#fff; border-color:#dc3232;" onclick="event.stopPropagation();">Delete</button>
+                                    <button type="submit" class="snn-delete-btn" onclick="event.stopPropagation();">Delete</button>
                                 </form>
                             </summary>
-                            <div style="padding:0 16px 16px 16px;">
-                                <div class="snn-table-wrap" style="max-height:380px; overflow:auto;">
+                            <div class="snn-list-content">
+                                <div class="snn-table-wrap">
                                     <table class="widefat striped">
                                         <thead>
                                             <tr>
@@ -518,47 +774,10 @@ class SNN_Tickets_Plugin {
                         </details>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p>No lists yet. Generate or import to get started.</p>
+                    <p>No lists yet. Generate or <a href="<?php echo admin_url('admin.php?page=snn-tickets-csv-import'); ?>">import from CSV</a> to get started.</p>
                 <?php endif; ?>
             </div>
         </div>
-
-        <style>
-            .snn-inline-edit {
-                display: inline-block;
-                min-width: 120px;
-                padding: 2px 4px;
-                border-radius: 3px;
-                transition: background-color .15s, box-shadow .15s;
-                outline: none;
-            }
-            .snn-inline-edit:focus {
-                background: #fffdf6;
-                box-shadow: 0 0 0 2px #f0c36d66;
-            }
-            .snn-inline-saving {
-                background: #f3f6ff !important;
-                box-shadow: 0 0 0 2px #6ea8fe66 !important;
-            }
-            .snn-inline-ok {
-                background: #effaf1;
-                box-shadow: 0 0 0 2px #46b45066;
-                animation: snn-fade-ok 1.2s ease forwards;
-            }
-            @keyframes snn-fade-ok {
-                0% { background: #effaf1; }
-                100% { background: transparent; box-shadow: none; }
-            }
-            .snn-inline-error {
-                background: #fff1f1;
-                box-shadow: 0 0 0 2px #dc323266;
-            }
-            .snn-inline-hint {
-                font-size: 11px;
-                color: #666;
-                margin-top: 6px;
-            }
-        </style>
 
         <script>
         (function(){
@@ -699,6 +918,132 @@ class SNN_Tickets_Plugin {
         <?php
     }
 
+    public function render_csv_import_page(){
+        $this->admin_cap_check();
+
+        $nonce_import = wp_create_nonce('snn_import_csv');
+        $template_url = admin_url('admin-post.php?action=snn_csv_template');
+        $now_placeholder = date_i18n('Y-m-d H:i', current_time('timestamp'));
+        ?>
+        <style>
+            .snn-csv-container {
+                max-width: 800px;
+                margin: 20px 0;
+            }
+            .snn-csv-card {
+                background: #fff;
+                border: 1px solid #000;
+                border-radius: 4px;
+                padding: 24px;
+                margin-bottom: 20px;
+            }
+            .snn-csv-card h2 {
+                margin-top: 0;
+                color: #000;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            .snn-csv-info {
+                background: #f5f5f5;
+                border-left: 4px solid #000;
+                padding: 16px;
+                margin: 16px 0;
+            }
+            .snn-csv-info h3 {
+                margin-top: 0;
+                color: #000;
+                font-size: 16px;
+            }
+            .snn-csv-info ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+            .snn-csv-info li {
+                margin: 4px 0;
+                color: #000;
+            }
+        </style>
+
+        <div class="wrap">
+            <h1>CSV Import</h1>
+
+            <?php if (isset($_GET['snn_msg'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
+            <?php endif; ?>
+
+            <div class="snn-csv-container">
+                <div class="snn-csv-card">
+                    <h2>Import Contacts from CSV</h2>
+                    
+                    <div class="snn-csv-info">
+                        <h3>CSV Format Requirements</h3>
+                        <ul>
+                            <li>CSV file must include a header row with columns: <strong>Name</strong> and <strong>Email</strong></li>
+                            <li>Column names are case-insensitive</li>
+                            <li>Each row will generate a unique ticket code</li>
+                            <li>Download the template below to see the correct format</li>
+                        </ul>
+                    </div>
+
+                    <p>
+                        <a class="button button-primary" href="<?php echo esc_url($template_url); ?>">
+                            Download CSV Template
+                        </a>
+                    </p>
+
+                    <hr style="margin: 24px 0; border: 0; border-top: 1px solid #ddd;">
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="snn_import_csv">
+                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_import); ?>">
+                        
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="snn_import_list_name">List Name</label></th>
+                                <td>
+                                    <input type="text" id="snn_import_list_name" name="list_name" class="regular-text" placeholder="Imported <?php echo esc_attr($now_placeholder); ?>">
+                                    <p class="description">Name for this import batch. If empty, will use "Imported [date time]"</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="snn_csv_file">CSV File</label></th>
+                                <td>
+                                    <input type="file" id="snn_csv_file" name="csv_file" accept=".csv" required>
+                                    <p class="description">Select your CSV file containing Name and Email columns</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="snn_ticket_length">Ticket Code Length</label></th>
+                                <td>
+                                    <input type="number" id="snn_ticket_length" name="length" value="10" min="6" max="64">
+                                    <p class="description">Number of characters for generated ticket codes (6-64)</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            <button type="submit" class="button button-primary">Import and Generate Tickets</button>
+                        </p>
+                        
+                        <p class="description">Each person in the CSV will receive a unique ticket code. The list will be created and you can view it in the Tickets Generator page.</p>
+                    </form>
+                </div>
+
+                <div class="snn-csv-card">
+                    <h2>After Import</h2>
+                    <p>Once imported:</p>
+                    <ul>
+                        <li>A new ticket list will be created with your specified name</li>
+                        <li>Each contact will have a unique ticket code generated</li>
+                        <li>View and manage tickets in the <a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Tickets Generator</a> page</li>
+                        <li>Send email invitations from the <a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Tickets Mailer</a> page</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
     public function handle_generate_tickets(){
         $this->admin_cap_check();
         check_admin_referer('snn_generate_tickets');
@@ -758,7 +1103,7 @@ class SNN_Tickets_Plugin {
         }
         fclose($handle);
 
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Imported $count contacts and generated tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-generator')));
+        wp_redirect(add_query_arg('snn_msg', rawurlencode("Imported $count contacts and generated tickets in list: $list_name"), admin_url('admin.php?page=snn-tickets-csv-import')));
         exit;
     }
 
@@ -865,15 +1210,123 @@ class SNN_Tickets_Plugin {
 HTML;
 
         ?>
-        <div class="wrap">
-            <h1>Tickets - Mailer</h1>
+        <style>
+            .snn-mailer-container {
+                max-width: 1400px;
+            }
+            .snn-mailer-grid {
+                display: flex;
+                gap: 24px;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+            }
+            .snn-mailer-card {
+                background: #fff;
+                border: 1px solid #000;
+                border-radius: 4px;
+                padding: 16px;
+            }
+            .snn-mailer-card h2 {
+                margin-top: 0;
+                color: #000;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            .snn-settings-card {
+                flex: 1;
+                min-width: 300px;
+            }
+            .snn-send-card {
+                flex: 2;
+                min-width: 360px;
+            }
+            .snn-template-controls {
+                background: #f5f5f5;
+                border: 1px solid #000;
+                padding: 8px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            .snn-template-header {
+                margin-bottom: 8px;
+            }
+            .snn-template-header strong {
+                color: #000;
+            }
+            .snn-template-status {
+                display: none;
+                margin-left: 10px;
+                padding: 3px 8px;
+                border-radius: 3px;
+            }
+            .snn-template-buttons {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .snn-template-save-section {
+                flex: 1 0 100%;
+                margin-top: 8px;
+                padding-top: 8px;
+                border-top: 1px solid #000;
+            }
+            .snn-html-buttons {
+                margin-bottom: 8px;
+            }
+            .snn-progress-wrap {
+                display: none;
+                margin-top: 16px;
+                background: #f5f5f5;
+                border: 1px solid #000;
+                padding: 12px;
+                border-radius: 4px;
+            }
+            .snn-progress-text {
+                margin-bottom: 8px;
+                color: #000;
+            }
+            .snn-progress-bar-container {
+                background: #fff;
+                border: 1px solid #000;
+                height: 24px;
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 8px;
+            }
+            .snn-progress-bar {
+                background: #000;
+                height: 100%;
+                width: 0%;
+                transition: width 0.3s;
+            }
+            .snn-progress-details {
+                margin-bottom: 8px;
+                font-size: 12px;
+                color: #000;
+            }
+            .snn-console-log-container {
+                background: #fff;
+                border: 1px solid #000;
+                border-radius: 4px;
+                padding: 8px;
+                max-height: 200px;
+                overflow-y: auto;
+                font-family: monospace;
+                font-size: 11px;
+            }
+        </style>
+
+        <div class="wrap snn-mailer-container">
+            <h1>Tickets Mailer</h1>
 
             <?php if (isset($_GET['snn_msg'])): ?>
                 <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
             <?php endif; ?>
 
-            <div style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
-                <div style="flex:1; min-width:300px; background:#fff; border:1px solid #ccd0d4; border-radius:6px; padding:16px;">
+            <div class="snn-mailer-grid">
+                <div class="snn-mailer-card snn-settings-card">
                     <h2>Batch Settings</h2>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <input type="hidden" name="action" value="snn_save_mailer_settings">
@@ -888,12 +1341,12 @@ HTML;
                                 <td><input type="number" id="snn_batch_delay" name="batch_delay" value="<?php echo esc_attr($batch_delay); ?>" min="0" max="60"></td>
                             </tr>
                         </table>
-                        <p><button type="submit" class="button">Save Settings</button></p>
+                        <p><button type="submit" class="button button-primary">Save Settings</button></p>
                         <p class="description">Emails are sent in batches to reduce server load. For large lists consider lowering per-batch size and increasing delay.</p>
                     </form>
                 </div>
 
-                <div style="flex:2; min-width:360px; background:#fff; border:1px solid #ccd0d4; border-radius:6px; padding:16px;">
+                <div class="snn-mailer-card snn-send-card">
                     <h2>Send Invitations</h2>
                     <form id="snn_mailer_form">
                         <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_send); ?>">
@@ -933,29 +1386,27 @@ HTML;
                             <tr>
                                 <th scope="row">Email Content</th>
                                 <td>
-                                    <div style="margin-bottom:10px;">
-                                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:8px; border-radius:4px;">
-                                            <div style="margin-bottom:8px;">
-                                                <strong>Templates:</strong>
-                                                <span id="snn_template_status" style="display:none; margin-left:10px; padding:3px 8px; border-radius:3px;"></span>
-                                            </div>
-                                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                                <select id="snn_template_list" style="min-width:200px;">
-                                                    <option value="">— Select Template —</option>
-                                                    <?php foreach ($templates as $name => $template): ?>
-                                                        <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                                <button type="button" id="snn_delete_template" class="button" style="display:none;">Delete</button>
-                                                <div style="flex:1 0 100%; margin-top:8px; padding-top:8px; border-top:1px solid #ddd;">
-                                                    <input type="text" id="snn_template_name" placeholder="Template name" style="min-width:200px;">
-                                                    <button type="button" id="snn_save_template" class="button">Save as Template</button>
-                                                    <button type="button" id="snn_new_template" class="button" style="display:none;">New Template</button>
-                                                </div>
+                                    <div class="snn-template-controls">
+                                        <div class="snn-template-header">
+                                            <strong>Templates:</strong>
+                                            <span id="snn_template_status" class="snn-template-status"></span>
+                                        </div>
+                                        <div class="snn-template-buttons">
+                                            <select id="snn_template_list" style="min-width:200px;">
+                                                <option value="">— Select Template —</option>
+                                                <?php foreach ($templates as $name => $template): ?>
+                                                    <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <button type="button" id="snn_delete_template" class="button" style="display:none;">Delete</button>
+                                            <div class="snn-template-save-section">
+                                                <input type="text" id="snn_template_name" placeholder="Template name" style="min-width:200px;">
+                                                <button type="button" id="snn_save_template" class="button">Save as Template</button>
+                                                <button type="button" id="snn_new_template" class="button" style="display:none;">New Template</button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="margin-bottom:8px;">
+                                    <div class="snn-html-buttons">
                                         <button type="button" class="button snn-html-btn" data-tag="<p>|</p>">P</button>
                                         <button type="button" class="button snn-html-btn" data-tag="<b>|</b>">B</button>
                                         <button type="button" class="button snn-html-btn" data-tag="<i>|</i>">I</button>
@@ -977,17 +1428,17 @@ HTML;
                             <button type="submit" class="button button-primary" id="snn_send_btn">Send Emails</button>
                         </p>
 
-                        <div id="snn_progress_wrap" style="display:none; margin-top:16px; background:#f9f9f9; border:1px solid #ddd; padding:12px; border-radius:4px;">
-                            <div style="margin-bottom:8px;">
+                        <div id="snn_progress_wrap" class="snn-progress-wrap">
+                            <div class="snn-progress-text">
                                 <strong id="snn_progress_text">Preparing...</strong>
                             </div>
-                            <div style="background:#fff; border:1px solid #ddd; height:24px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                                <div id="snn_progress_bar" style="background:#2271b1; height:100%; width:0%; transition:width 0.3s;"></div>
+                            <div class="snn-progress-bar-container">
+                                <div id="snn_progress_bar" class="snn-progress-bar"></div>
                             </div>
-                            <div style="margin-bottom:8px; font-size:12px; color:#666;">
+                            <div class="snn-progress-details">
                                 <span id="snn_progress_details">0 / 0 sent</span>
                             </div>
-                            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:8px; max-height:200px; overflow-y:auto; font-family:monospace; font-size:11px;">
+                            <div class="snn-console-log-container">
                                 <div id="snn_console_log"></div>
                             </div>
                         </div>
