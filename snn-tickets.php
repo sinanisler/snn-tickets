@@ -367,7 +367,7 @@ class SNN_Tickets_Plugin {
         </style>
 
         <div class="wrap snn-dashboard-container">
-            <h1>🎫 SNN Tickets - Dashboard</h1>
+            <h1>🎫 Tickets - Dashboard</h1>
 
             <div class="snn-stats-grid">
                 <div class="snn-stat-card">
