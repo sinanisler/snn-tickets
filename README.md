@@ -5,13 +5,13 @@ WordPress plugin for event ticket generation, management, and validation with QR
 
 <img width="1431" height="932" alt="image" src="https://github.com/user-attachments/assets/6407ff08-fec2-47f0-b5b8-df4f05e2e57f" />
 
-<img width="709" height="475" alt="image" src="https://github.com/user-attachments/assets/1f2715d1-aba9-4864-85ca-f78b757a28ab" />
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/1f2715d1-aba9-4864-85ca-f78b757a28ab" />
 
-<img width="1217" height="538" alt="image" src="https://github.com/user-attachments/assets/f40170e2-ee8e-4211-9e85-11dfe62fca4b" />
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/f40170e2-ee8e-4211-9e85-11dfe62fca4b" />
 
-<img width="1426" height="1032" alt="image" src="https://github.com/user-attachments/assets/d45e3de7-c61b-410a-8294-4308fb99c727" />
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/d45e3de7-c61b-410a-8294-4308fb99c727" />
 
-<img width="864" height="887" alt="image" src="https://github.com/user-attachments/assets/d71b0868-5648-4b60-a255-bf60e139e8e4" />
+<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/d71b0868-5648-4b60-a255-bf60e139e8e4" />
 
 
 
