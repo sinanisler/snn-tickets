@@ -2065,7 +2065,7 @@ HTML;
 
             if (!useBarcodeDetector){
                 const s = document.createElement('script');
-                s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+                s.src = '<?php echo plugin_dir_url(__FILE__); ?>src/jsQR.js';
                 s.async = true;
                 document.head.appendChild(s);
             }
