@@ -556,7 +556,6 @@ class SNN_Tickets_Plugin {
             }
             .snn-gen-accordion {
                 background: #fff;
-                border: 1px solid #000;
                 border-radius: 4px;
                 margin-bottom: 20px;
             }
@@ -566,7 +565,6 @@ class SNN_Tickets_Plugin {
                 font-weight: 600;
                 color: #000;
                 background: #f5f5f5;
-                border-bottom: 1px solid #000;
                 user-select: none;
             }
             .snn-gen-accordion summary:hover {
@@ -582,7 +580,6 @@ class SNN_Tickets_Plugin {
             .snn-list-item {
                 margin-bottom: 12px;
                 background: #fff;
-                border: 1px solid #000;
                 border-radius: 4px;
             }
             .snn-list-item summary {
@@ -647,7 +644,6 @@ class SNN_Tickets_Plugin {
             .snn-delete-btn {
                 background: #000;
                 color: #fff;
-                border: 1px solid #000;
                 padding: 4px 12px;
                 border-radius: 3px;
                 cursor: pointer;
@@ -924,7 +920,6 @@ class SNN_Tickets_Plugin {
             }
             .snn-csv-card {
                 background: #fff;
-                border: 1px solid #000;
                 border-radius: 4px;
                 padding: 24px;
                 margin-bottom: 20px;
@@ -932,12 +927,10 @@ class SNN_Tickets_Plugin {
             .snn-csv-card h2 {
                 margin-top: 0;
                 color: #000;
-                border-bottom: 2px solid #000;
                 padding-bottom: 10px;
             }
             .snn-csv-info {
                 background: #f5f5f5;
-                border-left: 4px solid #000;
                 padding: 16px;
                 margin: 16px 0;
             }
@@ -1215,14 +1208,12 @@ HTML;
             }
             .snn-mailer-card {
                 background: #fff;
-                border: 1px solid #000;
                 border-radius: 4px;
                 padding: 16px;
             }
             .snn-mailer-card h2 {
                 margin-top: 0;
                 color: #000;
-                border-bottom: 2px solid #000;
                 padding-bottom: 10px;
             }
             .snn-settings-card {
@@ -1235,7 +1226,6 @@ HTML;
             }
             .snn-template-controls {
                 background: #f5f5f5;
-                border: 1px solid #000;
                 padding: 8px;
                 border-radius: 4px;
                 margin-bottom: 10px;
@@ -1262,7 +1252,6 @@ HTML;
                 flex: 1 0 100%;
                 margin-top: 8px;
                 padding-top: 8px;
-                border-top: 1px solid #000;
             }
             .snn-html-buttons {
                 margin-bottom: 8px;
@@ -1271,7 +1260,6 @@ HTML;
                 display: none;
                 margin-top: 16px;
                 background: #f5f5f5;
-                border: 1px solid #000;
                 padding: 12px;
                 border-radius: 4px;
             }
@@ -1281,7 +1269,6 @@ HTML;
             }
             .snn-progress-bar-container {
                 background: #fff;
-                border: 1px solid #000;
                 height: 24px;
                 border-radius: 4px;
                 overflow: hidden;
@@ -1300,7 +1287,6 @@ HTML;
             }
             .snn-console-log-container {
                 background: #fff;
-                border: 1px solid #000;
                 border-radius: 4px;
                 padding: 8px;
                 max-height: 200px;
