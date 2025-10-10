@@ -596,7 +596,7 @@ class SNN_Tickets_Plugin {
                             </tr>
                             <tr>
                                 <th scope="row"><label for="snn_len">Ticket length</label></th>
-                                <td><input type="number" id="snn_len" name="length" value="10" min="6" max="64"></td>
+                                <td><input type="number" id="snn_len" name="length" value="8" min="6" max="64"></td>
                             </tr>
                         </table>
                         <p><button type="submit" class="button button-primary">Generate</button></p>
@@ -1065,7 +1065,7 @@ class SNN_Tickets_Plugin {
         check_admin_referer('snn_generate_tickets');
 
         $count  = isset($_POST['count']) ? max(1, min(5000, intval($_POST['count']))) : 10;
-        $length = isset($_POST['length']) ? max(6, min(64, intval($_POST['length']))) : 10;
+        $length = isset($_POST['length']) ? max(6, min(64, intval($_POST['length']))) : 8;
         $default_name = 'Generated ' . date_i18n('Y-m-d H:i', current_time('timestamp'));
         $list_name = isset($_POST['list_name']) && trim($_POST['list_name']) !== '' ? sanitize_text_field($_POST['list_name']) : $default_name;
 
