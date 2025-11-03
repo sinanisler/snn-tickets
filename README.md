@@ -60,16 +60,6 @@ WordPress plugin for event ticket generation, management, and validation with QR
 - **Inline Management**: Edit ticket details directly from the dashboard
 - **Search & Filter**: Find tickets quickly with built-in search functionality
 
-### **Technical Features**
-- **Database Optimization**: Efficient MySQL tables with proper indexing
-- **AJAX Integration**: Smooth user experience with asynchronous operations
-- **Batch Processing**: Configurable batch sizes and delays for email sending
-- **Security**: Proper capability checks and nonce verification
-- **Responsive Design**: Modern UI that works on all devices
-- **WordPress Integration**: Native WordPress admin interface and hooks
-
-## 📊 Admin Interface
-
 
 1. **Dashboard**: Overview statistics, recent activity, and ticket management
 2. **Tickets Generator**: Create tickets manually or import from CSV
