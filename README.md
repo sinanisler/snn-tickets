@@ -1,6 +1,9 @@
 
 # SNN Tickets
 
+[![Sponsor me](https://img.shields.io/badge/Consider_Supporting_My_Projects_❤-GitHub-d46)](https://github.com/sponsors/sinanisler)
+
+
 WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
 
 <img width="1431" height="932" alt="image" src="https://github.com/user-attachments/assets/6407ff08-fec2-47f0-b5b8-df4f05e2e57f" />
