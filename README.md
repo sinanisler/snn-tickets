@@ -1,6 +1,9 @@
 
 # SNN Tickets
 
+WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
+<br><br>
+
 **If you saved time and money with this project. Support it 😉** 
 
 
@@ -11,7 +14,6 @@
 
 
 
-WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
 
 <img width="1431" height="932" alt="image" src="https://github.com/user-attachments/assets/6407ff08-fec2-47f0-b5b8-df4f05e2e57f" />
 
