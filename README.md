@@ -1,9 +1,9 @@
 
 # SNN Tickets
 
-**If you saved time and money with this project. Support it 😉**
+**If you saved time and money with this project. Support it 😉** 
 
-<i>For now I dont need to develop this further but if anyone plans to make a big project on top of this maybe even integrate to woocommerce and need some feautres contact me...</i>
+
 
 <a href="https://github.com/sponsors/sinanisler">
 <img src="https://img.shields.io/badge/Consider_Supporting_My_Projects_❤-GitHub-d46" width="300" height="auto" />
