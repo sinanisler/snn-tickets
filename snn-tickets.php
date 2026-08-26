@@ -1,14 +1,27 @@
 <?php
 /*
     Plugin Name: SNN Tickets
-    Description: Generate tickets, import via CSV, email invites with QR codes (with batching), and scan/validate tickets from a public page via shortcode.
-    Version: 0.17
+    Description: Event tickets with server-side QR codes: a visual registration form builder, automatic or rule-based approval, confirmation emails, and a queued mailer that sends without keeping a browser tab open.
+    Version: 0.20
     Requires PHP: 8.1
     Author: sinanisler
-    Author URI: https://sinanisler.com/                         
+    Author URI: https://sinanisler.com/
 */
 
 if (!defined('ABSPATH')) exit;
+
+define('SNN_TICKETS_FILE', __FILE__);
+define('SNN_TICKETS_DIR', plugin_dir_path(__FILE__));
+define('SNN_TICKETS_URL', plugin_dir_url(__FILE__));
+
+require_once SNN_TICKETS_DIR . 'includes/class-snn-db.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-qr.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-tickets.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-mailer.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-forms.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-forms-admin.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-submissions.php';
+require_once SNN_TICKETS_DIR . 'includes/class-snn-admin.php';
 
 class SNN_Tickets_Plugin {
 
@@ -17,12 +30,6 @@ class SNN_Tickets_Plugin {
     private $table_lists;
     private $table_tickets;
 
-    // Options
-    private $opt_batch_size_key = 'snn_tickets_mailer_batch_size';
-    private $opt_batch_delay_key = 'snn_tickets_mailer_batch_delay';
-    private $opt_email_templates_key = 'snn_tickets_email_templates';
-    private $default_batch_size = 10;
-    private $default_batch_delay = 2;
 
     public static function instance(){
         if (self::$instance === null) {
@@ -32,13 +39,22 @@ class SNN_Tickets_Plugin {
     }
 
     private function __construct(){
-        global $wpdb;
-        $this->table_lists   = $wpdb->prefix . 'snn_ticket_lists';
-        $this->table_tickets = $wpdb->prefix . 'snn_tickets';
+        $this->table_lists   = SNN_T_DB::lists();
+        $this->table_tickets = SNN_T_DB::tickets();
 
-        register_activation_hook(__FILE__, [$this, 'activate']);
+        register_activation_hook(SNN_TICKETS_FILE,   [$this, 'activate']);
+        register_deactivation_hook(SNN_TICKETS_FILE, [$this, 'deactivate']);
 
+        add_action('admin_init', ['SNN_T_DB', 'maybe_upgrade']);
         add_action('admin_menu', [$this, 'admin_menu']);
+
+        // Feature modules
+        SNN_T_QR::init();
+        SNN_T_Mailer::init();
+        SNN_T_Forms::init();
+        SNN_T_Forms_Admin::init();
+        SNN_T_Submissions::init();
+        SNN_T_Admin::init();
 
         // Generator (create, import, delete)
         add_action('admin_post_snn_generate_tickets', [$this, 'handle_generate_tickets']);
@@ -46,127 +62,78 @@ class SNN_Tickets_Plugin {
         add_action('admin_post_snn_csv_template',     [$this, 'download_csv_template']);
         add_action('admin_post_snn_delete_list',      [$this, 'handle_delete_list']);
 
-        // Mailer
-        add_action('admin_post_snn_send_emails',           [$this, 'handle_send_emails']);
-        add_action('admin_post_snn_save_mailer_settings',  [$this, 'handle_save_mailer_settings']);
-        add_action('wp_ajax_snn_get_list_contacts',        [$this, 'ajax_get_list_contacts']);
-        add_action('wp_ajax_snn_send_single_email',        [$this, 'ajax_send_single_email']);
+        // Mailer: queue a whole list, or one ticket at a time
+        add_action('admin_post_snn_queue_list_emails', [$this, 'handle_queue_list_emails']);
+        add_action('admin_post_snn_resend_ticket',     [$this, 'handle_resend_ticket']);
+        add_action('admin_post_snn_ticket_qr',         [$this, 'handle_ticket_qr']);
 
         // AJAX validate (public)
-        add_action('wp_ajax_snn_validate_ticket',       [$this, 'ajax_validate_ticket']);
-        add_action('wp_ajax_nopriv_snn_validate_ticket',[$this, 'ajax_validate_ticket']);
+        add_action('wp_ajax_snn_validate_ticket',        [$this, 'ajax_validate_ticket']);
+        add_action('wp_ajax_nopriv_snn_validate_ticket', [$this, 'ajax_validate_ticket']);
 
         // AJAX inline update (admin)
-        add_action('wp_ajax_snn_update_ticket_field',   [$this, 'ajax_update_ticket_field']);
-        
-        // AJAX upload QR image
-        add_action('wp_ajax_snn_upload_qr_image',       [$this, 'ajax_upload_qr_image']);
+        add_action('wp_ajax_snn_update_ticket_field', [$this, 'ajax_update_ticket_field']);
 
-        // AJAX template management
-        add_action('wp_ajax_snn_save_email_template',   [$this, 'ajax_save_email_template']);
-        add_action('wp_ajax_snn_load_email_template',   [$this, 'ajax_load_email_template']);
-        add_action('wp_ajax_snn_delete_email_template', [$this, 'ajax_delete_email_template']);
-
-        // Shortcode
+        // Shortcodes
         add_shortcode('tickets_scan_page', [$this, 'shortcode_scan_page']);
     }
 
     public function activate(){
-        global $wpdb;
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        $charset_collate = $wpdb->get_charset_collate();
+        SNN_T_DB::install();
+        SNN_T_QR::secret();
 
-        $sql_lists = "CREATE TABLE {$this->table_lists} (
-            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-            name VARCHAR(255) NOT NULL,
-            created_at DATETIME NOT NULL,
-            PRIMARY KEY (id)
-        ) $charset_collate;";
-
-        $sql_tickets = "CREATE TABLE {$this->table_tickets} (
-            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-            list_id BIGINT UNSIGNED NOT NULL,
-            ticket_code VARCHAR(64) NOT NULL,
-            name VARCHAR(255) DEFAULT '' NOT NULL,
-            email VARCHAR(255) DEFAULT '' NOT NULL,
-            validate_count INT UNSIGNED NOT NULL DEFAULT 0,
-            last_validated DATETIME NULL,
-            created_at DATETIME NOT NULL,
-            UNIQUE KEY ticket_code (ticket_code),
-            KEY list_id (list_id),
-            PRIMARY KEY (id)
-        ) $charset_collate;";
-
-        dbDelta($sql_lists);
-        dbDelta($sql_tickets);
-
-        // Seed defaults for mailer batching
-        if (get_option($this->opt_batch_size_key, null) === null) {
-            add_option($this->opt_batch_size_key, $this->default_batch_size);
+        if (get_option(SNN_T_Mailer::BATCH_SIZE_OPTION, null) === null) {
+            add_option(SNN_T_Mailer::BATCH_SIZE_OPTION, 10);
         }
-        if (get_option($this->opt_batch_delay_key, null) === null) {
-            add_option($this->opt_batch_delay_key, $this->default_batch_delay);
+        if (get_option(SNN_T_Mailer::TEMPLATES_OPTION, null) === null) {
+            add_option(SNN_T_Mailer::TEMPLATES_OPTION, []);
         }
-        if (get_option($this->opt_email_templates_key, null) === null) {
-            add_option($this->opt_email_templates_key, []);
+        if (get_option(SNN_T_Mailer::FROM_NAME_OPTION, null) === null) {
+            add_option(SNN_T_Mailer::FROM_NAME_OPTION, get_bloginfo('name'));
         }
+
+        if (!wp_next_scheduled(SNN_T_Mailer::CRON_HOOK)) {
+            wp_schedule_event(time() + 60, 'snn_minute', SNN_T_Mailer::CRON_HOOK);
+        }
+    }
+
+    public function deactivate(){
+        SNN_T_Mailer::deactivate();
     }
 
     public function admin_menu(){
         add_menu_page(
-            'Tickets',
-            'Tickets',
-            'manage_options',
-            'snn-tickets',
-            [$this, 'render_dashboard_page'],
-            'dashicons-tickets',
-            26
+            'Tickets', 'Tickets', 'manage_options', 'snn-tickets',
+            [$this, 'render_dashboard_page'], 'dashicons-tickets', 26
         );
 
-        add_submenu_page(
-            'snn-tickets',
-            'Dashboard',
-            'Dashboard',
-            'manage_options',
-            'snn-tickets',
-            [$this, 'render_dashboard_page']
-        );
+        $pages = [
+            ['Dashboard',        'snn-tickets',              [$this, 'render_dashboard_page']],
+            ['Forms',            'snn-tickets-forms',        ['SNN_T_Forms_Admin', 'render_page']],
+            ['Submissions',      'snn-tickets-submissions',  ['SNN_T_Submissions', 'render_page']],
+            ['Tickets Generator','snn-tickets-generator',    [$this, 'render_generator_page']],
+            ['Ticket Lists',     'snn-tickets-lists',        [$this, 'render_lists_page']],
+            ['Tickets Mailer',   'snn-tickets-mailer',       [$this, 'render_mailer_page']],
+            ['Mail Queue',       'snn-tickets-queue',        ['SNN_T_Admin', 'render_queue_page']],
+            ['Email Templates',  'snn-tickets-templates',    ['SNN_T_Admin', 'render_templates_page']],
+            ['CSV Import',       'snn-tickets-csv-import',   [$this, 'render_csv_import_page']],
+            ['Settings',         'snn-tickets-settings',     ['SNN_T_Admin', 'render_settings_page']],
+        ];
 
-        add_submenu_page(
-            'snn-tickets',
-            'Tickets Generator',
-            'Tickets Generator',
-            'manage_options',
-            'snn-tickets-generator',
-            [$this, 'render_generator_page']
-        );
+        foreach ($pages as $page) {
+            list($title, $slug, $callback) = $page;
 
-        add_submenu_page(
-            'snn-tickets',
-            'Ticket Lists',
-            'Ticket Lists',
-            'manage_options',
-            'snn-tickets-lists',
-            [$this, 'render_lists_page']
-        );
+            $label = $title;
+            if ($slug === 'snn-tickets-submissions') {
+                $pending = SNN_T_Submissions::counts()['pending'];
+                if ($pending) {
+                    $label .= ' <span class="awaiting-mod"><span class="pending-count">'
+                            . (int)$pending . '</span></span>';
+                }
+            }
 
-        add_submenu_page(
-            'snn-tickets',
-            'Tickets Mailer',
-            'Tickets Mailer',
-            'manage_options',
-            'snn-tickets-mailer',
-            [$this, 'render_mailer_page']
-        );
-
-        add_submenu_page(
-            'snn-tickets',
-            'CSV Import',
-            'CSV Import',
-            'manage_options',
-            'snn-tickets-csv-import',
-            [$this, 'render_csv_import_page']
-        );
+            add_submenu_page('snn-tickets', $title, $label, 'manage_options', $slug, $callback);
+        }
     }
 
     private function admin_cap_check(){
@@ -185,9 +152,11 @@ class SNN_Tickets_Plugin {
         $total_validated = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_tickets} WHERE validate_count > 0");
         $total_with_email = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_tickets} WHERE email <> ''");
         
-        // Get email templates count
-        $email_templates = get_option($this->opt_email_templates_key, []);
-        $total_templates = is_array($email_templates) ? count($email_templates) : 0;
+        $total_templates = count(SNN_T_Mailer::get_templates());
+
+        $submissions = SNN_T_Submissions::counts();
+        $queue       = SNN_T_Mailer::queue_counts();
+        $total_forms = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::forms());
 
         // Recent activity
         $recent_tickets = $wpdb->get_results("
@@ -390,6 +359,24 @@ class SNN_Tickets_Plugin {
                     <div class="snn-stat-label">Email Templates</div>
                     <div class="snn-stat-value"><?php echo number_format($total_templates); ?></div>
                 </div>
+                <div class="snn-stat-card">
+                    <div class="snn-stat-label">Forms</div>
+                    <div class="snn-stat-value"><?php echo number_format($total_forms); ?></div>
+                </div>
+                <a class="snn-stat-card" style="text-decoration:none;color:#fff;<?php echo $submissions['pending'] ? 'background:#8a6100;' : ''; ?>"
+                   href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-submissions&status=pending')); ?>">
+                    <div class="snn-stat-label">Awaiting Review</div>
+                    <div class="snn-stat-value"><?php echo number_format($submissions['pending']); ?></div>
+                </a>
+                <a class="snn-stat-card" style="text-decoration:none;color:#fff;<?php echo $queue['failed'] ? 'background:#8f1d16;' : ''; ?>"
+                   href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-queue')); ?>">
+                    <div class="snn-stat-label">Mail Queue</div>
+                    <div class="snn-stat-value"><?php echo number_format($queue['pending']); ?></div>
+                    <div class="snn-stat-label" style="margin:6px 0 0;font-size:12px;">
+                        <?php echo number_format($queue['sent']); ?> sent<?php
+                            echo $queue['failed'] ? ', ' . number_format($queue['failed']) . ' failed' : ''; ?>
+                    </div>
+                </a>
             </div>
 
             <div class="snn-main-grid">
@@ -397,26 +384,38 @@ class SNN_Tickets_Plugin {
                     <h2>📚 How It Works</h2>
                     
                     <div class="snn-section">
-                        <h3>1. Generate or Import Tickets</h3>
-                        <p>Create random tickets or import from CSV files. Each ticket gets a unique QR code for validation.</p>
+                        <h3>1. Collect people</h3>
+                        <p>Build a registration form and drop it on any page with a shortcode, or generate
+                        tickets directly and import contacts from CSV.</p>
                     </div>
 
                     <div class="snn-section">
-                        <h3>2. Send Email Invitations</h3>
-                        <p>Send personalized emails with QR codes to ticket holders. Supports batch sending with customizable templates.</p>
+                        <h3>2. Decide who gets in</h3>
+                        <p>Each form approves automatically, holds everything for manual review, or applies
+                        rules to the answers &mdash; auto-approving the ones that match and queueing the rest.</p>
                     </div>
 
                     <div class="snn-section">
-                        <h3>3. Scan & Validate</h3>
-                        <p>Use the public scanning page to validate tickets in real-time using QR codes or manual entry.</p>
+                        <h3>3. Tickets go out on their own</h3>
+                        <p>Approval generates the QR code on the server, attaches it to the email and hands it
+                        to the queue. Sending continues in the background whether or not you stay on the page.</p>
+                    </div>
+
+                    <div class="snn-section">
+                        <h3>4. Scan &amp; validate</h3>
+                        <p>QR codes carry a signed URL, so a phone camera opens your scan page directly.
+                        Repeat scans are flagged rather than silently accepted.</p>
                     </div>
 
                     <div class="snn-info-box">
                         <strong>Quick Actions:</strong>
                         <ul>
-                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Create Tickets</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-forms&action=new'); ?>">Build a registration form</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-submissions'); ?>">Review submissions</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-generator'); ?>">Create tickets</a></li>
                             <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-csv-import'); ?>">Import from CSV</a></li>
-                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Send Emails</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-mailer'); ?>">Email a whole list</a></li>
+                            <li><a href="<?php echo admin_url('admin.php?page=snn-tickets-settings'); ?>">Settings &amp; system check</a></li>
                         </ul>
                     </div>
                 </div>
@@ -490,51 +489,20 @@ class SNN_Tickets_Plugin {
         <?php
     }
 
-    private function esc_textarea_keep_basic($html){
-        return wp_kses_post($html);
-    }
-
     private function generate_ticket_code($length = 8){
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $max = strlen($chars) - 1;
-        $code = '';
-        for ($i=0; $i < $length; $i++){
-            $code .= $chars[random_int(0, $max)];
-        }
-        return $code;
+        return SNN_T_Tickets::generate_code($length);
     }
 
     private function unique_ticket_code($length = 8){
-        global $wpdb;
-        do {
-            $code = $this->generate_ticket_code($length);
-            $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->table_tickets} WHERE ticket_code = %s", $code));
-        } while ($exists);
-        return $code;
+        return SNN_T_Tickets::unique_code($length);
     }
 
     private function create_list($name){
-        global $wpdb;
-        $wpdb->insert($this->table_lists, [
-            'name'       => $name,
-            'created_at' => current_time('mysql'),
-        ], ['%s', '%s']);
-        return (int)$wpdb->insert_id;
+        return SNN_T_Tickets::create_list($name);
     }
 
     private function insert_ticket($list_id, $name, $email, $code = null){
-        global $wpdb;
-        if (!$code) $code = $this->unique_ticket_code(8);
-        $wpdb->insert($this->table_tickets, [
-            'list_id'        => $list_id,
-            'ticket_code'    => $code,
-            'name'           => $name ?: '',
-            'email'          => $email ?: '',
-            'validate_count' => 0,
-            'last_validated' => null,
-            'created_at'     => current_time('mysql'),
-        ], ['%d','%s','%s','%s','%d','%s','%s']);
-        return (int)$wpdb->insert_id;
+        return SNN_T_Tickets::insert($list_id, $name, $email, $code);
     }
 
     public function render_generator_page(){
@@ -759,6 +727,8 @@ class SNN_Tickets_Plugin {
                                                 <th>Ticket Code</th>
                                                 <th>Validated</th>
                                                 <th>Last Validated</th>
+                                                <th>QR</th>
+                                                <th>Ticket email</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -782,9 +752,26 @@ class SNN_Tickets_Plugin {
                                                     <td><code><?php echo esc_html($t->ticket_code); ?></code></td>
                                                     <td><?php echo esc_html((int)$t->validate_count); ?></td>
                                                     <td><?php echo $t->last_validated ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($t->last_validated))) : '—'; ?></td>
+                                                    <td>
+                                                        <a class="button button-small" target="_blank" rel="noopener"
+                                                           href="<?php echo esc_url(wp_nonce_url(add_query_arg([
+                                                               'action' => 'snn_ticket_qr',
+                                                               'ticket' => (int)$t->id,
+                                                           ], admin_url('admin-post.php')), 'snn_ticket_qr')); ?>">View</a>
+                                                    </td>
+                                                    <td>
+                                                        <?php if ($t->email): ?>
+                                                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin:0;">
+                                                                <input type="hidden" name="action" value="snn_resend_ticket">
+                                                                <input type="hidden" name="ticket" value="<?php echo (int)$t->id; ?>">
+                                                                <?php wp_nonce_field('snn_resend_ticket'); ?>
+                                                                <button class="button button-small">Send</button>
+                                                            </form>
+                                                        <?php else: ?>—<?php endif; ?>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; else: ?>
-                                                <tr><td colspan="6">No tickets in this list yet.</td></tr>
+                                                <tr><td colspan="8">No tickets in this list yet.</td></tr>
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
@@ -1140,28 +1127,22 @@ class SNN_Tickets_Plugin {
             wp_die('List not found');
         }
 
-        // Get all ticket codes to delete their QR images
-        $tickets = $wpdb->get_results($wpdb->prepare("
-            SELECT ticket_code FROM {$this->table_tickets} WHERE list_id = %d
-        ", $list_id));
+        // Remove the cached QR image for every ticket in the list.
+        $tickets = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, ticket_code FROM {$this->table_tickets} WHERE list_id = %d", $list_id
+        ));
 
-        // Delete QR code files
-        $upload_dir = wp_upload_dir();
-        $qr_dir = $upload_dir['basedir'] . '/snn-tickets-qr';
-        
         foreach ($tickets as $ticket) {
-            $filename = 'qr-' . sanitize_file_name($ticket->ticket_code) . '.png';
-            $filepath = $qr_dir . '/' . $filename;
-            if (file_exists($filepath)) {
-                @unlink($filepath);
-            }
+            SNN_T_QR::delete($ticket->ticket_code);
+            $wpdb->delete(SNN_T_DB::queue(), ['ticket_id' => (int)$ticket->id], ['%d']);
         }
 
-        // Delete tickets first (due to foreign key relationship)
+        // Forms pointing at this list can no longer issue tickets, so close
+        // them rather than leaving a form that silently fails.
+        $wpdb->update(SNN_T_DB::forms(), ['status' => 'closed'], ['list_id' => $list_id], ['%s'], ['%d']);
+
         $tickets_deleted = $wpdb->delete($this->table_tickets, ['list_id' => $list_id], ['%d']);
-        
-        // Delete the list
-        $list_deleted = $wpdb->delete($this->table_lists, ['id' => $list_id], ['%d']);
+        $list_deleted    = $wpdb->delete($this->table_lists, ['id' => $list_id], ['%d']);
 
         if ($list_deleted) {
             wp_redirect(add_query_arg('snn_msg', rawurlencode("Deleted list '{$list->name}' and {$tickets_deleted} tickets"), admin_url('admin.php?page=snn-tickets-lists')));
@@ -1184,855 +1165,234 @@ class SNN_Tickets_Plugin {
         exit;
     }
 
-    private function get_batch_settings(){
-        $size = (int) get_option($this->opt_batch_size_key, $this->default_batch_size);
-        $delay = (int) get_option($this->opt_batch_delay_key, $this->default_batch_delay);
-        // Clamp
-        $size = max(1, min(200, $size));
-        $delay = max(0, min(60, $delay));
-        return [$size, $delay];
-    }
-
-    private function get_email_templates(){
-        return get_option($this->opt_email_templates_key, []);
-    }
-
     public function render_mailer_page(){
         $this->admin_cap_check();
         global $wpdb;
 
-        $lists = $wpdb->get_results("SELECT * FROM {$this->table_lists} ORDER BY id DESC");
-        $nonce_send  = wp_create_nonce('snn_send_emails');
-        $nonce_save  = wp_create_nonce('snn_save_mailer_settings');
+        $lists  = $wpdb->get_results("SELECT * FROM {$this->table_lists} ORDER BY id DESC");
+        $counts = SNN_T_Mailer::queue_counts();
 
-        list($batch_size, $batch_delay) = $this->get_batch_settings();
-        $templates = $this->get_email_templates();
-
-        $ajax_url = admin_url('admin-ajax.php');
-        $template_nonce = wp_create_nonce('snn_email_template');
-
-        $default_subject = 'Your Ticket to Our Event';
-        $default_body = <<<HTML
-<p>Hi {name},</p>
-
-<p>We're excited to invite you! Below is your unique ticket QR code. Please bring it to the event.</p>
-
-<p style="text-align:center;"><img alt="Your Ticket QR" src="{qr}" width="200" height="200" style="display:block; margin:0 auto;"/></p>
-
-<p>Your ticket code: <strong>{ticket}</strong></p>
-
-<p>See you soon!</p>
-
-HTML;
-
+        $selected_list = isset($_GET['list_id']) ? (int)$_GET['list_id'] : 0;
+        $templates     = SNN_T_Mailer::templates_for_role('ticket');
+        $default       = SNN_T_Mailer::default_template('ticket');
         ?>
-        <style>
-            .snn-mailer-container {
-                max-width: 1400px;
-            }
-            .snn-mailer-grid {
-                display: flex;
-                gap: 24px;
-                align-items: flex-start;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
-            }
-            .snn-mailer-card {
-                background: #fff;
-                border-radius: 4px;
-                padding: 16px;
-            }
-            .snn-mailer-card h2 {
-                margin-top: 0;
-                color: #000;
-                padding-bottom: 10px;
-            }
-            .snn-settings-card {
-                flex: 1;
-                min-width: 300px;
-            }
-            .snn-send-card {
-                flex: 2;
-                min-width: 360px;
-            }
-            .snn-template-controls {
-                background: #f5f5f5;
-                padding: 8px;
-                border-radius: 4px;
-                margin-bottom: 10px;
-            }
-            .snn-template-header {
-                margin-bottom: 8px;
-            }
-            .snn-template-header strong {
-                color: #000;
-            }
-            .snn-template-status {
-                display: none;
-                margin-left: 10px;
-                padding: 3px 8px;
-                border-radius: 3px;
-            }
-            .snn-template-buttons {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            .snn-template-save-section {
-                flex: 1 0 100%;
-                margin-top: 8px;
-                padding-top: 8px;
-            }
-            .snn-html-buttons {
-                margin-bottom: 8px;
-            }
-            .snn-progress-wrap {
-                display: none;
-                margin-top: 16px;
-                background: #f5f5f5;
-                padding: 12px;
-                border-radius: 4px;
-            }
-            .snn-progress-text {
-                margin-bottom: 8px;
-                color: #000;
-            }
-            .snn-progress-bar-container {
-                background: #fff;
-                height: 24px;
-                border-radius: 4px;
-                overflow: hidden;
-                margin-bottom: 8px;
-            }
-            .snn-progress-bar {
-                background: #000;
-                height: 100%;
-                width: 0%;
-                transition: width 0.3s;
-            }
-            .snn-progress-details {
-                margin-bottom: 8px;
-                font-size: 12px;
-                color: #000;
-            }
-            .snn-console-log-container {
-                background: #fff;
-                border-radius: 4px;
-                padding: 8px;
-                max-height: 200px;
-                overflow-y: auto;
-                font-family: monospace;
-                font-size: 11px;
-            }
-        </style>
-
-        <div class="wrap snn-mailer-container">
+        <div class="wrap" style="max-width:1000px;">
             <h1>Tickets Mailer</h1>
 
             <?php if (isset($_GET['snn_msg'])): ?>
-                <div class="notice notice-success is-dismissible"><p><?php echo esc_html($_GET['snn_msg']); ?></p></div>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(wp_unslash($_GET['snn_msg'])); ?></p></div>
             <?php endif; ?>
 
-            <div class="snn-mailer-grid">
-                <div class="snn-mailer-card snn-settings-card">
-                    <h2>Batch Settings</h2>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <input type="hidden" name="action" value="snn_save_mailer_settings">
-                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_save); ?>">
-                        <table class="form-table" role="presentation">
-                            <tr>
-                                <th scope="row"><label for="snn_batch_size">Emails per batch</label></th>
-                                <td><input type="number" id="snn_batch_size" name="batch_size" value="<?php echo esc_attr($batch_size); ?>" min="1" max="200"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_batch_delay">Delay between batches (seconds)</label></th>
-                                <td><input type="number" id="snn_batch_delay" name="batch_delay" value="<?php echo esc_attr($batch_delay); ?>" min="0" max="60"></td>
-                            </tr>
-                        </table>
-                        <p><button type="submit" class="button button-primary">Save Settings</button></p>
-                        <p class="description">Emails are sent in batches to reduce server load. For large lists consider lowering per-batch size and increasing delay.</p>
-                    </form>
-                </div>
+            <p class="description">
+                Queue a ticket email for everyone on a list. QR codes are generated on the server and
+                attached to each message, and sending runs in the background at
+                <?php echo (int)SNN_T_Mailer::batch_size(); ?> per minute &mdash; you can close this page.
+            </p>
 
-                <div class="snn-mailer-card snn-send-card">
-                    <h2>Send Invitations</h2>
-                    <form id="snn_mailer_form">
-                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce_send); ?>">
-
-                        <table class="form-table" role="presentation">
-                            <tr>
-                                <th scope="row"><label for="snn_list_id">Select List</label></th>
-                                <td>
-                                    <select id="snn_list_id" name="list_id" required>
-                                        <option value="">— Select a list —</option>
-                                        <?php foreach ($lists as $l): ?>
-                                            <?php
-                                            $counts = $wpdb->get_row($wpdb->prepare("
-                                                SELECT COUNT(*) AS total, SUM(CASE WHEN email <> '' THEN 1 ELSE 0 END) AS with_email
-                                                FROM {$this->table_tickets} WHERE list_id = %d
-                                            ", $l->id));
-                                            ?>
-                                            <option value="<?php echo esc_attr($l->id); ?>">
-                                                <?php echo esc_html($l->name . " (emails: " . (int)$counts->with_email . " / tickets: " . (int)$counts->total . ")"); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_from_name">From Name</label></th>
-                                <td><input type="text" id="snn_from_name" name="from_name" class="regular-text" placeholder="<?php echo esc_attr(get_bloginfo('name')); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_from_email">From Email</label></th>
-                                <td><input type="email" id="snn_from_email" name="from_email" class="regular-text" placeholder="<?php echo esc_attr(get_bloginfo('admin_email')); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="snn_subject">Subject</label></th>
-                                <td><input type="text" id="snn_subject" name="subject" class="regular-text" value="<?php echo esc_attr($default_subject); ?>" required></td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Email Content</th>
-                                <td>
-                                    <div class="snn-template-controls">
-                                        <div class="snn-template-header">
-                                            <strong>Templates:</strong>
-                                            <span id="snn_template_status" class="snn-template-status"></span>
-                                        </div>
-                                        <div class="snn-template-buttons">
-                                            <select id="snn_template_list" style="min-width:200px;">
-                                                <option value="">— Select Template —</option>
-                                                <?php foreach ($templates as $name => $template): ?>
-                                                    <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <button type="button" id="snn_delete_template" class="button" style="display:none;">Delete</button>
-                                            <div class="snn-template-save-section">
-                                                <input type="text" id="snn_template_name" placeholder="Template name" style="min-width:200px;">
-                                                <button type="button" id="snn_save_template" class="button">Save as Template</button>
-                                                <button type="button" id="snn_new_template" class="button" style="display:none;">New Template</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="snn-html-buttons">
-                                        <button type="button" class="button snn-html-btn" data-tag="<p>|</p>">P</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<b>|</b>">B</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<i>|</i>">I</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<br>">BR</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<a href=&quot;&quot;>|</a>">Link</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<strong>|</strong>">Strong</button>
-                                        <button type="button" class="button snn-html-btn" data-tag="<em>|</em>">Em</button>
-                                    </div>
-                                    <textarea id="snn_body" name="body" rows="12" style="width:100%; font-family:monospace; font-size:13px;"><?php echo esc_textarea($default_body); ?></textarea>
-                                    <p class="description">
-                                        Available tags: {name}, {ticket}, {qr}.<br>
-                                        {qr} will be replaced with a QR image for the ticket code.
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <p>
-                            <button type="submit" class="button button-primary" id="snn_send_btn">Send Emails</button>
-                        </p>
-
-                        <div id="snn_progress_wrap" class="snn-progress-wrap">
-                            <div class="snn-progress-text">
-                                <strong id="snn_progress_text">Preparing...</strong>
-                            </div>
-                            <div class="snn-progress-bar-container">
-                                <div id="snn_progress_bar" class="snn-progress-bar"></div>
-                            </div>
-                            <div class="snn-progress-details">
-                                <span id="snn_progress_details">0 / 0 sent</span>
-                            </div>
-                            <div class="snn-console-log-container">
-                                <div id="snn_console_log"></div>
-                            </div>
-                        </div>
-
-                        <p class="description" style="max-width:800px;">
-                            Sending uses WordPress mailer. Current batch settings: <?php echo esc_html($batch_size); ?> per batch, <?php echo esc_html($batch_delay); ?> second(s) between batches. QR codes are generated in your browser (offline) and saved as image files for maximum email compatibility.
-                        </p>
-                    </form>
-                </div>
+            <div style="display:flex;gap:12px;margin:18px 0;flex-wrap:wrap;">
+                <?php foreach (['pending', 'sent', 'failed'] as $k): ?>
+                    <div style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:12px 18px;">
+                        <strong style="font-size:20px;"><?php echo (int)$counts[$k]; ?></strong>
+                        <span style="color:#646970;"> <?php echo esc_html($k); ?></span>
+                    </div>
+                <?php endforeach; ?>
+                <a class="button" style="align-self:center;" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-queue')); ?>">Open the queue</a>
             </div>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+                  style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:20px;">
+                <input type="hidden" name="action" value="snn_queue_list_emails">
+                <?php wp_nonce_field('snn_queue_list_emails'); ?>
+
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row"><label for="snn_list_id">Ticket list</label></th>
+                        <td>
+                            <select id="snn_list_id" name="list_id" required>
+                                <option value="">Choose a list&hellip;</option>
+                                <?php foreach ($lists as $l):
+                                    $n = SNN_T_Tickets::count_in_list((int)$l->id); ?>
+                                    <option value="<?php echo (int)$l->id; ?>" <?php selected($selected_list, (int)$l->id); ?>>
+                                        <?php echo esc_html($l->name . ' (' . $n . ' tickets)'); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="snn_template">Template</label></th>
+                        <td>
+                            <select id="snn_template" name="template">
+                                <option value="">Built-in default</option>
+                                <?php foreach ($templates as $name => $t): ?>
+                                    <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">
+                                Manage these on the
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-templates')); ?>">Email Templates</a> page.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Skip duplicates</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="skip_sent" value="1" checked>
+                                Do not queue anyone who already has a ticket email queued or sent
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+
+                <details style="margin:16px 0;">
+                    <summary style="cursor:pointer;font-weight:600;">Preview the default template</summary>
+                    <div style="border:1px solid #dcdcde;border-radius:5px;padding:14px;margin-top:10px;background:#fbfbfc;">
+                        <p><strong>Subject:</strong> <?php echo esc_html($default['subject']); ?></p>
+                        <pre style="white-space:pre-wrap;font-size:12px;"><?php echo esc_html($default['body']); ?></pre>
+                    </div>
+                </details>
+
+                <p class="submit"><button class="button button-primary button-large">Queue emails</button></p>
+            </form>
         </div>
-
-    <!-- Load QR Code library from local file -->
-    <script src="<?php echo plugin_dir_url(__FILE__); ?>src/qrcode.min.js"></script>
-
-        <script>
-        (function(){
-            const ajaxUrl = <?php echo json_encode($ajax_url); ?>;
-            const nonce = <?php echo json_encode($template_nonce); ?>;
-
-            const templateList = document.getElementById('snn_template_list');
-            const deleteBtn = document.getElementById('snn_delete_template');
-            const saveBtn = document.getElementById('snn_save_template');
-            const newBtn = document.getElementById('snn_new_template');
-            const templateNameInput = document.getElementById('snn_template_name');
-            const subjectInput = document.getElementById('snn_subject');
-            const bodyTextarea = document.getElementById('snn_body');
-            const statusEl = document.getElementById('snn_template_status');
-
-            let currentTemplateName = '';
-
-            // HTML Button handlers
-            document.querySelectorAll('.snn-html-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tag = btn.getAttribute('data-tag');
-                    const textarea = bodyTextarea;
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = textarea.value;
-                    const selected = text.substring(start, end);
-                    
-                    let insert = tag.replace('|', selected);
-                    if (tag.includes('|') && !selected) {
-                        insert = tag.replace('|', '');
-                    }
-                    
-                    textarea.value = text.substring(0, start) + insert + text.substring(end);
-                    
-                    // Set cursor position
-                    if (tag.includes('|')) {
-                        const cursorPos = start + tag.indexOf('|') + selected.length;
-                        textarea.setSelectionRange(cursorPos, cursorPos);
-                    } else {
-                        textarea.setSelectionRange(start + insert.length, start + insert.length);
-                    }
-                    textarea.focus();
-                });
-            });
-
-            function showStatus(msg, type = 'info') {
-                statusEl.style.display = 'inline-block';
-                statusEl.textContent = msg;
-                statusEl.style.background = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1';
-                statusEl.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460';
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
-            }
-
-            // Template selection
-            templateList.addEventListener('change', async () => {
-                const selectedName = templateList.value;
-                
-                if (!selectedName) {
-                    currentTemplateName = '';
-                    templateNameInput.value = '';
-                    templateNameInput.placeholder = 'Template name';
-                    saveBtn.textContent = 'Save as Template';
-                    deleteBtn.style.display = 'none';
-                    newBtn.style.display = 'none';
-                    return;
-                }
-
-                const fd = new FormData();
-                fd.append('action', 'snn_load_email_template');
-                fd.append('nonce', nonce);
-                fd.append('name', selectedName);
-
-                try {
-                    const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
-                    const json = await res.json();
-                    if (json.success) {
-                        subjectInput.value = json.data.subject || '';
-                        bodyTextarea.value = json.data.body || '';
-
-                        currentTemplateName = selectedName;
-                        templateNameInput.value = selectedName;
-                        templateNameInput.placeholder = 'Template name';
-                        saveBtn.textContent = 'Update Template';
-                        deleteBtn.style.display = 'inline-block';
-                        newBtn.style.display = 'inline-block';
-                        
-                        showStatus('Template loaded', 'success');
-                    } else {
-                        showStatus('Failed to load template', 'error');
-                    }
-                } catch (e) {
-                    console.error('Failed to load template:', e);
-                    showStatus('Failed to load template', 'error');
-                }
-            });
-
-            // Save template
-            saveBtn.addEventListener('click', async () => {
-                const templateName = templateNameInput.value.trim();
-                if (!templateName) {
-                    alert('Please enter a template name');
-                    return;
-                }
-
-                const subject = subjectInput.value;
-                const body = bodyTextarea.value;
-
-                const isUpdate = (templateName === currentTemplateName);
-
-                const fd = new FormData();
-                fd.append('action', 'snn_save_email_template');
-                fd.append('nonce', nonce);
-                fd.append('name', templateName);
-                fd.append('subject', subject);
-                fd.append('body', body);
-
-                try {
-                    const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
-                    const json = await res.json();
-                    if (json.success) {
-                        if (!isUpdate) {
-                            const existingOption = Array.from(templateList.options).find(opt => opt.value === templateName);
-                            if (!existingOption) {
-                                const option = new Option(templateName, templateName);
-                                templateList.add(option);
-                            }
-                        }
-                        
-                        templateList.value = templateName;
-                        currentTemplateName = templateName;
-                        saveBtn.textContent = 'Update Template';
-                        deleteBtn.style.display = 'inline-block';
-                        newBtn.style.display = 'inline-block';
-                        
-                        showStatus(isUpdate ? 'Template updated!' : 'Template saved!', 'success');
-                    } else {
-                        showStatus('Failed to save template', 'error');
-                    }
-                } catch (e) {
-                    console.error('Failed to save template:', e);
-                    showStatus('Failed to save template', 'error');
-                }
-            });
-
-            // Delete template
-            deleteBtn.addEventListener('click', async () => {
-                if (!currentTemplateName) return;
-                
-                if (!confirm(`Delete template "${currentTemplateName}"? This cannot be undone.`)) {
-                    return;
-                }
-
-                const fd = new FormData();
-                fd.append('action', 'snn_delete_email_template');
-                fd.append('nonce', nonce);
-                fd.append('name', currentTemplateName);
-
-                try {
-                    const res = await fetch(ajaxUrl, { method: 'POST', body: fd });
-                    const json = await res.json();
-                    if (json.success) {
-                        const option = Array.from(templateList.options).find(opt => opt.value === currentTemplateName);
-                        if (option) option.remove();
-                        
-                        templateList.value = '';
-                        currentTemplateName = '';
-                        templateNameInput.value = '';
-                        templateNameInput.placeholder = 'Template name';
-                        saveBtn.textContent = 'Save as Template';
-                        deleteBtn.style.display = 'none';
-                        newBtn.style.display = 'none';
-                        
-                        showStatus('Template deleted', 'success');
-                    } else {
-                        showStatus('Failed to delete template', 'error');
-                    }
-                } catch (e) {
-                    console.error('Failed to delete template:', e);
-                    showStatus('Failed to delete template', 'error');
-                }
-            });
-
-            // New template
-            newBtn.addEventListener('click', () => {
-                templateList.value = '';
-                currentTemplateName = '';
-                templateNameInput.value = '';
-                templateNameInput.placeholder = 'Template name';
-                saveBtn.textContent = 'Save as Template';
-                deleteBtn.style.display = 'none';
-                newBtn.style.display = 'none';
-                showStatus('Ready to create new template', 'info');
-            });
-
-            // Update save button text
-            templateNameInput.addEventListener('input', () => {
-                const newName = templateNameInput.value.trim();
-                if (currentTemplateName && newName !== currentTemplateName) {
-                    saveBtn.textContent = 'Save as New Template';
-                } else if (currentTemplateName && newName === currentTemplateName) {
-                    saveBtn.textContent = 'Update Template';
-                } else {
-                    saveBtn.textContent = 'Save as Template';
-                }
-            });
-
-            // === EMAIL SENDING WITH PROGRESS ===
-            const form = document.getElementById('snn_mailer_form');
-            const submitBtn = document.getElementById('snn_send_btn');
-            const originalBtnText = submitBtn.textContent;
-            const progressWrap = document.getElementById('snn_progress_wrap');
-            const progressBar = document.getElementById('snn_progress_bar');
-            const progressText = document.getElementById('snn_progress_text');
-            const progressDetails = document.getElementById('snn_progress_details');
-            const consoleLog = document.getElementById('snn_console_log');
-
-            function log(msg, type = 'info') {
-                const time = new Date().toLocaleTimeString();
-                const colors = {
-                    info: '#333',
-                    success: '#0a7c0a',
-                    error: '#b00',
-                    warning: '#d68000'
-                };
-                const line = document.createElement('div');
-                line.style.color = colors[type] || colors.info;
-                line.style.marginBottom = '2px';
-                line.textContent = `[${time}] ${msg}`;
-                consoleLog.appendChild(line);
-                consoleLog.scrollTop = consoleLog.scrollHeight;
-            }
-
-            // Wait for QRCode library to be available
-            function waitForQRCode() {
-                return new Promise((resolve) => {
-                    if (typeof QRCode !== 'undefined') {
-                        resolve();
-                        return;
-                    }
-                    
-                    const checkInterval = setInterval(() => {
-                        if (typeof QRCode !== 'undefined') {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 100);
-                    
-                    // Timeout after 10 seconds
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        if (typeof QRCode === 'undefined') {
-                            throw new Error('QRCode library failed to load');
-                        }
-                        resolve();
-                    }, 10000);
-                });
-            }
-
-            // Generate QR code and upload to server
-            async function generateAndUploadQR(ticketCode, sendNonce) {
-                try {
-                    // Wait for QRCode library to be available
-                    await waitForQRCode();
-
-                    // Create a temporary DOM element to hold the QR code
-                    const tempDiv = document.createElement('div');
-                    tempDiv.style.position = 'absolute';
-                    tempDiv.style.left = '-9999px';
-                    document.body.appendChild(tempDiv);
-
-                    // Generate QR code
-                    const qr = new QRCode(tempDiv, {
-                        text: ticketCode,
-                        width: 300,
-                        height: 300,
-                        colorDark: '#000000',
-                        colorLight: '#FFFFFF',
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-
-                    // Wait for QR code to render
-                    await new Promise(resolve => setTimeout(resolve, 200));
-
-                    // Try to get data URL from <img> or <canvas>
-                    let qrDataUrl = null;
-                    const img = tempDiv.querySelector('img');
-                    if (img && img.src) {
-                        qrDataUrl = img.src;
-                    } else {
-                        const canvas = tempDiv.querySelector('canvas');
-                        if (canvas) {
-                            qrDataUrl = canvas.toDataURL('image/png');
-                        }
-                    }
-
-                    // Clean up
-                    tempDiv.remove();
-
-                    if (!qrDataUrl) {
-                        throw new Error('Failed to generate QR code image');
-                    }
-
-                    // Upload to server
-                    const uploadResponse = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams({
-                            action: 'snn_upload_qr_image',
-                            nonce: sendNonce,
-                            ticket_code: ticketCode,
-                            image_data: qrDataUrl
-                        })
-                    });
-
-                    const uploadResult = await uploadResponse.json();
-
-                    if (!uploadResult.success) {
-                        throw new Error(uploadResult.data?.message || 'Upload failed');
-                    }
-
-                    return uploadResult.data.url;
-                } catch (e) {
-                    console.error('QR generation/upload error:', e);
-                    throw e;
-                }
-            }
-
-            async function sendEmailsBatch() {
-                submitBtn.disabled = true;
-                progressWrap.style.display = 'block';
-                progressBar.style.width = '0%';
-                progressText.textContent = 'Preparing...';
-                progressDetails.textContent = '0 / 0 sent';
-                consoleLog.innerHTML = '';
-                
-                log('Starting email sending process...', 'info');
-                
-                // Check if QRCode library is loaded
-                try {
-                    log('Checking QR Code library...', 'info');
-                    await waitForQRCode();
-                    log('QR Code library loaded successfully', 'success');
-                } catch (e) {
-                    log('ERROR: QR Code library failed to load. Please refresh the page and try again.', 'error');
-                    alert('QR Code library failed to load. Please refresh the page and try again.');
-                    submitBtn.disabled = false;
-                    return;
-                }
-                
-                const formData = new FormData(form);
-                const listId = parseInt(formData.get('list_id'));
-                const fromName = formData.get('from_name');
-                const fromEmail = formData.get('from_email');
-                const subject = formData.get('subject');
-                const body = bodyTextarea.value;
-                const sendNonce = formData.get('_wpnonce');
-
-                if (!listId || !subject || !body) {
-                    log('ERROR: Please fill all required fields', 'error');
-                    alert('Please fill all required fields');
-                    submitBtn.disabled = false;
-                    return;
-                }
-
-                try {
-                    log('Fetching contacts from list...', 'info');
-                    progressText.textContent = 'Loading contacts...';
-                    
-                    // Fetch contacts
-                    const contactsResponse = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams({
-                            action: 'snn_get_list_contacts',
-                            nonce: sendNonce,
-                            list_id: listId
-                        })
-                    });
-                    
-                    const contactsData = await contactsResponse.json();
-                    if (!contactsData.success) {
-                        throw new Error('Failed to load contacts');
-                    }
-
-                    const contacts = contactsData.data.contacts;
-                    const batchSize = contactsData.data.batch_size;
-                    const batchDelay = contactsData.data.batch_delay;
-
-                    if (!contacts.length) {
-                        log('ERROR: No contacts with email found in selected list', 'error');
-                        alert('No contacts with email found in selected list');
-                        submitBtn.disabled = false;
-                        return;
-                    }
-
-                    log(`Found ${contacts.length} contacts with email`, 'success');
-                    log(`Batch settings: ${batchSize} emails per batch, ${batchDelay}s delay`, 'info');
-
-                    let sent = 0;
-                    let failed = 0;
-                    const total = contacts.length;
-
-                    progressText.textContent = `Sending emails (${total} total)...`;
-
-                    // Process in batches
-                    const totalBatches = Math.ceil(contacts.length / batchSize);
-                    for (let i = 0; i < contacts.length; i += batchSize) {
-                        const batch = contacts.slice(i, i + batchSize);
-                        const batchNum = Math.floor(i / batchSize) + 1;
-                        
-                        log(`--- Batch ${batchNum}/${totalBatches} (${batch.length} emails) ---`, 'warning');
-                        progressText.textContent = `Sending batch ${batchNum} of ${totalBatches}...`;
-
-                        // Send batch in parallel
-                        const batchPromises = batch.map(async (contact) => {
-                            try {
-                                // Generate and upload QR code
-                                log(`Generating QR for ${contact.ticket_code}...`, 'info');
-                                const qrUrl = await generateAndUploadQR(contact.ticket_code, sendNonce);
-                                
-                                log(`Sending email to ${contact.email} (${contact.name || 'No name'})...`, 'info');
-                                const response = await fetch(ajaxUrl, {
-                                    method: 'POST',
-                                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                                    body: new URLSearchParams({
-                                        action: 'snn_send_single_email',
-                                        nonce: sendNonce,
-                                        name: contact.name,
-                                        email: contact.email,
-                                        ticket: contact.ticket_code,
-                                        subject: subject,
-                                        body: body,
-                                        qr_url: qrUrl,
-                                        from_name: fromName,
-                                        from_email: fromEmail
-                                    })
-                                });
-
-                                const result = await response.json();
-                                if (result.success) {
-                                    sent++;
-                                    log(`✓ Sent to ${contact.email}`, 'success');
-                                } else {
-                                    failed++;
-                                    const errorMsg = result.data?.message || 'Unknown error';
-                                    log(`✗ Failed to send to ${contact.email}: ${errorMsg}`, 'error');
-                                    console.error('Server response:', result);
-                                }
-                            } catch (e) {
-                                failed++;
-                                log(`✗ Error sending to ${contact.email}: ${e.message}`, 'error');
-                                console.error('Failed to send to', contact.email, e);
-                            }
-
-                            // Update progress
-                            const progress = Math.round(((sent + failed) / total) * 100);
-                            progressBar.style.width = progress + '%';
-                            progressDetails.textContent = `${sent} sent, ${failed} failed / ${total} total`;
-                        });
-
-                        await Promise.all(batchPromises);
-
-                        // Delay between batches
-                        if (i + batchSize < contacts.length && batchDelay > 0) {
-                            log(`Waiting ${batchDelay} seconds before next batch...`, 'warning');
-                            progressText.textContent = `Waiting ${batchDelay}s before next batch...`;
-                            await new Promise(resolve => setTimeout(resolve, batchDelay * 1000));
-                        }
-                    }
-
-                    progressBar.style.width = '100%';
-                    progressText.textContent = 'Complete!';
-                    progressDetails.textContent = `${sent} sent, ${failed} failed / ${total} total`;
-                    
-                    log('=================================', 'info');
-                    log(`COMPLETE: ${sent} sent, ${failed} failed, ${total} total`, sent === total ? 'success' : 'warning');
-                    log('=================================', 'info');
-                    
-                    // alert(`Sending complete!\n\n✓ Sent: ${sent}\n✗ Failed: ${failed}\n━ Total: ${total}`);
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    log(`FATAL ERROR: ${error.message}`, 'error');
-                    alert('An error occurred: ' + error.message);
-                    progressText.textContent = 'Error occurred';
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalBtnText;
-                }
-            }
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                sendEmailsBatch();
-            });
-        })();
-        </script>
         <?php
     }
 
-    public function handle_save_mailer_settings(){
+    /**
+     * Queue one ticket email per addressable ticket in a list.
+     */
+    public function handle_queue_list_emails(){
         $this->admin_cap_check();
-        check_admin_referer('snn_save_mailer_settings');
+        check_admin_referer('snn_queue_list_emails');
 
-        $size  = isset($_POST['batch_size']) ? intval($_POST['batch_size']) : $this->default_batch_size;
-        $delay = isset($_POST['batch_delay']) ? intval($_POST['batch_delay']) : $this->default_batch_delay;
+        global $wpdb;
 
-        // Clamp
-        $size  = max(1, min(200, $size));
-        $delay = max(0, min(60, $delay));
+        $list_id   = isset($_POST['list_id']) ? (int)$_POST['list_id'] : 0;
+        $template  = sanitize_text_field(wp_unslash($_POST['template'] ?? ''));
+        $skip_sent = !empty($_POST['skip_sent']);
 
-        update_option($this->opt_batch_size_key, $size);
-        update_option($this->opt_batch_delay_key, $delay);
+        if (!$list_id) {
+            wp_safe_redirect(add_query_arg('snn_msg', rawurlencode('Pick a list first.'), admin_url('admin.php?page=snn-tickets-mailer')));
+            exit;
+        }
 
-        wp_redirect(add_query_arg('snn_msg', rawurlencode("Saved batch settings: $size per batch, $delay second(s) delay"), admin_url('admin.php?page=snn-tickets-mailer')));
+        $list_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->table_lists} WHERE id = %d", $list_id));
+
+        $tickets = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->table_tickets} WHERE list_id = %d AND email <> '' AND status = 'active'",
+            $list_id
+        ));
+
+        $queue   = SNN_T_DB::queue();
+        $queued  = 0;
+        $skipped = 0;
+        $failed  = 0;
+
+        foreach ($tickets as $ticket) {
+            if ($skip_sent) {
+                $already = (int)$wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$queue}
+                     WHERE ticket_id = %d AND role = 'ticket' AND status IN ('pending','sending','sent')",
+                    (int)$ticket->id
+                ));
+                if ($already) { $skipped++; continue; }
+            }
+
+            $result = SNN_T_Mailer::enqueue_from_template('ticket', $template, [
+                'name'        => $ticket->name,
+                'email'       => $ticket->email,
+                'ticket_code' => $ticket->ticket_code,
+                'list_name'   => $list_name,
+                'ticket_id'   => (int)$ticket->id,
+            ]);
+
+            if (is_wp_error($result)) { $failed++; } else { $queued++; }
+        }
+
+        $msg = sprintf('Queued %d email(s).', $queued);
+        if ($skipped) $msg .= sprintf(' Skipped %d already handled.', $skipped);
+        if ($failed)  $msg .= sprintf(' %d could not be queued (bad address?).', $failed);
+        if (!$queued && !$skipped) $msg .= ' Nothing in this list has an email address.';
+
+        wp_safe_redirect(add_query_arg([
+            'page'    => 'snn-tickets-queue',
+            'snn_msg' => rawurlencode($msg),
+        ], admin_url('admin.php')));
         exit;
     }
 
-    public function handle_send_emails(){
-        // This method is now deprecated - emails are sent via AJAX
-        // Redirect to mailer page if accessed directly
+    /**
+     * Queue (or requeue) the ticket email for a single ticket.
+     */
+    public function handle_resend_ticket(){
         $this->admin_cap_check();
-        wp_redirect(admin_url('admin.php?page=snn-tickets-mailer'));
+        check_admin_referer('snn_resend_ticket');
+
+        $ticket = SNN_T_Tickets::get(isset($_POST['ticket']) ? (int)$_POST['ticket'] : 0);
+
+        if (!$ticket) {
+            $msg = 'Ticket not found.';
+        } elseif (!$ticket->email) {
+            $msg = 'That ticket has no email address.';
+        } else {
+            $result = SNN_T_Mailer::enqueue_from_template('ticket', '', [
+                'name'        => $ticket->name,
+                'email'       => $ticket->email,
+                'ticket_code' => $ticket->ticket_code,
+                'list_name'   => SNN_T_Forms::list_name($ticket->list_id),
+                'ticket_id'   => (int)$ticket->id,
+            ]);
+
+            if (is_wp_error($result)) {
+                $msg = 'Could not queue: ' . $result->get_error_message();
+            } else {
+                SNN_T_Mailer::process_queue();
+                $msg = 'Ticket email queued for ' . $ticket->email . '.';
+            }
+        }
+
+        $back = wp_get_referer() ?: admin_url('admin.php?page=snn-tickets-lists');
+        wp_safe_redirect(add_query_arg('snn_msg', rawurlencode($msg), remove_query_arg('snn_msg', $back)));
+        exit;
+    }
+
+    /**
+     * Generate the QR on demand and hand the browser its image URL.
+     */
+    public function handle_ticket_qr(){
+        $this->admin_cap_check();
+        check_admin_referer('snn_ticket_qr');
+
+        $ticket = SNN_T_Tickets::get(isset($_GET['ticket']) ? (int)$_GET['ticket'] : 0);
+        if (!$ticket) wp_die('Ticket not found');
+
+        $url = SNN_T_QR::ensure_url($ticket->ticket_code);
+        if (is_wp_error($url)) wp_die(esc_html($url->get_error_message()));
+
+        wp_redirect($url);
         exit;
     }
 
     public function ajax_validate_ticket(){
-        if (!isset($_POST['code'])) {
+        if (!SNN_T_Tickets::rate_limit_ok()) {
+            wp_send_json_error(['message' => 'Too many scans from this address. Wait a minute and try again.'], 429);
+        }
+
+        $code = isset($_POST['code']) ? sanitize_text_field(wp_unslash($_POST['code'])) : '';
+        $sig  = isset($_POST['sig'])  ? sanitize_text_field(wp_unslash($_POST['sig']))  : '';
+
+        if ($code === '') {
             wp_send_json_error(['message' => 'Missing code'], 400);
         }
-        $code = sanitize_text_field($_POST['code']);
-        if ($code === '') {
-            wp_send_json_error(['message' => 'Empty code'], 400);
-        }
 
-        global $wpdb;
+        // A scan only counts when it is signed or performed by an operator,
+        // so guessing codes cannot burn through the list.
+        $result = SNN_T_Tickets::validate($code, $sig, current_user_can('manage_options'));
 
-        $ticket = $wpdb->get_row($wpdb->prepare("
-            SELECT t.*, l.name AS list_name
-            FROM {$this->table_tickets} t
-            JOIN {$this->table_lists} l ON l.id = t.list_id
-            WHERE t.ticket_code = %s
-            LIMIT 1
-        ", $code));
-
-        if (!$ticket) {
-            wp_send_json_success([
-                'valid' => false
-            ]);
-        }
-
-        $wpdb->update($this->table_tickets, [
-            'validate_count' => (int)$ticket->validate_count + 1,
-            'last_validated' => current_time('mysql'),
-        ], [
-            'id' => $ticket->id
-        ], ['%d', '%s'], ['%d']);
-
-        wp_send_json_success([
-            'valid'           => true,
-            'ticket_code'     => $ticket->ticket_code,
-            'name'            => $ticket->name,
-            'email'           => $ticket->email,
-            'list_name'       => $ticket->list_name,
-            'validate_count'  => (int)$ticket->validate_count + 1,
-        ]);
+        wp_send_json_success($result);
     }
 
-    // Inline update for Name/Email (admin)
     public function ajax_update_ticket_field(){
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Forbidden'], 403);
@@ -2083,213 +1443,6 @@ HTML;
             'field' => $field,
             'value' => $new_value,
         ]);
-    }
-
-    public function ajax_save_email_template(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        $nonce = isset($_POST['nonce']) ? $_POST['nonce'] : '';
-        if (!wp_verify_nonce($nonce, 'snn_email_template')) {
-            wp_send_json_error(['message' => 'Invalid request.'], 400);
-        }
-
-        $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-        $subject = isset($_POST['subject']) ? wp_unslash($_POST['subject']) : '';
-        $body = isset($_POST['body']) ? wp_unslash($_POST['body']) : '';
-
-        if (!$name) {
-            wp_send_json_error(['message' => 'Template name is required.'], 400);
-        }
-
-        $templates = $this->get_email_templates();
-        $templates[$name] = [
-            'subject' => $subject,
-            'body' => $body,
-            'created' => current_time('mysql')
-        ];
-
-        update_option($this->opt_email_templates_key, $templates);
-
-        wp_send_json_success(['message' => 'Template saved successfully.']);
-    }
-
-    public function ajax_load_email_template(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        $nonce = isset($_POST['nonce']) ? $_POST['nonce'] : '';
-        if (!wp_verify_nonce($nonce, 'snn_email_template')) {
-            wp_send_json_error(['message' => 'Invalid request.'], 400);
-        }
-
-        $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-        if (!$name) {
-            wp_send_json_error(['message' => 'Template name is required.'], 400);
-        }
-
-        $templates = $this->get_email_templates();
-        if (!isset($templates[$name])) {
-            wp_send_json_error(['message' => 'Template not found.'], 404);
-        }
-
-        wp_send_json_success($templates[$name]);
-    }
-
-    public function ajax_delete_email_template(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        $nonce = isset($_POST['nonce']) ? $_POST['nonce'] : '';
-        if (!wp_verify_nonce($nonce, 'snn_email_template')) {
-            wp_send_json_error(['message' => 'Invalid request.'], 400);
-        }
-
-        $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-        if (!$name) {
-            wp_send_json_error(['message' => 'Template name is required.'], 400);
-        }
-
-        $templates = $this->get_email_templates();
-        if (!isset($templates[$name])) {
-            wp_send_json_error(['message' => 'Template not found.'], 404);
-        }
-
-        unset($templates[$name]);
-        update_option($this->opt_email_templates_key, $templates);
-
-        wp_send_json_success(['message' => 'Template deleted successfully.']);
-    }
-
-    public function ajax_get_list_contacts(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
-            wp_send_json_error(['message' => 'Invalid nonce'], 403);
-        }
-
-        $list_id = isset($_POST['list_id']) ? intval($_POST['list_id']) : 0;
-        
-        if (!$list_id) {
-            wp_send_json_error(['message' => 'Invalid list ID'], 400);
-        }
-
-        global $wpdb;
-        $contacts = $wpdb->get_results($wpdb->prepare("
-            SELECT name, email, ticket_code
-            FROM {$this->table_tickets}
-            WHERE list_id = %d AND email <> ''
-        ", $list_id), ARRAY_A);
-
-        list($batch_size, $batch_delay) = $this->get_batch_settings();
-
-        wp_send_json_success([
-            'contacts' => $contacts,
-            'batch_size' => $batch_size,
-            'batch_delay' => $batch_delay
-        ]);
-    }
-
-    public function ajax_send_single_email(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
-            wp_send_json_error(['message' => 'Invalid nonce'], 403);
-        }
-
-        $name       = sanitize_text_field($_POST['name'] ?? '');
-        $email      = sanitize_email($_POST['email'] ?? '');
-        $ticket     = sanitize_text_field($_POST['ticket'] ?? '');
-        $subject    = wp_unslash($_POST['subject'] ?? '');
-        $body_html  = wp_unslash($_POST['body'] ?? '');
-        $qr_url     = esc_url_raw($_POST['qr_url'] ?? '');
-        $from_name  = sanitize_text_field($_POST['from_name'] ?? '');
-        $from_email = sanitize_email($_POST['from_email'] ?? '');
-
-        if (!$email || !$subject || !$body_html || !$ticket || !$qr_url) {
-            wp_send_json_error(['message' => 'Missing required fields'], 400);
-        }
-
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
-        if ($from_email) {
-            $from = $from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
-            $headers[] = 'From: ' . $from;
-        }
-
-        // Replace placeholders
-        $personalized = strtr($body_html, [
-            '{name}'   => $name ?: 'Guest',
-            '{ticket}' => $ticket,
-            '{qr}'     => $qr_url,
-        ]);
-
-        $html = '<html><body>' . $personalized . '</body></html>';
-
-        $sent = wp_mail($email, $subject, $html, $headers);
-
-        if ($sent) {
-            wp_send_json_success(['message' => 'Email sent', 'qr_url' => $qr_url]);
-        } else {
-            error_log("SNN Tickets: Failed to send email to $email");
-            wp_send_json_error(['message' => 'Failed to send email'], 500);
-        }
-    }
-
-    public function ajax_upload_qr_image(){
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => 'Forbidden'], 403);
-        }
-        
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'snn_send_emails')) {
-            wp_send_json_error(['message' => 'Invalid nonce'], 403);
-        }
-
-        $ticket_code = sanitize_text_field($_POST['ticket_code'] ?? '');
-        $image_data  = $_POST['image_data'] ?? '';
-
-        if (!$ticket_code || !$image_data) {
-            wp_send_json_error(['message' => 'Missing ticket code or image data'], 400);
-        }
-
-        // Check if QR already exists
-        $upload_dir = wp_upload_dir();
-        $qr_dir = $upload_dir['basedir'] . '/snn-tickets-qr';
-        
-        if (!file_exists($qr_dir)) {
-            wp_mkdir_p($qr_dir);
-        }
-
-        $filename = 'qr-' . sanitize_file_name($ticket_code) . '.png';
-        $filepath = $qr_dir . '/' . $filename;
-        $fileurl = $upload_dir['baseurl'] . '/snn-tickets-qr/' . $filename;
-
-        // If file already exists, return existing URL
-        if (file_exists($filepath)) {
-            wp_send_json_success(['url' => $fileurl, 'cached' => true]);
-        }
-
-        // Decode base64 image data
-        if (preg_match('/^data:image\/png;base64,(.+)$/', $image_data, $matches)) {
-            $image_binary = base64_decode($matches[1]);
-            
-            if ($image_binary === false) {
-                wp_send_json_error(['message' => 'Invalid base64 data'], 400);
-            }
-
-            $result = file_put_contents($filepath, $image_binary);
-            
-            if ($result === false) {
-                wp_send_json_error(['message' => 'Failed to save QR image'], 500);
-            }
-
-            wp_send_json_success(['url' => $fileurl, 'cached' => false]);
-        } else {
-            wp_send_json_error(['message' => 'Invalid image data format'], 400);
-        }
     }
 
     public function shortcode_scan_page($atts){
@@ -2372,33 +1525,68 @@ HTML;
 
             function showResult(data){
                 resultEl.style.display = 'block';
-                if (!data.valid){
-                    resultEl.innerHTML = '<div style="color:#b00;">Invalid ticket</div>';
+
+                if (!data || !data.valid){
+                    resultEl.style.borderLeft = '5px solid #b3261e';
+                    resultEl.innerHTML = '<div style="color:#b3261e;font-weight:700;font-size:17px;">Not valid</div>'
+                        + '<div style="margin-top:6px;">' + escapeHtml((data && data.message) || 'This ticket does not exist.') + '</div>';
                     return;
                 }
-                const name = data.name ? data.name : '—';
-                const email = data.email ? data.email : '—';
-                resultEl.innerHTML = `
-                    <div style="color:#0a0; font-weight:600;">Valid ticket</div>
-                    <div style="margin-top:6px;">
-                        <div><strong>Ticket:</strong> <code>${escapeHtml(data.ticket_code)}</code></div>
-                        <div><strong>Name:</strong> ${escapeHtml(name)}</div>
-                        <div><strong>Email:</strong> ${escapeHtml(email)}</div>
-                        <div><strong>List:</strong> ${escapeHtml(data.list_name || '')}</div>
-                        <div><strong>Validated Count:</strong> ${data.validate_count}</div>
-                    </div>
-                `;
+
+                // A ticket that has been scanned before is still genuine, but
+                // the person on the door needs to see that loudly.
+                var warn = data.already_used;
+                resultEl.style.borderLeft = '5px solid ' + (warn ? '#dba617' : '#0a7d32');
+
+                var name = data.name ? data.name : '—';
+                var email = data.email ? data.email : '—';
+
+                var head = warn
+                    ? '<div style="color:#8a6100;font-weight:700;font-size:17px;">Already scanned '
+                      + data.validate_count + '×</div>'
+                    : '<div style="color:#0a7d32;font-weight:700;font-size:17px;">Valid ticket</div>';
+
+                var unsigned = data.signed ? '' :
+                    '<div style="margin-top:8px;font-size:12px;color:#646970;">'
+                    + 'Entered manually — no QR signature.' + '</div>';
+
+                resultEl.innerHTML = head
+                    + '<div style="margin-top:8px;line-height:1.7;">'
+                    +   '<div><strong>Name:</strong> ' + escapeHtml(name) + '</div>'
+                    +   '<div><strong>Email:</strong> ' + escapeHtml(email) + '</div>'
+                    +   '<div><strong>List:</strong> ' + escapeHtml(data.list_name || '') + '</div>'
+                    +   '<div><strong>Ticket:</strong> <code>' + escapeHtml(data.ticket_code) + '</code></div>'
+                    + '</div>'
+                    + unsigned;
+            }
+
+            /**
+             * A scanned QR holds the full signed URL. Pull the code and its
+             * signature out of it; fall back to treating the payload as a
+             * bare code for anything older or typed by hand.
+             */
+            function parsePayload(raw){
+                raw = (raw || '').trim();
+                try {
+                    var u = new URL(raw);
+                    var code = u.searchParams.get('snn_ticket');
+                    if (code) {
+                        return { code: code, sig: u.searchParams.get('snn_sig') || '' };
+                    }
+                } catch (e) { /* not a URL */ }
+                return { code: raw, sig: '' };
             }
 
             function escapeHtml(str){
                 return (''+str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
             }
 
-            async function validateCode(code){
+            async function validateCode(code, sig){
                 try{
                     const form = new FormData();
                     form.append('action', 'snn_validate_ticket');
                     form.append('code', code);
+                    form.append('sig', sig || '');
                     const res = await fetch(ajaxUrl, { method: 'POST', body: form, credentials: 'same-origin' });
                     const json = await res.json();
                     if (json && json.success){
@@ -2422,8 +1610,8 @@ HTML;
                     if (codes && codes.length){
                         scanning = false;
                         setStatus('QR detected. Validating...');
-                        const code = codes[0].rawValue || (codes[0].rawValue ?? '');
-                        await validateCode(code);
+                        const parsed = parsePayload(codes[0].rawValue || '');
+                        await validateCode(parsed.code, parsed.sig);
                         setStatus('Ready. Click "Scan Next" to continue.');
                     }
                 }catch(e){
@@ -2450,7 +1638,8 @@ HTML;
                     if (code && code.data){
                         scanning = false;
                         setStatus('QR detected. Validating...');
-                        await validateCode(code.data);
+                        const parsed = parsePayload(code.data);
+                        await validateCode(parsed.code, parsed.sig);
                         setStatus('Ready. Click "Scan Next" to continue.');
                     }
                 }catch(e){
@@ -2502,9 +1691,19 @@ HTML;
                 const val = document.getElementById('snn-manual-code').value.trim();
                 if (!val) return;
                 setStatus('Validating manual code...');
-                await validateCode(val);
+                const parsed = parsePayload(val);
+                await validateCode(parsed.code, parsed.sig);
                 setStatus('Ready.');
             });
+
+            // Opened from a scanned QR? Validate straight away.
+            (function(){
+                var params = new URLSearchParams(window.location.search);
+                var code = params.get('snn_ticket');
+                if (!code) return;
+                setStatus('Validating scanned ticket...');
+                validateCode(code, params.get('snn_sig') || '');
+            })();
 
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
                 startCamera().then(()=>{

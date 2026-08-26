@@ -43,7 +43,7 @@ jobs:
       - name: Create zip file
         run: |
           mkdir -p snn-tickets
-          rsync -av --exclude='.git' --exclude='.github' --exclude='snn-tickets' ./ snn-tickets/
+          rsync -av --exclude='.git' --exclude='.github' --exclude='tests' --exclude='snn-tickets' ./ snn-tickets/
           zip -r snn-tickets.zip snn-tickets
           rm -rf snn-tickets
 

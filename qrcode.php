@@ -1,28 +1,55 @@
 <?php
 /**
- * QR Code Generator for PHP 8.0+
- * Uses only built-in PHP GD library
- * No external dependencies required
+ * SNN QR Code Generator — pure PHP, no external dependencies.
+ *
+ * Renders PNG through GD when available and falls back to a built-in PNG
+ * encoder (zlib only) when it is not, so QR generation never depends on GD
+ * being compiled into the host's PHP.
+ *
+ * Ported from the classic kazuhikoarase qrcode-generator algorithm, with
+ * automatic version (typeNumber) selection.
+ *
+ * Usage:
+ *   $qr = new SNN_QRCode('https://example.com/scan/?c=ABC123', [
+ *       'errorCorrectLevel' => SNN_QRCode::ERROR_CORRECT_M,
+ *   ]);
+ *   $qr->savePng('/path/to/qr.png', 8, 4);
+ *   echo $qr->toDataUri(8, 4);
+ *   echo $qr->toSvg(8, 4);
  */
 
-class QRCode {
-    const MODE_NUMBER = 1;
+if (!defined('ABSPATH')) {
+    // Allow standalone use (CLI tests) but keep WordPress direct-access guard.
+    if (php_sapi_name() !== 'cli' && !defined('SNN_QRCODE_STANDALONE')) exit;
+}
+
+if (!class_exists('SNN_QRCode')) :
+
+class SNN_QRCode {
+    const MODE_NUMBER    = 1;
     const MODE_ALPHA_NUM = 2;
     const MODE_8BIT_BYTE = 4;
-    const MODE_KANJI = 8;
-    
+    const MODE_KANJI     = 8;
+
     const ERROR_CORRECT_L = 1;
     const ERROR_CORRECT_M = 0;
     const ERROR_CORRECT_Q = 3;
     const ERROR_CORRECT_H = 2;
-    
+
+    const MIN_TYPE_NUMBER = 1;
+    const MAX_TYPE_NUMBER = 40;
+
     private $typeNumber;
     private $errorCorrectLevel;
     private $modules;
     private $moduleCount;
     private $dataCache;
     private $dataList = [];
-    
+
+    private static $EXP_TABLE = [];
+    private static $LOG_TABLE = [];
+    private static $initialized = false;
+
     private static $PATTERN_POSITION_TABLE = [
         [],
         [6, 18],
@@ -63,25 +90,57 @@ class QRCode {
         [6, 28, 54, 80, 106, 132, 158],
         [6, 32, 58, 84, 110, 136, 162],
         [6, 26, 54, 82, 110, 138, 166],
-        [6, 30, 58, 86, 114, 142, 170]
+        [6, 30, 58, 86, 114, 142, 170],
     ];
-    
-    private static $EXP_TABLE = [];
-    private static $LOG_TABLE = [];
-    private static $initialized = false;
-    
+
+    /**
+     * @param string $text
+     * @param array  $options typeNumber (int|0 for auto), errorCorrectLevel
+     */
     public function __construct($text, $options = []) {
-        $this->typeNumber = $options['typeNumber'] ?? 4;
-        $this->errorCorrectLevel = $options['errorCorrectLevel'] ?? self::ERROR_CORRECT_H;
-        
+        $this->errorCorrectLevel = $options['errorCorrectLevel'] ?? self::ERROR_CORRECT_M;
+
         if (!self::$initialized) {
             self::initTables();
         }
-        
+
         $this->addData($text);
+
+        $requested = $options['typeNumber'] ?? 0;
+        if (!$requested || $requested < self::MIN_TYPE_NUMBER) {
+            $this->typeNumber = $this->findBestTypeNumber();
+        } else {
+            $this->typeNumber = min((int)$requested, self::MAX_TYPE_NUMBER);
+        }
+
         $this->make();
     }
-    
+
+    /**
+     * Smallest version that fits the payload at the chosen EC level.
+     */
+    private function findBestTypeNumber() {
+        for ($type = self::MIN_TYPE_NUMBER; $type <= self::MAX_TYPE_NUMBER; $type++) {
+            $rsBlocks = SNN_QR_RSBlock::getRSBlocks($type, $this->errorCorrectLevel);
+            $totalDataCount = 0;
+            foreach ($rsBlocks as $b) {
+                $totalDataCount += $b->dataCount;
+            }
+
+            $bits = 0;
+            foreach ($this->dataList as $data) {
+                $bits += 4;
+                $bits += self::getLengthInBits($data->mode, $type);
+                $bits += $data->getLength() * 8;
+            }
+
+            if ($bits <= $totalDataCount * 8) {
+                return $type;
+            }
+        }
+
+        throw new Exception('SNN_QRCode: data too long for a QR code (max version 40).');
+    }
     private static function initTables() {
         for ($i = 0; $i < 8; $i++) {
             self::$EXP_TABLE[$i] = 1 << $i;
@@ -98,14 +157,14 @@ class QRCode {
         self::$initialized = true;
     }
     
-    private static function glog($n) {
+    public static function glog($n) {
         if ($n < 1) {
             throw new Exception("glog($n)");
         }
         return self::$LOG_TABLE[$n];
     }
     
-    private static function gexp($n) {
+    public static function gexp($n) {
         while ($n < 0) {
             $n += 255;
         }
@@ -116,7 +175,7 @@ class QRCode {
     }
     
     public function addData($data) {
-        $this->dataList[] = new QR8bitByte($data);
+        $this->dataList[] = new SNN_QR_8bitByte($data);
         $this->dataCache = null;
     }
     
@@ -443,8 +502,8 @@ class QRCode {
     }
     
     private static function createData($typeNumber, $errorCorrectLevel, $dataList) {
-        $rsBlocks = QRRSBlock::getRSBlocks($typeNumber, $errorCorrectLevel);
-        $buffer = new QRBitBuffer();
+        $rsBlocks = SNN_QR_RSBlock::getRSBlocks($typeNumber, $errorCorrectLevel);
+        $buffer = new SNN_QR_BitBuffer();
         
         for ($i = 0; $i < count($dataList); $i++) {
             $data = $dataList[$i];
@@ -502,7 +561,7 @@ class QRCode {
             $offset += $dcCount;
             
             $rsPoly = self::getErrorCorrectPolynomial($ecCount);
-            $rawPoly = new QRPolynomial($dcdata[$r], $rsPoly->getLength() - 1);
+            $rawPoly = new SNN_QR_Polynomial($dcdata[$r], $rsPoly->getLength() - 1);
             $modPoly = $rawPoly->mod($rsPoly);
             
             $ecdata[$r] = [];
@@ -540,9 +599,9 @@ class QRCode {
     }
     
     private static function getErrorCorrectPolynomial($errorCorrectLength) {
-        $a = new QRPolynomial([1], 0);
+        $a = new SNN_QR_Polynomial([1], 0);
         for ($i = 0; $i < $errorCorrectLength; $i++) {
-            $a = $a->multiply(new QRPolynomial([1, self::gexp($i)], 0));
+            $a = $a->multiply(new SNN_QR_Polynomial([1, self::gexp($i)], 0));
         }
         return $a;
     }
@@ -577,205 +636,339 @@ class QRCode {
         }
     }
     
-    public function outputImage($file = null, $size = 4, $margin = 4) {
-        $imgSize = $this->moduleCount * $size + $margin * 2;
-        $img = imagecreatetruecolor($imgSize, $imgSize);
-        
+
+    /* ------------------------------------------------------------------
+     * Output
+     * ---------------------------------------------------------------- */
+
+    /**
+     * The QR as a 2D bool array (true = dark).
+     */
+    public function getMatrix() {
+        $out = [];
+        for ($r = 0; $r < $this->moduleCount; $r++) {
+            $row = [];
+            for ($c = 0; $c < $this->moduleCount; $c++) {
+                $row[] = (bool)$this->modules[$r][$c];
+            }
+            $out[] = $row;
+        }
+        return $out;
+    }
+
+    public function getTypeNumber() {
+        return $this->typeNumber;
+    }
+
+    /**
+     * Pixel dimension of the rendered image.
+     */
+    public function getImageSize($scale = 8, $margin = 4) {
+        return $this->moduleCount * $scale + $margin * 2 * $scale;
+    }
+
+    /**
+     * Raw PNG bytes. Uses GD when present, otherwise the built-in encoder.
+     *
+     * @param int $scale  pixels per module
+     * @param int $margin quiet zone, in modules (spec minimum is 4)
+     */
+    public function toPng($scale = 8, $margin = 4) {
+        $scale  = max(1, (int)$scale);
+        $margin = max(0, (int)$margin);
+
+        if (function_exists('imagecreatetruecolor') && function_exists('imagepng')) {
+            return $this->toPngGd($scale, $margin);
+        }
+        return $this->toPngNative($scale, $margin);
+    }
+
+    private function toPngGd($scale, $margin) {
+        $size = $this->getImageSize($scale, $margin);
+        $img  = imagecreatetruecolor($size, $size);
+
         $white = imagecolorallocate($img, 255, 255, 255);
         $black = imagecolorallocate($img, 0, 0, 0);
-        
-        imagefilledrectangle($img, 0, 0, $imgSize - 1, $imgSize - 1, $white);
-        
+        imagefilledrectangle($img, 0, 0, $size - 1, $size - 1, $white);
+
+        $off = $margin * $scale;
         for ($r = 0; $r < $this->moduleCount; $r++) {
             for ($c = 0; $c < $this->moduleCount; $c++) {
-                if ($this->isDark($r, $c)) {
-                    imagefilledrectangle(
-                        $img,
-                        $c * $size + $margin,
-                        $r * $size + $margin,
-                        $c * $size + $size - 1 + $margin,
-                        $r * $size + $size - 1 + $margin,
-                        $black
-                    );
-                }
+                if (!$this->modules[$r][$c]) continue;
+                imagefilledrectangle(
+                    $img,
+                    $off + $c * $scale,
+                    $off + $r * $scale,
+                    $off + $c * $scale + $scale - 1,
+                    $off + $r * $scale + $scale - 1,
+                    $black
+                );
             }
         }
-        
+
+        ob_start();
+        imagepng($img, null, 9);
+        $bytes = ob_get_clean();
+        imagedestroy($img);
+
+        return $bytes;
+    }
+
+    /**
+     * Minimal 8-bit greyscale PNG writer. Only needs zlib.
+     */
+    private function toPngNative($scale, $margin) {
+        if (!function_exists('gzcompress')) {
+            throw new Exception('SNN_QRCode: PNG output requires either the GD or zlib extension.');
+        }
+
+        $size = $this->getImageSize($scale, $margin);
+        $off  = $margin * $scale;
+
+        // One raw scanline per module row, repeated $scale times.
+        $blank = "\x00" . str_repeat("\xff", $size);
+        $raw   = str_repeat($blank, $off);
+
+        for ($r = 0; $r < $this->moduleCount; $r++) {
+            $line = "\x00" . str_repeat("\xff", $off);
+            for ($c = 0; $c < $this->moduleCount; $c++) {
+                $line .= str_repeat($this->modules[$r][$c] ? "\x00" : "\xff", $scale);
+            }
+            $line .= str_repeat("\xff", $off);
+            $raw  .= str_repeat($line, $scale);
+        }
+
+        $raw .= str_repeat($blank, $off);
+
+        $png  = "\x89PNG\r\n\x1a\n";
+        $png .= self::pngChunk('IHDR', pack('NNCCCCC', $size, $size, 8, 0, 0, 0, 0));
+        $png .= self::pngChunk('IDAT', gzcompress($raw, 9));
+        $png .= self::pngChunk('IEND', '');
+
+        return $png;
+    }
+
+    private static function pngChunk($type, $data) {
+        return pack('N', strlen($data)) . $type . $data
+             . pack('N', crc32($type . $data));
+    }
+
+    /**
+     * Write the PNG to disk. Returns true on success.
+     */
+    public function savePng($file, $scale = 8, $margin = 4) {
+        $bytes = $this->toPng($scale, $margin);
+        return file_put_contents($file, $bytes) !== false;
+    }
+
+    /**
+     * data: URI, for inline previews.
+     */
+    public function toDataUri($scale = 8, $margin = 4) {
+        return 'data:image/png;base64,' . base64_encode($this->toPng($scale, $margin));
+    }
+
+    /**
+     * Scalable vector output — usable where GD and zlib are both unavailable.
+     */
+    public function toSvg($scale = 8, $margin = 4) {
+        $scale  = max(1, (int)$scale);
+        $margin = max(0, (int)$margin);
+        $size   = $this->getImageSize($scale, $margin);
+        $off    = $margin * $scale;
+
+        $path = '';
+        for ($r = 0; $r < $this->moduleCount; $r++) {
+            $c = 0;
+            while ($c < $this->moduleCount) {
+                if (!$this->modules[$r][$c]) { $c++; continue; }
+                $run = 0;
+                while ($c + $run < $this->moduleCount && $this->modules[$r][$c + $run]) $run++;
+                $path .= 'M' . ($off + $c * $scale) . ',' . ($off + $r * $scale)
+                       . 'h' . ($run * $scale) . 'v' . $scale . 'h-' . ($run * $scale) . 'z';
+                $c += $run;
+            }
+        }
+
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $size . '" height="' . $size . '" '
+             . 'viewBox="0 0 ' . $size . ' ' . $size . '" shape-rendering="crispEdges">'
+             . '<rect width="' . $size . '" height="' . $size . '" fill="#ffffff"/>'
+             . '<path d="' . $path . '" fill="#000000"/>'
+             . '</svg>';
+    }
+
+    /**
+     * Back-compat helper: echo the PNG, or write it to $file.
+     */
+    public function outputImage($file = null, $scale = 4, $margin = 4) {
+        $bytes = $this->toPng($scale, $margin);
         if ($file === null) {
             header('Content-Type: image/png');
-            imagepng($img);
-        } else {
-            imagepng($img, $file);
+            echo $bytes;
+            return true;
         }
-        
-        imagedestroy($img);
+        return file_put_contents($file, $bytes) !== false;
     }
 }
 
-class QR8bitByte {
-    public $mode;
+class SNN_QR_8bitByte {
+    public $mode = SNN_QRCode::MODE_8BIT_BYTE;
     public $data;
-    public $parsedData = [];
-    
+
     public function __construct($data) {
-        $this->mode = QRCode::MODE_8BIT_BYTE;
-        $this->data = $data;
-        
-        $this->parsedData = [];
-        for ($i = 0; $i < strlen($data); $i++) {
-            $this->parsedData[] = ord($data[$i]);
-        }
+        $this->data = (string)$data;
     }
-    
+
     public function getLength() {
-        return count($this->parsedData);
+        return strlen($this->data);
     }
-    
+
     public function write($buffer) {
-        for ($i = 0; $i < count($this->parsedData); $i++) {
-            $buffer->put($this->parsedData[$i], 8);
+        for ($i = 0; $i < strlen($this->data); $i++) {
+            $buffer->put(ord($this->data[$i]), 8);
         }
     }
 }
 
-class QRBitBuffer {
+class SNN_QR_BitBuffer {
     public $buffer = [];
     public $length = 0;
-    
+
     public function get($index) {
-        $bufIndex = floor($index / 8);
+        $bufIndex = intdiv($index, 8);
         return (($this->buffer[$bufIndex] >> (7 - $index % 8)) & 1) == 1;
     }
-    
+
     public function put($num, $length) {
         for ($i = 0; $i < $length; $i++) {
             $this->putBit((($num >> ($length - $i - 1)) & 1) == 1);
         }
     }
-    
+
     public function getLengthInBits() {
         return $this->length;
     }
-    
+
     public function putBit($bit) {
-        $bufIndex = floor($this->length / 8);
+        $bufIndex = intdiv($this->length, 8);
         if (count($this->buffer) <= $bufIndex) {
             $this->buffer[] = 0;
         }
-        
         if ($bit) {
             $this->buffer[$bufIndex] |= (0x80 >> ($this->length % 8));
         }
-        
         $this->length++;
     }
 }
 
-class QRPolynomial {
+class SNN_QR_Polynomial {
     public $num = [];
-    
+
     public function __construct($num, $shift) {
         if (!is_array($num)) {
-            throw new Exception('Invalid array');
+            throw new Exception('SNN_QR_Polynomial: invalid array');
         }
-        
+
         $offset = 0;
         while ($offset < count($num) && $num[$offset] == 0) {
             $offset++;
         }
-        
+
         $this->num = array_fill(0, count($num) - $offset + $shift, 0);
         for ($i = 0; $i < count($num) - $offset; $i++) {
             $this->num[$i] = $num[$i + $offset];
         }
     }
-    
+
     public function get($index) {
         return $this->num[$index];
     }
-    
+
     public function getLength() {
         return count($this->num);
     }
-    
+
     public function multiply($e) {
         $num = array_fill(0, $this->getLength() + $e->getLength() - 1, 0);
-        
+
         for ($i = 0; $i < $this->getLength(); $i++) {
             for ($j = 0; $j < $e->getLength(); $j++) {
-                $num[$i + $j] ^= QRCode::gexp(QRCode::glog($this->get($i)) + QRCode::glog($e->get($j)));
+                $num[$i + $j] ^= SNN_QRCode::gexp(
+                    SNN_QRCode::glog($this->get($i)) + SNN_QRCode::glog($e->get($j))
+                );
             }
         }
-        
-        return new QRPolynomial($num, 0);
+
+        return new SNN_QR_Polynomial($num, 0);
     }
-    
+
     public function mod($e) {
         if ($this->getLength() - $e->getLength() < 0) {
             return $this;
         }
-        
-        $ratio = QRCode::glog($this->get(0)) - QRCode::glog($e->get(0));
+
+        $ratio = SNN_QRCode::glog($this->get(0)) - SNN_QRCode::glog($e->get(0));
+
         $num = [];
         for ($i = 0; $i < $this->getLength(); $i++) {
             $num[$i] = $this->get($i);
         }
-        
         for ($i = 0; $i < $e->getLength(); $i++) {
-            $num[$i] ^= QRCode::gexp(QRCode::glog($e->get($i)) + $ratio);
+            $num[$i] ^= SNN_QRCode::gexp(SNN_QRCode::glog($e->get($i)) + $ratio);
         }
-        
-        return (new QRPolynomial($num, 0))->mod($e);
+
+        return (new SNN_QR_Polynomial($num, 0))->mod($e);
     }
 }
 
-class QRRSBlock {
+class SNN_QR_RSBlock {
     public $totalCount;
     public $dataCount;
-    
+
     public function __construct($totalCount, $dataCount) {
         $this->totalCount = $totalCount;
-        $this->dataCount = $dataCount;
+        $this->dataCount  = $dataCount;
     }
-    
+
     public static function getRSBlocks($typeNumber, $errorCorrectLevel) {
         $rsBlock = self::getRsBlockTable($typeNumber, $errorCorrectLevel);
-        
-        if ($rsBlock == null) {
-            throw new Exception("bad rs block @ typeNumber:$typeNumber/errorCorrectLevel:$errorCorrectLevel");
+
+        if ($rsBlock === null) {
+            throw new Exception("SNN_QR_RSBlock: bad rs block @ typeNumber:$typeNumber/errorCorrectLevel:$errorCorrectLevel");
         }
-        
+
         $length = count($rsBlock) / 3;
         $list = [];
-        
+
         for ($i = 0; $i < $length; $i++) {
-            $count = $rsBlock[$i * 3 + 0];
+            $count      = $rsBlock[$i * 3 + 0];
             $totalCount = $rsBlock[$i * 3 + 1];
-            $dataCount = $rsBlock[$i * 3 + 2];
-            
+            $dataCount  = $rsBlock[$i * 3 + 2];
+
             for ($j = 0; $j < $count; $j++) {
-                $list[] = new QRRSBlock($totalCount, $dataCount);
+                $list[] = new SNN_QR_RSBlock($totalCount, $dataCount);
             }
         }
-        
+
         return $list;
     }
-    
+
     private static function getRsBlockTable($typeNumber, $errorCorrectLevel) {
-        switch($errorCorrectLevel) {
-            case QRCode::ERROR_CORRECT_L:
-                return self::$RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 0];
-            case QRCode::ERROR_CORRECT_M:
-                return self::$RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 1];
-            case QRCode::ERROR_CORRECT_Q:
-                return self::$RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 2];
-            case QRCode::ERROR_CORRECT_H:
-                return self::$RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 3];
-            default:
-                return null;
+        if ($typeNumber < 1 || $typeNumber > 40) return null;
+
+        switch ($errorCorrectLevel) {
+            case SNN_QRCode::ERROR_CORRECT_L: $offset = 0; break;
+            case SNN_QRCode::ERROR_CORRECT_M: $offset = 1; break;
+            case SNN_QRCode::ERROR_CORRECT_Q: $offset = 2; break;
+            case SNN_QRCode::ERROR_CORRECT_H: $offset = 3; break;
+            default: return null;
         }
+
+        return self::$RS_BLOCK_TABLE[($typeNumber - 1) * 4 + $offset];
     }
-    
+
+    // [blocksInGroup1, totalCodewords, dataCodewords, (group2 triple...)]
+    // Rows run version 1..40, each version in L, M, Q, H order.
     private static $RS_BLOCK_TABLE = [
         [1, 26, 19],
         [1, 26, 16],
@@ -809,6 +1002,10 @@ class QRRSBlock {
         [2, 60, 38, 2, 61, 39],
         [4, 40, 18, 2, 41, 19],
         [4, 40, 14, 2, 41, 15],
+        [2, 146, 116],
+        [3, 58, 36, 2, 59, 37],
+        [4, 36, 16, 4, 37, 17],
+        [4, 36, 12, 4, 37, 13],
         [2, 86, 68, 2, 87, 69],
         [4, 69, 43, 1, 70, 44],
         [6, 43, 19, 2, 44, 20],
@@ -832,7 +1029,7 @@ class QRRSBlock {
         [5, 109, 87, 1, 110, 88],
         [5, 65, 41, 5, 66, 42],
         [5, 54, 24, 7, 55, 25],
-        [11, 36, 12],
+        [11, 36, 12, 7, 37, 13],
         [5, 122, 98, 1, 123, 99],
         [7, 73, 45, 3, 74, 46],
         [15, 43, 19, 2, 44, 20],
@@ -936,10 +1133,4 @@ class QRRSBlock {
     ];
 }
 
-// Example usage:
-// $qr = new QRCode('Hello World!', [
-//     'typeNumber' => 4,
-//     'errorCorrectLevel' => QRCode::ERROR_CORRECT_H
-// ]);
-// $qr->outputImage();  // Output to browser
-// $qr->outputImage('qrcode.png', 4, 4);  // Save to file
+endif;
