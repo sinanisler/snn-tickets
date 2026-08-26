@@ -4,7 +4,7 @@
     Description: Event tickets with server-side QR codes: a visual registration form builder, automatic or rule-based approval, confirmation emails, and a queued mailer that sends without keeping a browser tab open.
     Version: 0.21
     Requires PHP: 8.1
-    Author: sinanisler
+    Author: sinanisler 
     Author URI: https://sinanisler.com/ 
 */
 
