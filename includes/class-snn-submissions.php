@@ -92,7 +92,7 @@ class SNN_T_Submissions {
                 'fields'        => $submission->data,
                 'ticket_id'     => $ticket_id,
                 'submission_id' => (int)$id,
-            ]);
+            ], SNN_T_Forms::mail_override($form, 'ticket'));
         }
 
         return $ticket_id;
@@ -149,7 +149,7 @@ class SNN_T_Submissions {
             'fields'        => $submission->data,
             'ticket_id'     => (int)$submission->ticket_id,
             'submission_id' => (int)$id,
-        ]);
+        ], SNN_T_Forms::mail_override($form, 'ticket'));
     }
 
     /**

@@ -294,6 +294,35 @@ check($settings['notify_email'] === '', 'an invalid notification address is drop
 check($settings['redirect_url'] === '', 'a javascript: redirect is rejected');
 check($settings['submit_label'] === 'Register', 'a blank message falls back to the default');
 
+// Per-form email wording
+$mail_settings = SNN_T_Forms::sanitize_settings([
+    'confirmation_subject' => "  You're in  ",
+    'confirmation_body'    => '<p>Hi {name}</p>',
+    'ticket_subject'       => '',
+    'ticket_body'          => "  <p>{qr_inline}</p>  ",
+]);
+check($mail_settings['confirmation_subject'] === "You're in", 'a confirmation subject survives sanitising');
+check($mail_settings['confirmation_body'] === '<p>Hi {name}</p>', 'a confirmation body keeps its HTML');
+check($mail_settings['ticket_body'] === '<p>{qr_inline}</p>', 'a ticket body is trimmed');
+check($mail_settings['ticket_subject'] === '', 'a blank mail subject stays blank rather than defaulting');
+
+$defaults = SNN_T_Forms::default_settings();
+foreach (['confirmation_subject', 'confirmation_body', 'ticket_subject', 'ticket_body'] as $k) {
+    check($defaults[$k] === '', "$k defaults to blank so the template is used");
+}
+
+$form_with_override = (object)['settings' => SNN_T_Forms::sanitize_settings([
+    'ticket_body' => '<p>Custom {ticket}</p>',
+])];
+$override = SNN_T_Forms::mail_override($form_with_override, 'ticket');
+check(is_array($override) && $override['body'] === '<p>Custom {ticket}</p>', 'mail_override returns the form wording');
+check($override['subject'] === '', 'mail_override leaves an unset subject blank');
+check(SNN_T_Forms::mail_override($form_with_override, 'confirmation') === null,
+      'mail_override is null when the role has no wording');
+check(SNN_T_Forms::mail_override(null, 'ticket') === null, 'mail_override tolerates a missing form');
+check(SNN_T_Forms::mail_override($form_with_override, 'rejection') === null,
+      'mail_override ignores roles that have no per-form editor');
+
 /* ================= 7. rules ================= */
 section('Approval rules');
 

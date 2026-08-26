@@ -140,11 +140,8 @@ class SNN_T_Forms_Admin {
         <div class="wrap snn-builder">
             <h1><?php echo $form->id ? 'Edit form' : 'New form'; ?></h1>
 
-            <?php if (!$lists): ?>
-                <div class="notice notice-warning"><p>
-                    You need at least one ticket list before a form can issue tickets.
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-generator')); ?>">Create one</a>.
-                </p></div>
+            <?php if (isset($_GET['snn_msg'])): ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(wp_unslash($_GET['snn_msg'])); ?></p></div>
             <?php endif; ?>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="snn-form-builder">
@@ -168,15 +165,23 @@ class SNN_T_Forms_Admin {
                                 <tr>
                                     <th scope="row"><label for="snn-list-id">Ticket list</label></th>
                                     <td>
-                                        <select id="snn-list-id" name="list_id" required>
-                                            <option value="">Choose a list…</option>
+                                        <select id="snn-list-id" name="list_id">
+                                            <option value="0" <?php selected((int)$form->list_id, 0); ?>>
+                                                <?php echo $form->id
+                                                    ? 'Create a new list named after this form'
+                                                    : 'Create a new list named after this form (default)'; ?>
+                                            </option>
                                             <?php foreach ($lists as $l): ?>
                                                 <option value="<?php echo (int)$l->id; ?>" <?php selected((int)$form->list_id, (int)$l->id); ?>>
                                                     <?php echo esc_html($l->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <p class="description">Approved registrations become tickets in this list.</p>
+                                        <p class="description">
+                                            Approved registrations become tickets in this list. Leave it on the default
+                                            and saving the form creates a matching list for you — pick an existing list
+                                            only when you want this form to feed one you already have.
+                                        </p>
                                     </td>
                                 </tr>
                                 <tr>
@@ -213,12 +218,12 @@ class SNN_T_Forms_Admin {
                         <div class="snn-card">
                             <h2>When someone submits</h2>
                             <p>
-                                <label><input type="radio" name="approval_mode" value="auto"> <strong>Approve automatically</strong></label><br>
-                                <span class="description snn-indent">Ticket is created and emailed straight away.</span>
+                                <label><input type="radio" name="approval_mode" value="auto"> <strong>Issue a ticket automatically</strong></label><br>
+                                <span class="description snn-indent">Every submission gets a ticket, and the confirmation email carries its QR code.</span>
                             </p>
                             <p>
                                 <label><input type="radio" name="approval_mode" value="manual"> <strong>Hold for review</strong></label><br>
-                                <span class="description snn-indent">Submitter gets a confirmation email; you approve manually.</span>
+                                <span class="description snn-indent">Submitter gets the plain confirmation email; the ticket follows when you approve.</span>
                             </p>
                             <p>
                                 <label><input type="radio" name="approval_mode" value="conditional"> <strong>Decide by rules</strong></label><br>
@@ -258,28 +263,80 @@ class SNN_T_Forms_Admin {
 
                         <div class="snn-card">
                             <h2>Emails</h2>
-                            <p>
-                                <label for="snn-tpl-ticket">Ticket email</label><br>
-                                <select id="snn-tpl-ticket" class="widefat">
-                                    <option value="">Built-in default</option>
-                                    <?php foreach (SNN_T_Mailer::templates_for_role('ticket') as $name => $t): ?>
-                                        <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <p class="description">
+                                Every registration gets one email. Held or awaiting approval &rarr; the
+                                confirmation email. Approved &rarr; the ticket email, which carries the QR code.
                             </p>
-                            <p><label><input type="checkbox" id="snn-send-confirmation"> Send a confirmation email when held for review</label></p>
-                            <p>
-                                <label for="snn-tpl-confirmation">Confirmation email</label><br>
-                                <select id="snn-tpl-confirmation" class="widefat">
-                                    <option value="">Built-in default</option>
-                                    <?php foreach (SNN_T_Mailer::templates_for_role('confirmation') as $name => $t): ?>
-                                        <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+
+                            <h3 class="snn-mail-h">Confirmation email</h3>
+                            <p><label><input type="checkbox" id="snn-send-confirmation"> Send it</label></p>
+                            <div class="snn-subbox">
+                                <p>
+                                    <label for="snn-conf-subject">Subject</label>
+                                    <input type="text" id="snn-conf-subject" class="widefat"
+                                           placeholder="<?php echo esc_attr(SNN_T_Mailer::default_template('confirmation')['subject']); ?>">
+                                </p>
+                                <p>
+                                    <label for="snn-conf-body">Message</label>
+                                    <textarea id="snn-conf-body" class="widefat snn-mail-body" rows="7"
+                                              placeholder="<?php echo esc_attr(SNN_T_Mailer::default_template('confirmation')['body']); ?>"></textarea>
+                                    <span class="description">Leave blank for the default wording below.</span>
+                                </p>
+                                <p>
+                                    <label for="snn-tpl-confirmation">Or use a saved template</label>
+                                    <select id="snn-tpl-confirmation" class="widefat">
+                                        <option value="">Built-in default</option>
+                                        <?php foreach (SNN_T_Mailer::templates_for_role('confirmation') as $name => $t): ?>
+                                            <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <span class="description">Anything typed above still wins over the template.</span>
+                                </p>
+                            </div>
+
+                            <h3 class="snn-mail-h">Ticket email (confirmation + QR code)</h3>
+                            <p class="description">
+                                Sent the moment a registration is approved — automatically when this form
+                                approves on submit, or when you approve it by hand.
                             </p>
+                            <div class="snn-subbox">
+                                <p>
+                                    <label for="snn-ticket-subject">Subject</label>
+                                    <input type="text" id="snn-ticket-subject" class="widefat"
+                                           placeholder="<?php echo esc_attr(SNN_T_Mailer::default_template('ticket')['subject']); ?>">
+                                </p>
+                                <p>
+                                    <label for="snn-ticket-body">Message</label>
+                                    <textarea id="snn-ticket-body" class="widefat snn-mail-body" rows="9"
+                                              placeholder="<?php echo esc_attr(SNN_T_Mailer::default_template('ticket')['body']); ?>"></textarea>
+                                    <span class="description">
+                                        Keep <code>{qr_inline}</code> as an image source to embed the QR code:
+                                        <code>&lt;img src="{qr_inline}" width="240"&gt;</code>
+                                    </span>
+                                </p>
+                                <p>
+                                    <label for="snn-tpl-ticket">Or use a saved template</label>
+                                    <select id="snn-tpl-ticket" class="widefat">
+                                        <option value="">Built-in default</option>
+                                        <?php foreach (SNN_T_Mailer::templates_for_role('ticket') as $name => $t): ?>
+                                            <option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </p>
+                            </div>
+
+                            <h3 class="snn-mail-h">Tags you can use</h3>
+                            <p class="snn-tags">
+                                <code>{name}</code> <code>{email}</code> <code>{ticket}</code>
+                                <code>{list}</code> <code>{form}</code> <code>{site}</code>
+                                <code>{site_url}</code> <code>{date}</code> <code>{qr_inline}</code>
+                                <code>{qr}</code> <code>{scan_url}</code> <code>{field:your_field_key}</code>
+                            </p>
+
+                            <hr>
+                            <h3 class="snn-mail-h">Rejection email</h3>
                             <p><label><input type="checkbox" id="snn-send-rejection"> Send an email when rejected</label></p>
                             <p>
-                                <label for="snn-tpl-rejection">Rejection email</label><br>
                                 <select id="snn-tpl-rejection" class="widefat">
                                     <option value="">Built-in default</option>
                                     <?php foreach (SNN_T_Mailer::templates_for_role('rejection') as $name => $t): ?>
@@ -287,6 +344,7 @@ class SNN_T_Forms_Admin {
                                     <?php endforeach; ?>
                                 </select>
                             </p>
+
                             <hr>
                             <p><label><input type="checkbox" id="snn-notify-admin"> Notify an admin on every submission</label></p>
                             <p>
@@ -354,6 +412,9 @@ class SNN_T_Forms_Admin {
         .snn-preview .snn-pc{font-weight:400;display:block}
         .snn-preview .snn-req{color:#b3261e}
         .snn-empty{color:#646970;font-style:italic;padding:10px 0}
+        .snn-mail-h{font-size:13px;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:#50575e}
+        .snn-mail-body{font-family:Menlo,Consolas,monospace;font-size:12px;line-height:1.5}
+        .snn-tags code{display:inline-block;margin:0 4px 4px 0;font-size:11px}
         </style>
 
         <script>
@@ -672,6 +733,10 @@ class SNN_T_Forms_Admin {
                 'snn-tpl-ticket':       'template_ticket',
                 'snn-tpl-confirmation': 'template_confirmation',
                 'snn-tpl-rejection':    'template_rejection',
+                'snn-conf-subject':     'confirmation_subject',
+                'snn-conf-body':        'confirmation_body',
+                'snn-ticket-subject':   'ticket_subject',
+                'snn-ticket-body':      'ticket_body',
                 'snn-notify-email':     'notify_email',
                 'snn-msg-submit':       'submit_label',
                 'snn-msg-success':      'success_message',
@@ -766,9 +831,23 @@ class SNN_T_Forms_Admin {
         $fields   = json_decode(wp_unslash($_POST['fields_json'] ?? '[]'), true);
         $settings = json_decode(wp_unslash($_POST['settings_json'] ?? '{}'), true);
 
+        $name    = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
+        $list_id = (int)($_POST['list_id'] ?? 0);
+        $msg     = 'Form saved.';
+
+        // No list chosen: a form is nothing without one, so give it its own,
+        // named after the form. That is the default path for a new form.
+        if ($list_id <= 0 || !SNN_T_Forms::list_name($list_id)) {
+            $list_name = $name !== '' ? $name : 'Untitled form';
+            $list_id   = SNN_T_Tickets::create_list($list_name);
+            if ($list_id) {
+                $msg = sprintf('Form saved. Ticket list "%s" was created for it.', $list_name);
+            }
+        }
+
         $id = SNN_T_Forms::save($id, [
-            'name'     => wp_unslash($_POST['name'] ?? ''),
-            'list_id'  => (int)($_POST['list_id'] ?? 0),
+            'name'     => $name,
+            'list_id'  => $list_id,
             'status'   => sanitize_key($_POST['status'] ?? 'active'),
             'fields'   => is_array($fields) ? $fields : [],
             'settings' => is_array($settings) ? $settings : [],
@@ -778,7 +857,7 @@ class SNN_T_Forms_Admin {
             'page'    => 'snn-tickets-forms',
             'action'  => 'edit',
             'form'    => $id,
-            'snn_msg' => rawurlencode('Form saved.'),
+            'snn_msg' => rawurlencode($msg),
         ], admin_url('admin.php')));
         exit;
     }

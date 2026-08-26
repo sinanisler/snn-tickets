@@ -67,6 +67,12 @@ class SNN_T_Forms {
             'template_confirmation' => '',
             'template_ticket'       => '',
             'template_rejection'    => '',
+            // Per-form wording. Blank falls back to the selected template,
+            // then to the built-in default.
+            'confirmation_subject'  => '',
+            'confirmation_body'     => '',
+            'ticket_subject'        => '',
+            'ticket_body'           => '',
             'notify_admin'          => 1,
             'notify_email'          => '',
             'submit_label'          => 'Register',
@@ -233,6 +239,14 @@ class SNN_T_Forms {
         }
         foreach (['template_confirmation', 'template_ticket', 'template_rejection'] as $k) {
             $out[$k] = sanitize_text_field($s[$k] ?? '');
+        }
+        foreach (['confirmation_subject', 'ticket_subject'] as $k) {
+            $out[$k] = sanitize_text_field($s[$k] ?? '');
+        }
+        // Bodies are HTML emails the admin writes, so keep the markup that
+        // post content is allowed to carry.
+        foreach (['confirmation_body', 'ticket_body'] as $k) {
+            $out[$k] = trim(wp_kses_post((string)($s[$k] ?? '')));
         }
 
         $notify = sanitize_email($s['notify_email'] ?? '');
@@ -636,7 +650,7 @@ class SNN_T_Forms {
                 'form_name'     => $form->name,
                 'fields'        => $data,
                 'submission_id' => $submission_id,
-            ]);
+            ], self::mail_override($form, 'confirmation'));
         }
 
         self::notify_admin($form, $submission_id, $name, $email, $decision);
@@ -721,6 +735,20 @@ class SNN_T_Forms {
         if ($hits >= 10) return false;
         set_transient($key, $hits + 1, 10 * MINUTE_IN_SECONDS);
         return true;
+    }
+
+    /**
+     * The per-form subject/body pair for a mail role, or null when the form
+     * has not overridden that role's wording.
+     */
+    public static function mail_override($form, $role) {
+        if (!$form || !in_array($role, ['confirmation', 'ticket'], true)) return null;
+
+        $subject = trim((string)($form->settings[$role . '_subject'] ?? ''));
+        $body    = trim((string)($form->settings[$role . '_body'] ?? ''));
+        if ($subject === '' && $body === '') return null;
+
+        return ['subject' => $subject, 'body' => $body];
     }
 
     public static function list_name($list_id) {

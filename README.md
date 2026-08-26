@@ -37,6 +37,7 @@ WordPress plugin for event ticket generation, management, and validation with QR
 ### Registration forms
 - **Visual form builder** — drag to reorder fields, edit them inline, and watch a live preview update as you go
 - **Field types** — text, email, phone, number, date, paragraph, dropdown, radio, checkboxes, consent checkbox, hidden
+- **Automatic ticket list** — saving a new form creates a ticket list named after it; pick an existing list only if you want the form to feed one you already have
 - **Field mapping** — point one field at the ticket holder's name and one at their email; everything else is stored as custom answers
 - **Shortcode** — drop a form on any page with `[snn_ticket_form id="1"]`
 - **Capacity limits** — cap registrations per form and show a "fully booked" message once it fills
@@ -45,8 +46,8 @@ WordPress plugin for event ticket generation, management, and validation with QR
 
 ### Approval logic
 Every form decides for itself what happens on submit:
-- **Approve automatically** — the ticket is created and emailed straight away
-- **Hold for review** — the submitter gets a confirmation email; you approve or reject from the Submissions screen
+- **Issue a ticket automatically** — every submission gets a ticket, and the confirmation email carries its QR code
+- **Hold for review** — the submitter gets the plain confirmation email; the ticket follows when you approve from the Submissions screen
 - **Decide by rules** — auto-approve only when the answers match, with the rest held or rejected
 
 Rules run against any field, with operators for *is exactly*, *is not*, *contains*, *starts with*, *is empty*, *is not empty*, *is checked*, *is not checked*, *email domain is*, and *is one of*. Match on **all** rules or **any**, and choose whether a non-match is held for review or rejected outright.
@@ -70,6 +71,8 @@ Rules run against any field, with operators for *is exactly*, *is not*, *contain
 - **Rate limited** — set how many messages go out per minute to stay inside your host's limits
 - **Retries** — failed sends are retried up to three times, with the error recorded
 - **Inline QR** — the QR is attached to the message rather than hotlinked, so it renders even when a client blocks remote images
+- **Confirmation on every submission** — held registrations get the plain confirmation email; approved ones get the ticket email with the QR code embedded
+- **Per-form wording** — edit the confirmation and ticket subject and body right in the form builder, no template needed; blank falls back to the selected template, then the built-in default
 - **Three template roles** — ticket, submission confirmation, and rejection, each selectable per form
 - **Placeholders** — `{name}`, `{email}`, `{ticket}`, `{qr_inline}`, `{qr}`, `{scan_url}`, `{list}`, `{form}`, `{site}`, `{date}`, and `{field:key}` for any form field
 - **Queue monitor** — pending / sent / failed counts, per-message errors, retry and process-now controls
@@ -93,9 +96,9 @@ Rules run against any field, with operators for *is exactly*, *is not*, *contain
 
 ## Getting started
 
-1. **Create a ticket list** — Tickets → Tickets Generator, or import one from CSV
-2. **Set the scan page** — put `[tickets_scan_page]` on a page, then paste its URL into Tickets → Settings so QR codes point at it
-3. **Build a form** — Tickets → Forms → Add New, pick the list, arrange the fields, and choose how submissions are approved
+1. **Set the scan page** — put `[tickets_scan_page]` on a page, then paste its URL into Tickets → Settings so QR codes point at it
+2. **Build a form** — Tickets → Forms → Add New, arrange the fields, and choose how submissions are approved. Saving it creates the matching ticket list for you; you can also make lists by hand under Tickets → Tickets Generator or import one from CSV
+3. **Write the emails** — the form builder's Emails panel holds the confirmation and ticket messages, with tags like `{name}` and `{qr_inline}`
 4. **Publish it** — paste the form's shortcode onto any page
 5. **Watch it work** — submissions land in Tickets → Submissions, tickets go out through Tickets → Mail Queue
 

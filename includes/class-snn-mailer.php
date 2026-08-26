@@ -225,12 +225,25 @@ class SNN_T_Mailer {
     }
 
     /**
-     * Queue a message built from a stored template (or its built-in default).
+     * Queue a message built from a per-form override, a stored template, or
+     * the built-in default -- in that order of precedence.
+     *
+     * @param array|null $override ['subject' => ?, 'body' => ?] straight from
+     *                             the form builder. Either half may be blank,
+     *                             in which case the template supplies it.
      */
-    public static function enqueue_from_template($role, $template_name, $args) {
+    public static function enqueue_from_template($role, $template_name, $args, $override = null) {
         $tpl = $template_name ? self::get_template($template_name) : null;
         if (!$tpl) {
             $tpl = self::default_template($role);
+        }
+
+        // A form that carries its own wording wins over the shared template.
+        if (is_array($override)) {
+            $subject = trim((string)($override['subject'] ?? ''));
+            $body    = trim((string)($override['body'] ?? ''));
+            if ($subject !== '') $tpl['subject'] = $subject;
+            if ($body !== '')    $tpl['body']    = $body;
         }
 
         $vars = self::build_vars($args);
