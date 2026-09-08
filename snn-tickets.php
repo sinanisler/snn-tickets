@@ -1449,36 +1449,36 @@ class SNN_Tickets_Plugin {
         ob_start();
         $ajax_url = admin_url('admin-ajax.php');
         ?>
-        <div id="snn-scan-wrap" style="max-width:720px;margin:0 auto;">
-            <h2>Scan Ticket</h2>
-            <p>Use your camera to scan the QR code, or enter the ticket code manually.</p>
+        <div id="snn-scan-wrap" class="snn-scan-wrap" style="max-width:720px;margin:0 auto;">
+            <h2 class="snn-scan-title">Scan Ticket</h2>
+            <p class="snn-scan-intro">Use your camera to scan the QR code, or enter the ticket code manually.</p>
 
-            <div id="snn-scan-ui" style="display:flex; gap:16px; flex-wrap:wrap;">
-                <div style="flex:2; min-width:280px;">
-                    <div style="position:relative; background:#000; border-radius:8px; overflow:hidden;">
-                        <video id="snn-video" autoplay playsinline style="width:100%; height:auto; background:#000;"></video>
-                        <canvas id="snn-canvas" style="display:none;"></canvas>
-                        <div id="snn-overlay" style="position:absolute; inset:0; border:2px dashed rgba(255,255,255,0.6); margin:12%; border-radius:8px; pointer-events:none;"></div>
-                        <div id="snn-status" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; padding:6px 8px; font-size:12px; border-radius:4px;">Initializing camera...</div>
+            <div id="snn-scan-ui" class="snn-scan-ui" style="display:flex; gap:16px; flex-wrap:wrap;">
+                <div class="snn-scan-col snn-scan-col-camera" style="flex:2; min-width:280px;">
+                    <div class="snn-scan-video-box" style="position:relative; background:#000; border-radius:8px; overflow:hidden;">
+                        <video id="snn-video" class="snn-scan-video" autoplay playsinline style="width:100%; height:auto; background:#000;"></video>
+                        <canvas id="snn-canvas" class="snn-scan-canvas" style="display:none;"></canvas>
+                        <div id="snn-overlay" class="snn-scan-overlay" style="position:absolute; inset:0; border:2px dashed rgba(255,255,255,0.6); margin:12%; border-radius:8px; pointer-events:none;"></div>
+                        <div id="snn-status" class="snn-scan-status" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; padding:6px 8px; font-size:12px; border-radius:4px;">Initializing camera...</div>
                     </div>
-                    <div style="margin-top:8px;">
-                        <button id="snn-start-scan" class="button">Start Scan</button>
-                        <button id="snn-stop-scan" class="button">Stop Scan</button>
-                        <button id="snn-scan-next" class="button">Scan Next</button>
+                    <div class="snn-scan-controls" style="margin-top:8px;">
+                        <button id="snn-start-scan" class="button snn-scan-btn snn-scan-btn-start">Start Scan</button>
+                        <button id="snn-stop-scan" class="button snn-scan-btn snn-scan-btn-stop">Stop Scan</button>
+                        <button id="snn-scan-next" class="button snn-scan-btn snn-scan-btn-next">Scan Next</button>
                     </div>
                 </div>
 
-                <div style="flex:1; min-width:260px;">
-                    <div style="background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px;">
-                        <h3>Manual Entry</h3>
-                        <form id="snn-manual-form">
-                            <input type="text" id="snn-manual-code" class="regular-text" placeholder="Enter ticket code" style="width:100%; font-family:monospace;">
-                            <button type="submit" class="button button-primary" style="margin-top:8px;">Validate</button>
+                <div class="snn-scan-col snn-scan-col-side" style="flex:1; min-width:260px;">
+                    <div class="snn-scan-manual" style="background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px;">
+                        <h3 class="snn-scan-manual-title">Manual Entry</h3>
+                        <form id="snn-manual-form" class="snn-scan-manual-form">
+                            <input type="text" id="snn-manual-code" class="regular-text snn-scan-manual-input" placeholder="Enter ticket code" style="width:100%; font-family:monospace;">
+                            <button type="submit" class="button button-primary snn-scan-manual-submit" style="margin-top:8px;">Validate</button>
                         </form>
-                        <p class="description" style="margin-top:8px;">Paste or type the code if you can't scan.</p>
+                        <p class="description snn-scan-manual-hint" style="margin-top:8px;">Paste or type the code if you can't scan.</p>
                     </div>
 
-                    <div id="snn-result" style="margin-top:12px; background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; display:none;"></div>
+                    <div id="snn-result" class="snn-scan-result" style="margin-top:12px; background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; display:none;"></div>
                 </div>
             </div>
         </div>
@@ -1528,34 +1528,36 @@ class SNN_Tickets_Plugin {
 
                 if (!data || !data.valid){
                     resultEl.style.borderLeft = '5px solid #b3261e';
-                    resultEl.innerHTML = '<div style="color:#b3261e;font-weight:700;font-size:17px;">Not valid</div>'
-                        + '<div style="margin-top:6px;">' + escapeHtml((data && data.message) || 'This ticket does not exist.') + '</div>';
+                    resultEl.className = 'snn-scan-result snn-scan-result-invalid';
+                    resultEl.innerHTML = '<div class="snn-scan-result-head" style="color:#b3261e;font-weight:700;font-size:17px;">Not valid</div>'
+                        + '<div class="snn-scan-result-message" style="margin-top:6px;">' + escapeHtml((data && data.message) || 'This ticket does not exist.') + '</div>';
                     return;
                 }
 
                 // A ticket that has been scanned before is still genuine, but
                 // the person on the door needs to see that loudly.
                 var warn = data.already_used;
+                resultEl.className = 'snn-scan-result ' + (warn ? 'snn-scan-result-used' : 'snn-scan-result-valid');
                 resultEl.style.borderLeft = '5px solid ' + (warn ? '#dba617' : '#0a7d32');
 
                 var name = data.name ? data.name : '—';
                 var email = data.email ? data.email : '—';
 
                 var head = warn
-                    ? '<div style="color:#8a6100;font-weight:700;font-size:17px;">Already scanned '
+                    ? '<div class="snn-scan-result-head" style="color:#8a6100;font-weight:700;font-size:17px;">Already scanned '
                       + data.validate_count + '×</div>'
-                    : '<div style="color:#0a7d32;font-weight:700;font-size:17px;">Valid ticket</div>';
+                    : '<div class="snn-scan-result-head" style="color:#0a7d32;font-weight:700;font-size:17px;">Valid ticket</div>';
 
                 var unsigned = data.signed ? '' :
-                    '<div style="margin-top:8px;font-size:12px;color:#646970;">'
+                    '<div class="snn-scan-result-unsigned" style="margin-top:8px;font-size:12px;color:#646970;">'
                     + 'Entered manually — no QR signature.' + '</div>';
 
                 resultEl.innerHTML = head
-                    + '<div style="margin-top:8px;line-height:1.7;">'
-                    +   '<div><strong>Name:</strong> ' + escapeHtml(name) + '</div>'
-                    +   '<div><strong>Email:</strong> ' + escapeHtml(email) + '</div>'
-                    +   '<div><strong>List:</strong> ' + escapeHtml(data.list_name || '') + '</div>'
-                    +   '<div><strong>Ticket:</strong> <code>' + escapeHtml(data.ticket_code) + '</code></div>'
+                    + '<div class="snn-scan-result-details" style="margin-top:8px;line-height:1.7;">'
+                    +   '<div class="snn-scan-result-name"><strong>Name:</strong> ' + escapeHtml(name) + '</div>'
+                    +   '<div class="snn-scan-result-email"><strong>Email:</strong> ' + escapeHtml(email) + '</div>'
+                    +   '<div class="snn-scan-result-list"><strong>List:</strong> ' + escapeHtml(data.list_name || '') + '</div>'
+                    +   '<div class="snn-scan-result-ticket"><strong>Ticket:</strong> <code class="snn-scan-result-code">' + escapeHtml(data.ticket_code) + '</code></div>'
                     + '</div>'
                     + unsigned;
             }

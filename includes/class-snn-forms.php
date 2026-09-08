@@ -389,7 +389,7 @@ class SNN_T_Forms {
             }
         }
 
-        echo '<div class="snn-ticket-form-wrap" id="snn-form-' . (int)$form->id . '">';
+        echo '<div class="snn-ticket-form-wrap snn-form-id-' . (int)$form->id . '" id="snn-form-' . (int)$form->id . '">';
         self::render_styles();
 
         if ($for_id === (int)$form->id && $result) {
@@ -422,12 +422,12 @@ class SNN_T_Forms {
         }
 
         if ($errors) {
-            echo '<div class="snn-form-notice snn-err"><ul style="margin:0;padding-left:18px;">';
-            foreach ($errors as $e) echo '<li>' . esc_html($e) . '</li>';
+            echo '<div class="snn-form-notice snn-err"><ul class="snn-form-errors" style="margin:0;padding-left:18px;">';
+            foreach ($errors as $e) echo '<li class="snn-form-error">' . esc_html($e) . '</li>';
             echo '</ul></div>';
         }
 
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="snn-ticket-form">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="snn-ticket-form snn-ticket-form-' . (int)$form->id . '">';
         echo '<input type="hidden" name="action" value="snn_ticket_form_submit">';
         echo '<input type="hidden" name="form_id" value="' . (int)$form->id . '">';
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
@@ -443,7 +443,7 @@ class SNN_T_Forms {
             self::render_field($field, $old[$field['key']] ?? null);
         }
 
-        echo '<p class="snn-form-submit"><button type="submit">'
+        echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">'
            . esc_html($form->settings['submit_label']) . '</button></p>';
         echo '</form></div>';
     }
@@ -459,24 +459,26 @@ class SNN_T_Forms {
             return;
         }
 
-        echo '<div class="snn-field snn-field-' . esc_attr($field['type']) . '">';
+        echo '<div class="snn-field snn-field-' . esc_attr($field['type'])
+           . ' snn-field-key-' . esc_attr($field['key'])
+           . ($required ? ' snn-field-required' : '') . '">';
 
         $label_html = esc_html($field['label']) . ($required ? ' <span class="snn-req">*</span>' : '');
 
         switch ($field['type']) {
             case 'textarea':
-                echo '<label for="' . $id . '">' . $label_html . '</label>';
-                echo '<textarea id="' . $id . '" name="' . $name . '" rows="4"'
+                echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
+                echo '<textarea class="snn-input snn-textarea" id="' . $id . '" name="' . $name . '" rows="4"'
                    . ($required ? ' required' : '')
                    . ' placeholder="' . esc_attr($field['placeholder']) . '">' . esc_textarea((string)$value) . '</textarea>';
                 break;
 
             case 'select':
-                echo '<label for="' . $id . '">' . $label_html . '</label>';
-                echo '<select id="' . $id . '" name="' . $name . '"' . ($required ? ' required' : '') . '>';
-                echo '<option value="">' . esc_html($field['placeholder'] ?: 'Choose…') . '</option>';
+                echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
+                echo '<select class="snn-input snn-select" id="' . $id . '" name="' . $name . '"' . ($required ? ' required' : '') . '>';
+                echo '<option class="snn-option snn-option-empty" value="">' . esc_html($field['placeholder'] ?: 'Choose…') . '</option>';
                 foreach ($field['options'] as $opt) {
-                    echo '<option value="' . esc_attr($opt) . '"' . selected($value, $opt, false) . '>'
+                    echo '<option class="snn-option" value="' . esc_attr($opt) . '"' . selected($value, $opt, false) . '>'
                        . esc_html($opt) . '</option>';
                 }
                 echo '</select>';
@@ -484,37 +486,42 @@ class SNN_T_Forms {
 
             case 'radio':
                 echo '<span class="snn-label">' . $label_html . '</span>';
+                echo '<span class="snn-choices snn-choices-radio">';
                 foreach ($field['options'] as $i => $opt) {
                     $oid = $id . '-' . $i;
-                    echo '<label class="snn-choice" for="' . $oid . '">'
-                       . '<input type="radio" id="' . $oid . '" name="' . $name . '" value="' . esc_attr($opt) . '"'
+                    echo '<label class="snn-choice snn-choice-radio" for="' . $oid . '">'
+                       . '<input class="snn-input snn-radio" type="radio" id="' . $oid . '" name="' . $name . '" value="' . esc_attr($opt) . '"'
                        . checked($value, $opt, false) . ($required ? ' required' : '') . '> '
-                       . esc_html($opt) . '</label>';
+                       . '<span class="snn-choice-text">' . esc_html($opt) . '</span></label>';
                 }
+                echo '</span>';
                 break;
 
             case 'checkbox':
                 echo '<span class="snn-label">' . $label_html . '</span>';
                 $selected = is_array($value) ? $value : [];
+                echo '<span class="snn-choices snn-choices-checkbox">';
                 foreach ($field['options'] as $i => $opt) {
                     $oid = $id . '-' . $i;
-                    echo '<label class="snn-choice" for="' . $oid . '">'
-                       . '<input type="checkbox" id="' . $oid . '" name="' . $name . '[]" value="' . esc_attr($opt) . '"'
+                    echo '<label class="snn-choice snn-choice-checkbox" for="' . $oid . '">'
+                       . '<input class="snn-input snn-checkbox" type="checkbox" id="' . $oid . '" name="' . $name . '[]" value="' . esc_attr($opt) . '"'
                        . (in_array($opt, $selected, true) ? ' checked' : '') . '> '
-                       . esc_html($opt) . '</label>';
+                       . '<span class="snn-choice-text">' . esc_html($opt) . '</span></label>';
                 }
+                echo '</span>';
                 break;
 
             case 'consent':
-                echo '<label class="snn-choice snn-consent" for="' . $id . '">'
-                   . '<input type="checkbox" id="' . $id . '" name="' . $name . '" value="1"'
+                echo '<label class="snn-choice snn-choice-consent snn-consent" for="' . $id . '">'
+                   . '<input class="snn-input snn-checkbox snn-consent-input" type="checkbox" id="' . $id . '" name="' . $name . '" value="1"'
                    . checked((string)$value, '1', false) . ($required ? ' required' : '') . '> '
                    . $label_html . '</label>';
                 break;
 
             default: // text, email, tel, number, date
-                echo '<label for="' . $id . '">' . $label_html . '</label>';
-                echo '<input type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
+                echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
+                echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . '"'
+                   . ' type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
                    . ' value="' . esc_attr((string)$value) . '"'
                    . ' placeholder="' . esc_attr($field['placeholder']) . '"'
                    . ($required ? ' required' : '')
@@ -540,6 +547,7 @@ class SNN_T_Forms {
         .snn-ticket-form select{width:100%;padding:10px 12px;border:1px solid #c3c4c7;border-radius:4px;
             font:inherit;background:#fff;box-sizing:border-box}
         .snn-ticket-form textarea{resize:vertical}
+        .snn-ticket-form .snn-choices{display:block}
         .snn-ticket-form .snn-choice{display:block;font-weight:400;margin:0 0 6px}
         .snn-ticket-form .snn-choice input{margin-right:8px}
         .snn-ticket-form .snn-req{color:#b3261e}
