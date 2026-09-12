@@ -4,35 +4,7 @@
 WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
 <br><br>
 
-**If you saved time and money with this project. Support it 😉** 
 
-
-
-<a href="https://github.com/sponsors/sinanisler">
-<img src="https://img.shields.io/badge/Consider_Supporting_My_Projects_❤-GitHub-d46" width="300" height="auto" />
-</a>
-
-
-
-
-<img width="1431" height="932" alt="image" src="https://github.com/user-attachments/assets/6407ff08-fec2-47f0-b5b8-df4f05e2e57f" />
-
-<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/1f2715d1-aba9-4864-85ca-f78b757a28ab" />
-
-<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/d45e3de7-c61b-410a-8294-4308fb99c727" />
-
-<img width="1600" height="738" alt="image" src="https://github.com/user-attachments/assets/5a8cd89c-df97-4a22-881d-c4d53a6e8b76" />
-
-
-<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/d71b0868-5648-4b60-a255-bf60e139e8e4" />
-
-<img width="48%" height="auto" alt="image" src="https://github.com/user-attachments/assets/9ff488f0-15ab-459d-897c-3e82581e756c" />
-
-
-
-
-
-## 🎫 Features
 
 ### Registration forms
 - **Visual form builder** — drag to reorder fields, edit them inline, and watch a live preview update as you go
