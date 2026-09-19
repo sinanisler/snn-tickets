@@ -2,7 +2,7 @@
 /*
     Plugin Name: SNN Tickets
     Description: Event tickets with server-side QR codes: a visual registration form builder, automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner.
-    Version: 0.23
+    Version: 0.24
     Requires PHP: 8.1
     Author: sinanisler
     Author URI: https://sinanisler.com/
