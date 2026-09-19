@@ -174,8 +174,12 @@ class SNN_T_QR {
     }
 
     /**
-     * A camera app opening the QR lands on the site root with our query args.
-     * Send it to the configured scan page, or render a minimal result page.
+     * A camera app opening the QR lands here with our query args.
+     *
+     * Staff are sent to the scanner (or shown the result right here when no
+     * scanner page is configured) and the ticket is checked in. Anyone else
+     * -- usually the attendee tapping the link in their email -- sees their
+     * ticket, and nothing is counted.
      */
     public static function maybe_handle_scan() {
         if (empty($_GET['snn_ticket'])) return;
@@ -183,14 +187,25 @@ class SNN_T_QR {
         $code = sanitize_text_field(wp_unslash($_GET['snn_ticket']));
         $sig  = sanitize_text_field(wp_unslash($_GET['snn_sig'] ?? ''));
 
+        if (!SNN_T_Scanner::is_staff()) {
+            $ticket = self::verify($code, $sig) ? SNN_T_Tickets::get_by_code($code) : null;
+            nocache_headers();
+            if ($ticket) {
+                SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket));
+            } else {
+                self::render_standalone_result(['valid' => false, 'message' => __('This ticket link is not valid.', 'snn-tickets')]);
+            }
+            exit;
+        }
+
         $configured = trim((string)get_option(self::SCAN_URL_OPTION, ''));
 
         if ($configured !== '') {
             $target_path  = untrailingslashit((string)parse_url($configured, PHP_URL_PATH));
             $current_path = untrailingslashit((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 
-            // Already on the scan page: let the shortcode handle it, and
-            // never redirect to ourselves.
+            // Already on the scan page: the scanner checks it in. Never
+            // redirect to ourselves.
             if ($target_path !== $current_path) {
                 wp_safe_redirect(add_query_arg([
                     'snn_ticket' => rawurlencode($code),
@@ -201,8 +216,8 @@ class SNN_T_QR {
             return;
         }
 
-        // No scan page configured: render a self-contained result page.
-        $result = SNN_T_Tickets::validate($code, $sig, current_user_can('manage_options'));
+        // No scan page configured: check in and show a self-contained result.
+        $result = SNN_T_Tickets::validate($code, $sig, true);
 
         status_header(200);
         nocache_headers();
@@ -213,7 +228,9 @@ class SNN_T_QR {
     private static function render_standalone_result($result) {
         $ok      = !empty($result['valid']);
         $color   = $ok ? '#0a7d32' : '#b3261e';
-        $heading = $ok ? 'Valid ticket' : 'Not valid';
+        $used    = $ok && !empty($result['already_used']);
+        if ($used) $color = '#b86e00';
+        $heading = $ok ? ($used ? __('Already checked in', 'snn-tickets') : __('Valid ticket', 'snn-tickets')) : __('Not valid', 'snn-tickets');
         ?><!doctype html>
         <html <?php language_attributes(); ?>>
         <head>
@@ -226,7 +243,7 @@ class SNN_T_QR {
                 <h1 style="margin:0 0 12px;color:<?php echo esc_attr($color); ?>;"><?php echo esc_html($heading); ?></h1>
                 <p style="margin:0 0 8px;"><?php echo esc_html($result['message'] ?? ''); ?></p>
                 <?php if ($ok): ?>
-                    <p style="margin:0;"><strong><?php echo esc_html($result['name'] ?: 'Guest'); ?></strong><br>
+                    <p style="margin:0;"><strong><?php echo esc_html($result['name'] ?: __('Guest', 'snn-tickets')); ?></strong><br>
                     <?php echo esc_html($result['list_name'] ?? ''); ?><br>
                     <code><?php echo esc_html($result['ticket_code']); ?></code></p>
                 <?php endif; ?>

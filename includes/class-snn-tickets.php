@@ -99,71 +99,117 @@ class SNN_T_Tickets {
      * ---------------------------------------------------------------- */
 
     /**
-     * Look a ticket up and, when the caller is trusted, count the scan.
+     * Look a ticket up and, when the caller is staff, check it in.
      *
-     * A scan only counts when the request carries a valid signature or comes
-     * from a logged-in operator. Unsigned public lookups are read-only, so a
-     * scraper cannot burn through the ticket list by guessing codes.
+     * Only staff scans count. A signed QR proves the ticket came from this
+     * site, but anyone holding the email can open that link -- including
+     * the attendee checking their own ticket -- so a signature alone must
+     * never mark a ticket as used.
      *
      * @param string $code
-     * @param string $sig       signature from the QR, may be empty
-     * @param bool   $is_operator caller holds the scan capability
+     * @param string $sig         signature from the QR, may be empty
+     * @param bool   $is_operator caller is door staff
+     * @param int    $list_id     scanner limited to one event, 0 = any
      * @return array
      */
-    public static function validate($code, $sig = '', $is_operator = false) {
+    public static function validate($code, $sig = '', $is_operator = false, $list_id = 0) {
         $code = trim((string)$code);
         if ($code === '') {
-            return ['valid' => false, 'message' => 'No ticket code supplied.'];
+            return ['valid' => false, 'reason' => 'empty', 'message' => __('No ticket code supplied.', 'snn-tickets')];
         }
 
-        $signed  = SNN_T_QR::verify($code, $sig);
-        $trusted = $signed || $is_operator;
+        $signed = SNN_T_QR::verify($code, $sig);
 
         $ticket = self::get_by_code($code);
-        if (!$ticket) {
-            return ['valid' => false, 'reason' => 'not_found', 'message' => 'This ticket does not exist.'];
+        if (!$ticket && !$signed) {
+            // Hand-typed codes are forgiving about case.
+            $ticket = self::get_by_code(strtoupper($code));
         }
+        if (!$ticket) {
+            return ['valid' => false, 'reason' => 'not_found', 'message' => __('This ticket does not exist.', 'snn-tickets')];
+        }
+
+        global $wpdb;
+        $lists     = SNN_T_DB::lists();
+        $list_name = (string)$wpdb->get_var($wpdb->prepare("SELECT name FROM {$lists} WHERE id = %d", $ticket->list_id));
 
         if ($ticket->status === 'revoked') {
             return [
                 'valid'       => false,
                 'reason'      => 'revoked',
-                'message'     => 'This ticket has been revoked.',
+                'message'     => __('This ticket has been cancelled.', 'snn-tickets'),
                 'ticket_code' => $ticket->ticket_code,
                 'name'        => $ticket->name,
+                'list_name'   => $list_name,
             ];
         }
 
-        global $wpdb;
-        $lists     = SNN_T_DB::lists();
-        $list_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$lists} WHERE id = %d", $ticket->list_id));
+        if ($list_id && (int)$ticket->list_id !== (int)$list_id) {
+            return [
+                'valid'       => false,
+                'reason'      => 'other_list',
+                'message'     => sprintf(__('This ticket is for %s.', 'snn-tickets'), $list_name),
+                'ticket_code' => $ticket->ticket_code,
+                'name'        => $ticket->name,
+                'list_name'   => $list_name,
+            ];
+        }
 
         $already = ((int)$ticket->validate_count) > 0;
         $count   = (int)$ticket->validate_count;
+        $last    = $ticket->last_validated;
 
-        if ($trusted) {
-            $wpdb->update(SNN_T_DB::tickets(), [
-                'validate_count' => $count + 1,
-                'last_validated' => current_time('mysql'),
-            ], ['id' => $ticket->id], ['%d', '%s'], ['%d']);
+        if ($is_operator) {
+            // Atomic increment, so two phones at the same door cannot both
+            // see a fresh ticket.
+            $wpdb->query($wpdb->prepare(
+                "UPDATE " . SNN_T_DB::tickets() . " SET validate_count = validate_count + 1, last_validated = %s WHERE id = %d",
+                current_time('mysql'), (int)$ticket->id
+            ));
             $count++;
         }
 
         return [
-            'valid'          => true,
-            'counted'        => $trusted,
-            'already_used'   => $already,
-            'signed'         => $signed,
-            'ticket_code'    => $ticket->ticket_code,
-            'name'           => $ticket->name,
-            'email'          => $ticket->email,
-            'list_name'      => $list_name,
-            'validate_count' => $count,
-            'last_validated' => $ticket->last_validated,
-            'message'        => $already
-                ? 'Valid, but this ticket has already been scanned ' . $count . ' time(s).'
-                : 'Welcome. This ticket is valid.',
+            'valid'                => true,
+            'counted'              => (bool)$is_operator,
+            'already_used'         => $already,
+            'signed'               => $signed,
+            'ticket_code'          => $ticket->ticket_code,
+            'name'                 => $ticket->name,
+            'email'                => $ticket->email,
+            'list_name'            => $list_name,
+            'validate_count'       => $count,
+            'last_validated'       => $last,
+            'last_validated_human' => $last ? self::human_time($last) : '',
+            'message'              => $already
+                ? sprintf(__('Valid, but already scanned %d time(s).', 'snn-tickets'), $count)
+                : __('Welcome. This ticket is valid.', 'snn-tickets'),
         ];
+    }
+
+    public static function human_time($mysql) {
+        $ts = strtotime($mysql);
+        if (!$ts) return '';
+        $now = current_time('timestamp');
+        if (function_exists('human_time_diff') && $now - $ts < DAY_IN_SECONDS) {
+            return sprintf(__('%s ago', 'snn-tickets'), human_time_diff($ts, $now));
+        }
+        return date_i18n(get_option('date_format', 'M j') . ' ' . get_option('time_format', 'H:i'), $ts);
+    }
+
+    /* ------------------------------------------------------------------
+     * Admin actions on single tickets
+     * ---------------------------------------------------------------- */
+
+    public static function set_status($id, $status) {
+        global $wpdb;
+        if (!in_array($status, ['active', 'revoked'], true)) return false;
+        return false !== $wpdb->update(SNN_T_DB::tickets(), ['status' => $status], ['id' => (int)$id], ['%s'], ['%d']);
+    }
+
+    public static function undo_checkin($id) {
+        global $wpdb;
+        return false !== $wpdb->update(SNN_T_DB::tickets(), ['validate_count' => 0, 'last_validated' => null], ['id' => (int)$id], ['%d', '%s'], ['%d']);
     }
 
     /**

@@ -13,6 +13,10 @@ class SNN_T_Forms {
     /** Minimum seconds between a form rendering and a genuine submission. */
     const MIN_FILL_SECONDS = 3;
 
+    /** Set while handling a submission made with fetch() rather than a page post. */
+    private static $ajax = false;
+    private static $current_form = null;
+
     public static function init() {
         add_shortcode('snn_ticket_form', [__CLASS__, 'shortcode']);
         add_action('admin_post_snn_ticket_form_submit',        [__CLASS__, 'handle_submit']);
@@ -82,6 +86,8 @@ class SNN_T_Forms {
             'duplicate_message'     => 'You have already registered with this email address.',
             'error_message'         => 'Something went wrong. Please try again.',
             'redirect_url'          => '',
+            'accent_color'          => '',
+            'show_remaining'        => 0,
         ];
     }
 
@@ -140,7 +146,7 @@ class SNN_T_Forms {
         $row = [
             'name'       => sanitize_text_field($data['name'] ?? 'Untitled form'),
             'list_id'    => (int)($data['list_id'] ?? 0),
-            'status'     => in_array($data['status'] ?? 'active', ['active', 'closed'], true) ? $data['status'] : 'active',
+            'status'     => in_array($data['status'] ?? '', ['active', 'closed'], true) ? $data['status'] : 'active',
             'fields'     => wp_json_encode(self::sanitize_fields($data['fields'] ?? [])),
             'settings'   => wp_json_encode(self::sanitize_settings($data['settings'] ?? [])),
             'updated_at' => $now,
@@ -261,6 +267,10 @@ class SNN_T_Forms {
         $redirect = esc_url_raw($s['redirect_url'] ?? '');
         $out['redirect_url'] = $redirect;
 
+        $accent = trim((string)($s['accent_color'] ?? ''));
+        $out['accent_color']   = preg_match('/^#[0-9a-fA-F]{6}$/', $accent) ? strtolower($accent) : '';
+        $out['show_remaining'] = !empty($s['show_remaining']) ? 1 : 0;
+
         return $out;
     }
 
@@ -375,13 +385,26 @@ class SNN_T_Forms {
         ));
     }
 
+    public static function messages($form) {
+        return [
+            'approved'  => ['ok',   $form->settings['success_message']],
+            'pending'   => ['ok',   $form->settings['pending_message']],
+            // A rejection is not announced on screen; the email (if enabled)
+            // does that more gently.
+            'rejected'  => ['ok',   $form->settings['pending_message']],
+            'full'      => ['warn', $form->settings['full_message']],
+            'duplicate' => ['warn', $form->settings['duplicate_message']],
+            'error'     => ['err',  $form->settings['error_message']],
+        ];
+    }
+
     private static function render_form($form) {
         $result = isset($_GET['snn_result']) ? sanitize_key(wp_unslash($_GET['snn_result'])) : '';
         $for_id = isset($_GET['snn_form']) ? (int)$_GET['snn_form'] : 0;
         $errors = [];
         $old    = [];
 
-        if (!empty($_GET['snn_err'])) {
+        if (!empty($_GET['snn_err']) && $for_id === (int)$form->id) {
             $stash = get_transient('snn_t_err_' . sanitize_key(wp_unslash($_GET['snn_err'])));
             if (is_array($stash)) {
                 $errors = $stash['errors'] ?? [];
@@ -389,21 +412,15 @@ class SNN_T_Forms {
             }
         }
 
-        echo '<div class="snn-ticket-form-wrap snn-form-id-' . (int)$form->id . '" id="snn-form-' . (int)$form->id . '">';
+        $accent = $form->settings['accent_color'] ?: '#111111';
+        echo '<div class="snn-ticket-form-wrap snn-form-id-' . (int)$form->id . '" id="snn-form-' . (int)$form->id . '" style="--snn-accent:' . esc_attr($accent) . '">';
         self::render_styles();
 
         if ($for_id === (int)$form->id && $result) {
-            $messages = [
-                'approved'  => ['ok',   $form->settings['success_message']],
-                'pending'   => ['ok',   $form->settings['pending_message']],
-                'rejected'  => ['warn', $form->settings['pending_message']],
-                'full'      => ['warn', $form->settings['full_message']],
-                'duplicate' => ['warn', $form->settings['duplicate_message']],
-                'error'     => ['err',  $form->settings['error_message']],
-            ];
+            $messages = self::messages($form);
             if (isset($messages[$result])) {
                 list($kind, $text) = $messages[$result];
-                echo '<div class="snn-form-notice snn-' . esc_attr($kind) . '">' . esc_html($text) . '</div>';
+                echo '<div class="snn-form-notice snn-' . esc_attr($kind) . '" role="status" tabindex="-1">' . esc_html($text) . '</div>';
                 if (in_array($result, ['approved', 'pending', 'rejected'], true)) {
                     echo '</div>';
                     return; // form done, do not re-render the fields
@@ -411,23 +428,28 @@ class SNN_T_Forms {
             }
         }
 
-        if ($form->status === 'closed') {
+        if ($form->status === 'closed' || self::is_full($form)) {
             echo '<div class="snn-form-notice snn-warn">' . esc_html($form->settings['full_message']) . '</div></div>';
             return;
         }
 
-        if (self::is_full($form)) {
-            echo '<div class="snn-form-notice snn-warn">' . esc_html($form->settings['full_message']) . '</div></div>';
-            return;
+        if (!empty($form->settings['show_remaining']) && (int)$form->settings['max_tickets'] > 0) {
+            $left = max(0, (int)$form->settings['max_tickets'] - self::issued_count($form));
+            echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d spot left', '%d spots left', $left, 'snn-tickets'), $left)) . '</p>';
         }
 
-        if ($errors) {
-            echo '<div class="snn-form-notice snn-err"><ul class="snn-form-errors" style="margin:0;padding-left:18px;">';
-            foreach ($errors as $e) echo '<li class="snn-form-error">' . esc_html($e) . '</li>';
-            echo '</ul></div>';
+        // Errors not tied to a field go on top; the rest sit under their field.
+        $field_keys = array_column($form->fields, 'key');
+        $general = array_filter($errors, function ($k) use ($field_keys) { return !in_array($k, $field_keys, true); }, ARRAY_FILTER_USE_KEY);
+        echo '<div class="snn-form-notice snn-err" data-snn-errors role="alert"' . ($general ? '' : ' hidden') . '>';
+        if ($general) {
+            echo '<ul class="snn-form-errors">';
+            foreach ($general as $e) echo '<li class="snn-form-error">' . esc_html($e) . '</li>';
+            echo '</ul>';
         }
+        echo '</div>';
 
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="snn-ticket-form snn-ticket-form-' . (int)$form->id . '">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="snn-ticket-form snn-ticket-form-' . (int)$form->id . '" novalidate data-snn-form>';
         echo '<input type="hidden" name="action" value="snn_ticket_form_submit">';
         echo '<input type="hidden" name="form_id" value="' . (int)$form->id . '">';
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
@@ -440,19 +462,23 @@ class SNN_T_Forms {
            . '</div>';
 
         foreach ($form->fields as $field) {
-            self::render_field($field, $old[$field['key']] ?? null);
+            self::render_field($field, $old[$field['key']] ?? null, $errors[$field['key']] ?? '');
         }
 
         echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">'
            . esc_html($form->settings['submit_label']) . '</button></p>';
         echo '</form></div>';
+
+        self::render_script();
     }
 
-    private static function render_field($field, $old = null) {
+    private static function render_field($field, $old = null, $error = '') {
         $id       = 'snn-f-' . esc_attr($field['key']);
         $name     = 'snn_field[' . esc_attr($field['key']) . ']';
         $required = !empty($field['required']);
         $value    = $old !== null ? $old : ($field['default'] ?? '');
+        $err_id   = $id . '-err';
+        $aria     = ' aria-describedby="' . $err_id . '"' . ($error !== '' ? ' aria-invalid="true"' : '');
 
         if ($field['type'] === 'hidden') {
             echo '<input type="hidden" name="' . $name . '" value="' . esc_attr($value) . '">';
@@ -461,22 +487,23 @@ class SNN_T_Forms {
 
         echo '<div class="snn-field snn-field-' . esc_attr($field['type'])
            . ' snn-field-key-' . esc_attr($field['key'])
-           . ($required ? ' snn-field-required' : '') . '">';
+           . ($required ? ' snn-field-required' : '')
+           . ($error !== '' ? ' snn-has-error' : '') . '" data-key="' . esc_attr($field['key']) . '">';
 
-        $label_html = esc_html($field['label']) . ($required ? ' <span class="snn-req">*</span>' : '');
+        $label_html = esc_html($field['label']) . ($required ? ' <span class="snn-req" aria-hidden="true">*</span>' : '');
 
         switch ($field['type']) {
             case 'textarea':
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
                 echo '<textarea class="snn-input snn-textarea" id="' . $id . '" name="' . $name . '" rows="4"'
-                   . ($required ? ' required' : '')
+                   . ($required ? ' required' : '') . $aria
                    . ' placeholder="' . esc_attr($field['placeholder']) . '">' . esc_textarea((string)$value) . '</textarea>';
                 break;
 
             case 'select':
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
-                echo '<select class="snn-input snn-select" id="' . $id . '" name="' . $name . '"' . ($required ? ' required' : '') . '>';
-                echo '<option class="snn-option snn-option-empty" value="">' . esc_html($field['placeholder'] ?: 'Choose…') . '</option>';
+                echo '<select class="snn-input snn-select" id="' . $id . '" name="' . $name . '"' . ($required ? ' required' : '') . $aria . '>';
+                echo '<option class="snn-option snn-option-empty" value="">' . esc_html($field['placeholder'] ?: __('Choose…', 'snn-tickets')) . '</option>';
                 foreach ($field['options'] as $opt) {
                     echo '<option class="snn-option" value="' . esc_attr($opt) . '"' . selected($value, $opt, false) . '>'
                        . esc_html($opt) . '</option>';
@@ -485,50 +512,42 @@ class SNN_T_Forms {
                 break;
 
             case 'radio':
-                echo '<span class="snn-label">' . $label_html . '</span>';
-                echo '<span class="snn-choices snn-choices-radio">';
-                foreach ($field['options'] as $i => $opt) {
-                    $oid = $id . '-' . $i;
-                    echo '<label class="snn-choice snn-choice-radio" for="' . $oid . '">'
-                       . '<input class="snn-input snn-radio" type="radio" id="' . $oid . '" name="' . $name . '" value="' . esc_attr($opt) . '"'
-                       . checked($value, $opt, false) . ($required ? ' required' : '') . '> '
-                       . '<span class="snn-choice-text">' . esc_html($opt) . '</span></label>';
-                }
-                echo '</span>';
-                break;
-
             case 'checkbox':
-                echo '<span class="snn-label">' . $label_html . '</span>';
-                $selected = is_array($value) ? $value : [];
-                echo '<span class="snn-choices snn-choices-checkbox">';
+                $multi = $field['type'] === 'checkbox';
+                $selected = $multi ? (is_array($value) ? $value : []) : [$value];
+                echo '<fieldset class="snn-fieldset"' . $aria . '><legend class="snn-label">' . $label_html . '</legend>';
+                echo '<span class="snn-choices snn-choices-' . esc_attr($field['type']) . '">';
                 foreach ($field['options'] as $i => $opt) {
                     $oid = $id . '-' . $i;
-                    echo '<label class="snn-choice snn-choice-checkbox" for="' . $oid . '">'
-                       . '<input class="snn-input snn-checkbox" type="checkbox" id="' . $oid . '" name="' . $name . '[]" value="' . esc_attr($opt) . '"'
-                       . (in_array($opt, $selected, true) ? ' checked' : '') . '> '
+                    echo '<label class="snn-choice snn-choice-' . esc_attr($field['type']) . '" for="' . $oid . '">'
+                       . '<input class="snn-input snn-' . esc_attr($field['type']) . '" type="' . esc_attr($field['type']) . '" id="' . $oid
+                       . '" name="' . $name . ($multi ? '[]' : '') . '" value="' . esc_attr($opt) . '"'
+                       . (in_array($opt, $selected, true) ? ' checked' : '') . (!$multi && $required ? ' required' : '') . '> '
                        . '<span class="snn-choice-text">' . esc_html($opt) . '</span></label>';
                 }
-                echo '</span>';
+                echo '</span></fieldset>';
                 break;
 
             case 'consent':
                 echo '<label class="snn-choice snn-choice-consent snn-consent" for="' . $id . '">'
                    . '<input class="snn-input snn-checkbox snn-consent-input" type="checkbox" id="' . $id . '" name="' . $name . '" value="1"'
-                   . checked((string)$value, '1', false) . ($required ? ' required' : '') . '> '
-                   . $label_html . '</label>';
+                   . checked((string)$value, '1', false) . ($required ? ' required' : '') . $aria . '> '
+                   . '<span>' . $label_html . '</span></label>';
                 break;
 
             default: // text, email, tel, number, date
+                $auto = ['email' => 'email', 'tel' => 'tel'][$field['type']] ?? ($field['map_to'] === 'name' ? 'name' : '');
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
                 echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . '"'
                    . ' type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
-                   . ' value="' . esc_attr((string)$value) . '"'
+                   . ' value="' . esc_attr(is_array($value) ? '' : (string)$value) . '"'
                    . ' placeholder="' . esc_attr($field['placeholder']) . '"'
-                   . ($required ? ' required' : '')
-                   . ($field['type'] === 'email' ? ' autocomplete="email"' : '')
+                   . ($required ? ' required' : '') . $aria
+                   . ($auto ? ' autocomplete="' . $auto . '"' : '')
                    . '>';
         }
 
+        echo '<span class="snn-field-error" id="' . $err_id . '"' . ($error !== '' ? '' : ' hidden') . '>' . esc_html($error) . '</span>';
         echo '</div>';
     }
 
@@ -538,24 +557,34 @@ class SNN_T_Forms {
         $done = true;
         ?>
         <style>
-        .snn-ticket-form-wrap{max-width:560px}
+        .snn-ticket-form-wrap{max-width:560px;--snn-accent:#111}
         .snn-ticket-form .snn-field{margin-bottom:16px}
         .snn-ticket-form label,.snn-ticket-form .snn-label{display:block;font-weight:600;margin-bottom:6px}
+        .snn-ticket-form .snn-fieldset{border:0;padding:0;margin:0}
+        .snn-ticket-form .snn-fieldset legend{padding:0}
         .snn-ticket-form input[type=text],.snn-ticket-form input[type=email],
         .snn-ticket-form input[type=tel],.snn-ticket-form input[type=number],
         .snn-ticket-form input[type=date],.snn-ticket-form textarea,
-        .snn-ticket-form select{width:100%;padding:10px 12px;border:1px solid #c3c4c7;border-radius:4px;
-            font:inherit;background:#fff;box-sizing:border-box}
+        .snn-ticket-form select{width:100%;padding:10px 12px;border:1px solid #c3c4c7;border-radius:6px;
+            font:inherit;background:#fff;color:inherit;box-sizing:border-box}
+        .snn-ticket-form input:focus,.snn-ticket-form textarea:focus,.snn-ticket-form select:focus{outline:2px solid var(--snn-accent);outline-offset:1px;border-color:var(--snn-accent)}
         .snn-ticket-form textarea{resize:vertical}
         .snn-ticket-form .snn-choices{display:block}
-        .snn-ticket-form .snn-choice{display:block;font-weight:400;margin:0 0 6px}
-        .snn-ticket-form .snn-choice input{margin-right:8px}
+        .snn-ticket-form .snn-choice{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:0 0 6px}
+        .snn-ticket-form .snn-choice input{margin:.25em 0 0;accent-color:var(--snn-accent)}
         .snn-ticket-form .snn-req{color:#b3261e}
-        .snn-ticket-form .snn-form-submit button{padding:11px 22px;border:0;border-radius:4px;
-            background:#111;color:#fff;font:inherit;font-weight:600;cursor:pointer}
-        .snn-ticket-form .snn-form-submit button:hover{background:#333}
+        .snn-ticket-form .snn-has-error input,.snn-ticket-form .snn-has-error textarea,.snn-ticket-form .snn-has-error select{border-color:#b3261e}
+        .snn-ticket-form .snn-field-error{display:block;color:#b3261e;font-size:.875em;margin-top:4px}
+        .snn-ticket-form .snn-field-error[hidden]{display:none}
+        .snn-ticket-form .snn-form-submit button{padding:12px 24px;border:0;border-radius:6px;
+            background:var(--snn-accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+        .snn-ticket-form .snn-form-submit button:hover{filter:brightness(1.15)}
+        .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}
         .snn-hp{position:absolute!important;left:-9999px!important;height:1px;overflow:hidden}
-        .snn-form-notice{padding:12px 14px;border-radius:4px;margin-bottom:16px;border-left:4px solid}
+        .snn-form-remaining{font-weight:600;color:var(--snn-accent)}
+        .snn-form-notice{padding:12px 14px;border-radius:6px;margin-bottom:16px;border-left:4px solid}
+        .snn-form-notice[hidden]{display:none}
+        .snn-form-notice ul{margin:0;padding-left:18px}
         .snn-form-notice.snn-ok{background:#edf7ed;border-color:#0a7d32}
         .snn-form-notice.snn-warn{background:#fff8e5;border-color:#dba617}
         .snn-form-notice.snn-err{background:#fcf0f1;border-color:#b3261e}
@@ -563,11 +592,112 @@ class SNN_T_Forms {
         <?php
     }
 
+    /**
+     * Submit with fetch() so the visitor keeps their place and sees errors
+     * next to the fields. Without JavaScript the form posts normally.
+     */
+    private static function render_script() {
+        static $done = false;
+        if ($done) return;
+        $done = true;
+        ob_start();
+        ?>
+        (function(){
+            function init(form){
+                if (form.dataset.snnReady) return;
+                form.dataset.snnReady = '1';
+                var wrap = form.closest('.snn-ticket-form-wrap');
+                var box = wrap.querySelector('[data-snn-errors]');
+                var btn = form.querySelector('.snn-submit-button');
+
+                function clear(){
+                    box.hidden = true; box.innerHTML = '';
+                    form.querySelectorAll('.snn-has-error').forEach(function(f){ f.classList.remove('snn-has-error'); });
+                    form.querySelectorAll('.snn-field-error').forEach(function(e){ e.hidden = true; e.textContent = ''; });
+                    form.querySelectorAll('[aria-invalid]').forEach(function(e){ e.removeAttribute('aria-invalid'); });
+                }
+                function fieldError(key, msg){
+                    var f = form.querySelector('.snn-field[data-key="' + key + '"]');
+                    if (!f) return false;
+                    f.classList.add('snn-has-error');
+                    var e = f.querySelector('.snn-field-error');
+                    e.textContent = msg; e.hidden = false;
+                    var input = f.querySelector('input,select,textarea');
+                    if (input) input.setAttribute('aria-invalid', 'true');
+                    return true;
+                }
+                function done(kind, text){
+                    wrap.innerHTML = '';
+                    var n = document.createElement('div');
+                    n.className = 'snn-form-notice snn-' + kind;
+                    n.setAttribute('role', 'status'); n.tabIndex = -1;
+                    n.textContent = text;
+                    wrap.appendChild(n);
+                    n.focus();
+                }
+
+                form.addEventListener('submit', function(e){
+                    if (!window.fetch || !window.FormData) return;
+                    e.preventDefault();
+                    clear();
+                    btn.disabled = true;
+                    var fd = new FormData(form);
+                    fd.append('snn_ajax', '1');
+                    // form.action would return the hidden input named "action".
+                    fetch(form.getAttribute('action'), {method:'POST', body:fd, credentials:'same-origin'})
+                        .then(function(r){ return r.json(); })
+                        .then(function(j){
+                            var d = (j && j.data) || {};
+                            if (d.redirect) { location.href = d.redirect; return; }
+                            if (d.errors) {
+                                var general = [], first = null;
+                                Object.keys(d.errors).forEach(function(k){
+                                    if (!fieldError(k, d.errors[k])) general.push(d.errors[k]);
+                                    else if (!first) first = k;
+                                });
+                                if (general.length) {
+                                    var ul = document.createElement('ul');
+                                    general.forEach(function(m){ var li = document.createElement('li'); li.textContent = m; ul.appendChild(li); });
+                                    box.appendChild(ul);
+                                    box.hidden = false;
+                                }
+                                var sel = first ? '.snn-field[data-key="' + first + '"]' : null;
+                                var target = sel ? form.querySelector(sel + ' input,' + sel + ' select,' + sel + ' textarea') : box;
+                                if (target) { target.scrollIntoView({block:'center', behavior:'smooth'}); if (target.focus) target.focus({preventScroll:true}); }
+                                btn.disabled = false;
+                                return;
+                            }
+                            if (d.final) { done(d.kind || 'ok', d.message || ''); return; }
+                            box.textContent = d.message || ''; box.hidden = false;
+                            btn.disabled = false;
+                        })
+                        .catch(function(){ btn.disabled = false; form.submit(); });
+                });
+            }
+            document.querySelectorAll('form[data-snn-form]').forEach(init);
+        })();
+        <?php
+        self::footer_script('snn-tickets-form', ob_get_clean());
+    }
+
+    /**
+     * Print front-end JavaScript in the footer rather than inside shortcode
+     * output: the_content filters (wptexturize) would turn && into &#038;
+     * and curl the quotes in an inline <script>.
+     */
+    public static function footer_script($handle, $js) {
+        if (!wp_script_is($handle, 'registered')) {
+            wp_register_script($handle, false, [], null, true);
+        }
+        wp_enqueue_script($handle);
+        wp_add_inline_script($handle, $js);
+    }
+
     private static function current_url() {
         $scheme = is_ssl() ? 'https://' : 'http://';
         $host   = $_SERVER['HTTP_HOST'] ?? '';
         $uri    = $_SERVER['REQUEST_URI'] ?? '/';
-        return esc_url_raw($scheme . $host . $uri);
+        return esc_url_raw(remove_query_arg(['snn_form', 'snn_result', 'snn_err'], $scheme . $host . $uri));
     }
 
     /* ------------------------------------------------------------------
@@ -575,15 +705,18 @@ class SNN_T_Forms {
      * ---------------------------------------------------------------- */
 
     public static function handle_submit() {
+        self::$ajax = !empty($_POST['snn_ajax']);
+
         $form_id = isset($_POST['form_id']) ? (int)$_POST['form_id'] : 0;
         $form    = self::get($form_id);
+        self::$current_form = $form;
 
         $redirect = isset($_POST['redirect_to'])
             ? esc_url_raw(wp_unslash($_POST['redirect_to']))
             : home_url('/');
 
         if (!$form || $form->status === 'closed') {
-            self::bounce($redirect, $form_id, 'error');
+            self::bounce($redirect, $form_id, $form ? 'full' : 'error');
         }
 
         if (!isset($_POST['snn_nonce']) || !wp_verify_nonce(wp_unslash($_POST['snn_nonce']), self::NONCE)) {
@@ -655,6 +788,7 @@ class SNN_T_Forms {
                 'name'          => $name,
                 'email'         => $email,
                 'list_name'     => self::list_name($form->list_id),
+                'list_id'       => (int)$form->list_id,
                 'form_name'     => $form->name,
                 'fields'        => $data,
                 'submission_id' => $submission_id,
@@ -664,6 +798,7 @@ class SNN_T_Forms {
         self::notify_admin($form, $submission_id, $name, $email, $decision);
 
         if ($form->settings['redirect_url']) {
+            if (self::$ajax) wp_send_json_success(['final' => true, 'redirect' => $form->settings['redirect_url']]);
             wp_safe_redirect($form->settings['redirect_url']);
             exit;
         }
@@ -674,9 +809,9 @@ class SNN_T_Forms {
     /**
      * Validate and normalise the posted values.
      *
-     * @return array [data, errors, name, email]
+     * @return array [data, errors keyed by field key, name, email]
      */
-    private static function collect($form, $raw) {
+    public static function collect($form, $raw) {
         $data   = [];
         $errors = [];
         $name   = '';
@@ -685,6 +820,7 @@ class SNN_T_Forms {
         foreach ($form->fields as $field) {
             $key   = $field['key'];
             $value = $raw[$key] ?? ($field['type'] === 'checkbox' ? [] : '');
+            $error = '';
 
             if ($field['type'] === 'checkbox') {
                 $value = array_values(array_filter(array_map('sanitize_text_field', (array)$value)));
@@ -701,7 +837,7 @@ class SNN_T_Forms {
                 $value = sanitize_email(trim((string)$value));
                 $empty = $value === '';
                 if (!$empty && !is_email($value)) {
-                    $errors[] = sprintf('%s does not look like a valid email address.', $field['label']);
+                    $error = sprintf(__('%s does not look like a valid email address.', 'snn-tickets'), $field['label']);
                 }
             } else {
                 $value = sanitize_text_field((string)$value);
@@ -709,13 +845,17 @@ class SNN_T_Forms {
 
                 if (in_array($field['type'], ['select', 'radio'], true) && !$empty
                     && !in_array($value, $field['options'], true)) {
-                    $errors[] = sprintf('%s is not one of the available choices.', $field['label']);
+                    $error = sprintf(__('%s is not one of the available choices.', 'snn-tickets'), $field['label']);
                 }
             }
 
             if (!empty($field['required']) && $empty) {
-                $errors[] = sprintf('%s is required.', $field['label']);
+                $error = $field['type'] === 'consent'
+                    ? __('Please tick this box to continue.', 'snn-tickets')
+                    : sprintf(__('%s is required.', 'snn-tickets'), $field['label']);
             }
+
+            if ($error !== '') $errors[$key] = $error;
 
             $data[$key] = $value;
 
@@ -730,8 +870,8 @@ class SNN_T_Forms {
             }
         }
 
-        if ($email !== '' && !is_email($email)) {
-            $errors[] = 'A valid email address is required.';
+        if ($email !== '' && !is_email($email) && !$errors) {
+            $errors['_email'] = __('A valid email address is required.', 'snn-tickets');
         }
 
         return [$data, $errors, $name, $email];
@@ -773,12 +913,12 @@ class SNN_T_Forms {
 
         $link = admin_url('admin.php?page=snn-tickets-submissions&submission=' . (int)$submission_id);
 
-        $subject = sprintf('[%s] New registration: %s', get_bloginfo('name'), $form->name);
-        $body    = '<p>A new registration came in on <strong>' . esc_html($form->name) . '</strong>.</p>'
-                 . '<p><strong>Name:</strong> ' . esc_html($name ?: '—') . '<br>'
-                 . '<strong>Email:</strong> ' . esc_html($email ?: '—') . '<br>'
-                 . '<strong>Status:</strong> ' . esc_html($status) . '</p>'
-                 . '<p><a href="' . esc_url($link) . '">Review it in the dashboard</a></p>';
+        $subject = sprintf(__('[%1$s] New registration: %2$s', 'snn-tickets'), get_bloginfo('name'), $form->name);
+        $body    = '<p>' . sprintf(esc_html__('A new registration came in on %s.', 'snn-tickets'), '<strong>' . esc_html($form->name) . '</strong>') . '</p>'
+                 . '<p><strong>' . esc_html__('Name', 'snn-tickets') . ':</strong> ' . esc_html($name ?: '—') . '<br>'
+                 . '<strong>' . esc_html__('Email', 'snn-tickets') . ':</strong> ' . esc_html($email ?: '—') . '<br>'
+                 . '<strong>' . esc_html__('Status', 'snn-tickets') . ':</strong> ' . esc_html($status) . '</p>'
+                 . '<p><a href="' . esc_url($link) . '">' . esc_html__('Review it in the dashboard', 'snn-tickets') . '</a></p>';
 
         SNN_T_Mailer::enqueue([
             'to_email'      => $to,
@@ -790,6 +930,18 @@ class SNN_T_Forms {
     }
 
     private static function bounce($redirect, $form_id, $result) {
+        if (self::$ajax) {
+            $form = self::$current_form;
+            $messages = $form ? self::messages($form) : [];
+            list($kind, $text) = $messages[$result] ?? ['err', __('Something went wrong. Please try again.', 'snn-tickets')];
+            wp_send_json_success([
+                'result'  => $result,
+                'kind'    => $kind,
+                'message' => $text,
+                'final'   => in_array($result, ['approved', 'pending', 'rejected', 'full'], true),
+            ]);
+        }
+
         wp_safe_redirect(add_query_arg([
             'snn_form'   => (int)$form_id,
             'snn_result' => $result,
@@ -798,6 +950,10 @@ class SNN_T_Forms {
     }
 
     private static function bounce_with_errors($redirect, $form_id, $errors, $values) {
+        if (self::$ajax) {
+            wp_send_json_success(['result' => 'invalid', 'errors' => $errors]);
+        }
+
         $token = wp_generate_password(12, false, false);
         set_transient('snn_t_err_' . $token, [
             'errors' => $errors,

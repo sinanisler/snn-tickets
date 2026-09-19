@@ -1,0 +1,2665 @@
+# SNN Tickets translation template.
+msgid ""
+msgstr ""
+"Project-Id-Version: SNN Tickets
+"
+"MIME-Version: 1.0
+"
+"Content-Type: text/plain; charset=UTF-8
+"
+"Content-Transfer-Encoding: 8bit
+"
+"Plural-Forms: nplurals=2; plural=(n != 1);
+"
+"X-Domain: snn-tickets
+"
+
+#: includes/class-snn-submissions.php:255
+#, php-format
+msgid "%1$d submission(s) %2$s."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:918
+#, php-format
+msgid "%1$s (%2$d with email)"
+msgid_plural "%1$s (%2$d with email)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-dashboard.php:85
+#, php-format
+msgid "%1$s sent · %2$s failed"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:871
+#, php-format
+msgid "%d already had a ticket and were skipped."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:102
+#, php-format
+msgid "%d approved"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:970
+#, php-format
+msgid "%d could not be queued (bad address?)."
+msgstr ""
+
+#: includes/class-snn-admin.php:1011
+#, php-format
+msgid "%d message(s) requeued."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:100
+#, php-format
+msgid "%d pending"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:110
+#, php-format
+msgid "%d revoked"
+msgstr ""
+
+#: includes/class-snn-submissions.php:535 includes/class-snn-tickets-admin.php:324
+#, php-format
+msgid "%d selected"
+msgstr ""
+
+#: includes/class-snn-admin.php:1022
+#, php-format
+msgid "%d sent record(s) removed."
+msgstr ""
+
+#: includes/class-snn-forms.php:438
+#, php-format
+msgid "%d spot left"
+msgid_plural "%d spots left"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-tickets-admin.php:531
+#, php-format
+msgid "%d ticket email(s) queued."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:530
+#, php-format
+msgid "%d ticket(s) deleted."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:528
+#, php-format
+msgid "%d ticket(s) restored."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:527
+#, php-format
+msgid "%d ticket(s) revoked."
+msgstr ""
+
+#: includes/class-snn-admin.php:931
+#, php-format
+msgid "%d tries"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:533
+#, php-format
+msgid "%d updated."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:940
+#, php-format
+msgid "%s (copy)"
+msgstr ""
+
+#: includes/class-snn-admin.php:342 includes/class-snn-tickets.php:195
+#, php-format
+msgid "%s ago"
+msgstr ""
+
+#: includes/class-snn-forms.php:840
+#, php-format
+msgid "%s does not look like a valid email address."
+msgstr ""
+
+#: includes/class-snn-forms.php:848
+#, php-format
+msgid "%s is not one of the available choices."
+msgstr ""
+
+#: includes/class-snn-forms.php:855
+#, php-format
+msgid "%s is required."
+msgstr ""
+
+#: includes/class-snn-admin.php:957 includes/class-snn-submissions.php:451
+#, php-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-tickets-admin.php:240
+#, php-format
+msgid "%s ticket"
+msgid_plural "%s tickets"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-dashboard.php:80
+#, php-format
+msgid "%s today"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:395
+msgid "(untitled)"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:402
+msgid "(used by rules and {field:key})"
+msgstr ""
+
+#: includes/class-snn-submissions.php:502
+#, php-format
+msgid "+%d more"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:265
+msgid "0 = unlimited. Pending registrations count as taken."
+msgstr ""
+
+#: includes/class-snn-events.php:194
+msgid "12 Harbour Street, Istanbul"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:63
+msgid "A form collects registrations and turns them into tickets — automatically, after your review, or by rules."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:793
+msgid "A header row with Name and Email columns (any order, any case)."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:713 includes/class-snn-tickets-admin.php:778
+msgid "A new event"
+msgstr ""
+
+#: includes/class-snn-forms.php:917
+#, php-format
+msgid "A new registration came in on %s."
+msgstr ""
+
+#: includes/class-snn-admin.php:778
+msgid "A template name is required."
+msgstr ""
+
+#: includes/class-snn-forms.php:874
+msgid "A valid email address is required."
+msgstr ""
+
+#: includes/class-snn-mailer.php:327
+msgid "A valid recipient address is required."
+msgstr ""
+
+#: includes/class-snn-mailer.php:96
+msgid "About your registration"
+msgstr ""
+
+#: includes/class-snn-design.php:24
+msgid "Accent / buttons"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:337
+msgid "Accent colour (button, focus, checkboxes)"
+msgstr ""
+
+#: includes/class-snn-admin.php:922 includes/class-snn-forms-admin.php:76 includes/class-snn-submissions.php:466 includes/class-snn-tickets-admin.php:90 includes/class-snn-tickets-admin.php:254
+msgid "Actions"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:77 includes/class-snn-tickets-admin.php:195
+msgid "Active tickets"
+msgstr ""
+
+#: includes/class-snn-events.php:203
+msgid "Ada Lovelace"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:51
+msgid "Add New"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:416
+msgid "Add a field first."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:412
+msgid "Add a field to see the form."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:417
+msgid "Add at least one field before saving."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:107
+msgid "Add date & venue"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:230
+msgid "Add field"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:257
+msgid "Add rule"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:186
+msgid "Add tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:711 includes/class-snn-tickets-admin.php:776
+msgid "Add to"
+msgstr ""
+
+#: includes/class-snn-files.php:43
+msgid "Add to Apple Wallet"
+msgstr ""
+
+#: includes/class-snn-files.php:46
+msgid "Add to Google Wallet"
+msgstr ""
+
+#: includes/class-snn-files.php:50
+msgid "Add to calendar"
+msgstr ""
+
+#: includes/class-snn-mailer.php:126 includes/class-snn-tickets-admin.php:438 includes/class-snn-wallet.php:117
+msgid "Address"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:268
+msgid "Admin notification"
+msgstr ""
+
+#: includes/class-snn-design.php:317 includes/class-snn-pdf.php:568
+msgid "Admit one"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:328
+msgid "After auto-approval"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:329
+msgid "After held for review"
+msgstr ""
+
+#: includes/class-snn-submissions.php:409 includes/class-snn-tickets-admin.php:161
+msgid "All"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:188
+msgid "All events"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:170 includes/class-snn-submissions.php:422
+msgid "All forms"
+msgstr ""
+
+#: includes/class-snn-qr.php:233 includes/class-snn-scanner.php:164
+msgid "Already checked in"
+msgstr ""
+
+#: includes/class-snn-admin.php:1007
+msgid "Another send is already running. Try again in a moment."
+msgstr ""
+
+#: includes/class-snn-submissions.php:464 includes/class-snn-submissions.php:615
+msgid "Answers"
+msgstr ""
+
+#: includes/class-snn-mailer.php:139
+msgid "Any form field"
+msgstr ""
+
+#: includes/class-snn-admin.php:497
+msgid "Apple WWDR certificate"
+msgstr ""
+
+#: includes/class-snn-admin.php:476
+msgid "Apple Wallet"
+msgstr ""
+
+#: includes/class-snn-files.php:92
+msgid "Apple Wallet is not set up."
+msgstr ""
+
+#: includes/class-snn-mailer.php:134
+msgid "Apple Wallet link"
+msgstr ""
+
+#: includes/class-snn-events.php:18
+msgid "Apple Wallet pass (.pkpass)"
+msgstr ""
+
+#: includes/class-snn-admin.php:441
+msgid "Apple Wallet support"
+msgstr ""
+
+#: includes/class-snn-admin.php:479
+msgid "Apple's guide"
+msgstr ""
+
+#: includes/class-snn-submissions.php:447 includes/class-snn-tickets-admin.php:236
+msgid "Apply"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:72
+msgid "Approval"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:159
+msgid "Approval & capacity"
+msgstr ""
+
+#: includes/class-snn-submissions.php:509
+msgid "Approve"
+msgstr ""
+
+#: includes/class-snn-submissions.php:541
+#, php-format
+msgid "Approve %d submission(s) and send their tickets?"
+msgstr ""
+
+#: includes/class-snn-submissions.php:442 includes/class-snn-submissions.php:601
+msgid "Approve & send ticket"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:253
+msgid "Approve when"
+msgstr ""
+
+#: includes/class-snn-submissions.php:407
+#, php-format
+msgid "Approved (%d)"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:450
+msgid "Attach to the ticket email"
+msgstr ""
+
+#: includes/class-snn-admin.php:986
+msgid "Attachments"
+msgstr ""
+
+#: includes/class-snn-admin.php:213
+msgid "Attachments:"
+msgstr ""
+
+#: includes/class-snn-design.php:305 includes/class-snn-pdf.php:589 includes/class-snn-wallet.php:107
+msgid "Attendee"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:250
+msgid "Auto-approve only when the answers match."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:44
+msgid "Automatic"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:82
+msgid "Awaiting review"
+msgstr ""
+
+#: includes/class-snn-admin.php:971 includes/class-snn-submissions.php:581
+msgid "Back"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:416
+msgid "Back to tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:601
+msgid "Bad parameters."
+msgstr ""
+
+#: includes/class-snn-design.php:50
+msgid "Boarding pass"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:100
+msgid "Branding"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:94 includes/class-snn-tickets-admin.php:77
+msgid "Build a registration form"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:291 includes/class-snn-forms-admin.php:305 includes/class-snn-forms-admin.php:316
+msgid "Built-in default"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:923
+msgid "Built-in ticket email"
+msgstr ""
+
+#: includes/class-snn-submissions.php:441 includes/class-snn-tickets-admin.php:229
+msgid "Bulk actions"
+msgstr ""
+
+#: includes/class-snn-design.php:25
+msgid "Button text"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:111
+msgid "Buttons"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:46
+msgid "By rules"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:774
+msgid "CSV file"
+msgstr ""
+
+#: includes/class-snn-mailer.php:133
+msgid "Calendar file link"
+msgstr ""
+
+#: includes/class-snn-events.php:19
+msgid "Calendar invite (.ics)"
+msgstr ""
+
+#: includes/class-snn-scanner.php:172
+msgid "Camera unavailable. Type the code below."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:346
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:118 includes/class-snn-forms-admin.php:73 includes/class-snn-forms-admin.php:263
+msgid "Capacity"
+msgstr ""
+
+#: includes/class-snn-design.php:21
+msgid "Card background"
+msgstr ""
+
+#: includes/class-snn-admin.php:493
+msgid "Certificate"
+msgstr ""
+
+#: includes/class-snn-admin.php:487
+msgid "Certificate (.p12)"
+msgstr ""
+
+#: includes/class-snn-admin.php:490
+msgid "Certificate password"
+msgstr ""
+
+#: includes/class-snn-scanner.php:259
+msgid "Check"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:253
+msgid "Check-in"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:529
+#, php-format
+msgid "Check-in undone for %d ticket(s)."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:79 includes/class-snn-dashboard.php:97 includes/class-snn-tickets-admin.php:88 includes/class-snn-tickets-admin.php:162 includes/class-snn-tickets-admin.php:196
+msgid "Checked in"
+msgstr ""
+
+#: includes/class-snn-scanner.php:173
+msgid "Checking…"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:409
+msgid "Choices (one per line)"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:71
+msgid "Choose a design"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:162
+msgid "Choose a logo"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:106
+msgid "Choose image"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:415 includes/class-snn-forms.php:506 includes/class-snn-tickets-admin.php:915
+msgid "Choose…"
+msgstr ""
+
+#: includes/class-snn-design.php:114
+msgid "Classic stub"
+msgstr ""
+
+#: includes/class-snn-admin.php:902
+msgid "Clear sent log"
+msgstr ""
+
+#: includes/class-snn-admin.php:332
+msgid "Click to copy"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:263 includes/class-snn-tickets-admin.php:264
+msgid "Click to edit"
+msgstr ""
+
+#: includes/class-snn-admin.php:212 includes/class-snn-admin.php:224
+msgid "Close"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:199
+msgid "Closed"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:251
+msgid "Code"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:721 includes/class-snn-tickets-admin.php:782
+msgid "Code length"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:467
+#, php-format
+msgid "Colour tweaks and the logo live on the %s screen."
+msgstr ""
+
+#: includes/class-snn-design-admin.php:87
+msgid "Colours"
+msgstr ""
+
+#: includes/class-snn-admin.php:707
+#, php-format
+msgid "Colours, logo and footer come from the %s screen and wrap this message automatically."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:794
+msgid "Comma or semicolon separated; UTF-8, with or without BOM."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:298
+msgid "Confirmation email"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:32
+msgid "Connect Apple or Google Wallet"
+msgstr ""
+
+#: includes/class-snn-design.php:98
+msgid "Corporate"
+msgstr ""
+
+#: includes/class-snn-wallet.php:202
+msgid "Could not create the pass archive."
+msgstr ""
+
+#: includes/class-snn-wallet.php:242
+msgid "Could not read the signature produced by OpenSSL."
+msgstr ""
+
+#: includes/class-snn-mailer.php:353
+msgid "Could not write to the mail queue."
+msgstr ""
+
+#: includes/class-snn-design.php:115
+msgid "Cream paper and serif type. Theatre and galas."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:20
+msgid "Create a registration form"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:64
+msgid "Create your first form"
+msgstr ""
+
+#: includes/class-snn-admin.php:439
+msgid "DISABLE_WP_CRON is on — make sure a real cron job calls wp-cron.php."
+msgstr ""
+
+#: includes/class-snn-design.php:67
+msgid "Dark card with a neon accent. Concerts and nightlife."
+msgstr ""
+
+#: snn-tickets.php:117
+msgid "Dashboard"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:618
+msgid "Database error."
+msgstr ""
+
+#: includes/class-snn-design.php:306 includes/class-snn-pdf.php:595 includes/class-snn-wallet.php:109
+msgid "Date"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:249
+msgid "Decide by rules"
+msgstr ""
+
+#: includes/class-snn-submissions.php:662
+msgid "Decided"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:338
+msgid "Default"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:408
+msgid "Default value"
+msgstr ""
+
+#: includes/class-snn-admin.php:724 includes/class-snn-admin.php:947 includes/class-snn-forms-admin.php:119
+msgid "Delete"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:300
+#, php-format
+msgid "Delete \"%s\" and all %d tickets? This cannot be undone."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:304
+msgid "Delete event and tickets"
+msgstr ""
+
+#: includes/class-snn-submissions.php:445 includes/class-snn-submissions.php:609 includes/class-snn-tickets-admin.php:234
+msgid "Delete permanently"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:297
+msgid "Delete this event"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:115
+msgid "Delete this form? Submissions and tickets already created are kept."
+msgstr ""
+
+#: includes/class-snn-admin.php:723
+msgid "Delete this template? Forms using it fall back to the built-in default."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:677
+#, php-format
+msgid "Deleted \"%1$s\" and %2$d tickets."
+msgstr ""
+
+#: includes/class-snn-admin.php:707 includes/class-snn-design-admin.php:62 includes/class-snn-forms-admin.php:280 includes/class-snn-tickets-admin.php:460 includes/class-snn-tickets-admin.php:467 snn-tickets.php:126
+msgid "Design"
+msgstr ""
+
+#: includes/class-snn-events.php:190
+msgid "Design Summit 2026"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:221
+msgid "Design saved."
+msgstr ""
+
+#: includes/class-snn-submissions.php:658 includes/class-snn-tickets-admin.php:426
+msgid "Details"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:168
+msgid "Door scanner:"
+msgstr ""
+
+#: includes/class-snn-admin.php:418
+msgid "Door staff PIN"
+msgstr ""
+
+#: includes/class-snn-events.php:196
+msgid "Doors open 30 minutes before the start. Bring this ticket on your phone or printed."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:443
+msgid "Doors open at 18:30. Bring a photo ID."
+msgstr ""
+
+#: includes/class-snn-admin.php:500
+#, php-format
+msgid "Download %s from Apple and upload it here."
+msgstr ""
+
+#: includes/class-snn-files.php:48
+msgid "Download PDF"
+msgstr ""
+
+#: includes/class-snn-admin.php:503
+msgid "Download a sample pass"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:797
+msgid "Download a template"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:457
+msgid "Download links for these are always available through {wallet_buttons}, even when not attached."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:222
+msgid "Drag to reorder, click to edit. Map one field to Name and one to Email — the email mapping is where the ticket goes."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:112 includes/class-snn-forms-admin.php:398
+msgid "Duplicate"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:331
+msgid "Duplicate email"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:784
+msgid "Duplicates"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:907
+#, php-format
+msgid "Each attendee with an email address gets their own ticket. Sending runs in the background at %d per minute — you can close this page."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:75
+msgid "Each event has its own ticket list. Build a registration form and one is created for you, or add tickets directly."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:107
+msgid "Edit"
+msgstr ""
+
+#: includes/class-snn-admin.php:682
+#, php-format
+msgid "Edit \"%s\""
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:169
+msgid "Edit form"
+msgstr ""
+
+#: includes/class-snn-forms.php:919 includes/class-snn-tickets-admin.php:124 includes/class-snn-tickets-admin.php:250
+msgid "Email"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:109
+msgid "Email footer"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:269
+msgid "Email me on every submission"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:118
+msgid "Email only"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:217
+msgid "Email this list"
+msgstr ""
+
+#: includes/class-snn-admin.php:908
+msgid "Email, subject or code"
+msgstr ""
+
+#: includes/class-snn-admin.php:671 includes/class-snn-admin.php:878 includes/class-snn-forms-admin.php:160 includes/class-snn-submissions.php:624 includes/class-snn-tickets-admin.php:901 snn-tickets.php:123
+msgid "Emails"
+msgstr ""
+
+#: includes/class-snn-admin.php:396
+msgid "Emails per minute"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:84
+msgid "Emails waiting"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:433
+msgid "Ends"
+msgstr ""
+
+#: includes/class-snn-scanner.php:237
+msgid "Enter the door PIN to start checking tickets in."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:97 includes/class-snn-forms-admin.php:71 includes/class-snn-tickets-admin.php:85 includes/class-snn-tickets-admin.php:913 includes/class-snn-wallet.php:106
+msgid "Event"
+msgstr ""
+
+#: includes/class-snn-mailer.php:123
+msgid "Event date"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:204
+msgid "Event date & venue"
+msgstr ""
+
+#: includes/class-snn-mailer.php:122 includes/class-snn-tickets-admin.php:429
+msgid "Event name"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:482
+msgid "Event saved."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:123 includes/class-snn-tickets-admin.php:185
+msgid "Event settings"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:415
+#, php-format
+msgid "Event settings: %s"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:91
+msgid "Events"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:67 includes/class-snn-tickets-admin.php:700 includes/class-snn-tickets-admin.php:763 snn-tickets.php:120
+msgid "Events & Tickets"
+msgstr ""
+
+#: includes/class-snn-admin.php:52
+msgid "Events & tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:795
+msgid "Every row gets a unique ticket code."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:246
+msgid "Every submission gets a ticket straight away."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:339
+msgid "Everything else follows your theme. The form markup has stable class names (snn-field, snn-input, snn-submit-button…) for custom CSS."
+msgstr ""
+
+#: includes/class-snn-submissions.php:430 includes/class-snn-tickets-admin.php:216
+msgid "Export CSV"
+msgstr ""
+
+#: includes/class-snn-design.php:82
+msgid "Festival"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:158 includes/class-snn-forms-admin.php:221
+msgid "Fields"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:118 includes/class-snn-forms-admin.php:70 includes/class-snn-submissions.php:461 includes/class-snn-submissions.php:660
+msgid "Form"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:928
+msgid "Form deleted."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:951
+msgid "Form duplicated. The copy starts closed so it cannot take registrations until you open it."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:184 includes/class-snn-mailer.php:136
+msgid "Form name"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:936
+msgid "Form not found."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:890
+msgid "Form saved."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:898
+#, php-format
+msgid "Form saved. Event \"%s\" was created for it — add its date and venue in the event settings."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:102
+msgid "Form:"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:791
+msgid "Format"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:50 snn-tickets.php:118
+msgid "Forms"
+msgstr ""
+
+#: includes/class-snn-admin.php:511
+msgid "Free. Create an issuer in the Google Pay & Wallet Console, create a Google Cloud service account with the Wallet API enabled, add it to the issuer, and upload its JSON key."
+msgstr ""
+
+#: includes/class-snn-admin.php:391
+msgid "From address"
+msgstr ""
+
+#: includes/class-snn-admin.php:387
+msgid "From name"
+msgstr ""
+
+#: includes/class-snn-admin.php:437
+msgid "GD is not installed; the built-in PNG encoder is used instead. This works fine."
+msgstr ""
+
+#: includes/class-snn-admin.php:437
+msgid "GD is present — PNGs render through GD."
+msgstr ""
+
+#: includes/class-snn-admin.php:359
+msgid "General"
+msgstr ""
+
+#: includes/class-snn-admin.php:53 includes/class-snn-tickets-admin.php:725
+msgid "Generate"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:705
+msgid "Generate blank tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:78 snn-tickets.php:121
+msgid "Generate tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:746
+msgid "Generated"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:751
+#, php-format
+msgid "Generated %d tickets."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:717
+#, php-format
+msgid "Generated %s"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:332
+msgid "Generic error"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:22
+msgid "Give your event a date and venue"
+msgstr ""
+
+#: includes/class-snn-pdf.php:635 includes/class-snn-tickets-admin.php:442 includes/class-snn-wallet.php:118
+msgid "Good to know"
+msgstr ""
+
+#: includes/class-snn-admin.php:509
+msgid "Google Wallet"
+msgstr ""
+
+#: includes/class-snn-files.php:115
+msgid "Google Wallet is not set up."
+msgstr ""
+
+#: includes/class-snn-mailer.php:135
+msgid "Google Wallet link"
+msgstr ""
+
+#: includes/class-snn-admin.php:512
+msgid "Google's guide"
+msgstr ""
+
+#: includes/class-snn-design.php:83
+msgid "Gradient header and bold display type."
+msgstr ""
+
+#: includes/class-snn-events.php:193 includes/class-snn-tickets-admin.php:437
+msgid "Grand Hall"
+msgstr ""
+
+#: includes/class-snn-design.php:305 includes/class-snn-mailer.php:178 includes/class-snn-pdf.php:590 includes/class-snn-qr.php:246 includes/class-snn-wallet.php:107 includes/class-snn-wallet.php:315
+msgid "Guest"
+msgstr ""
+
+#: includes/class-snn-design.php:26
+msgid "Header background"
+msgstr ""
+
+#: includes/class-snn-design.php:27
+msgid "Header text"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:279
+#, php-format
+msgid "Held registrations get the confirmation email; approved ones get the ticket email. Leave a box empty to use the saved template or built-in default. Colours and logo come from %s."
+msgstr ""
+
+#: includes/class-snn-mailer.php:107
+msgid "Here is your ticket. Show the QR code at the entrance — on your phone or printed."
+msgstr ""
+
+#: includes/class-snn-mailer.php:97
+msgid "Hi {name},"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:247
+msgid "Hold for review"
+msgstr ""
+
+#: includes/class-snn-design.php:51
+msgid "Horizontal ticket with a perforated QR stub."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:719
+msgid "How many?"
+msgstr ""
+
+#: includes/class-snn-admin.php:54 snn-tickets.php:122
+msgid "Import CSV"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:787
+msgid "Import and create tickets"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:769
+msgid "Import attendees from CSV"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:79
+msgid "Import from CSV"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:861
+msgid "Imported"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:870
+#, php-format
+msgid "Imported %d attendees."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:781
+#, php-format
+msgid "Imported %s"
+msgstr ""
+
+#: includes/class-snn-submissions.php:651
+msgid "In event list"
+msgstr ""
+
+#: includes/class-snn-admin.php:21 includes/class-snn-forms-admin.php:17 includes/class-snn-submissions.php:351
+msgid "Insufficient permissions"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:611
+msgid "Invalid email address."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:334
+msgid "Invalid email. Leave empty to clear."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:593
+msgid "Invalid request."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:245
+msgid "Issue a ticket automatically"
+msgstr ""
+
+#: includes/class-snn-pdf.php:645
+#, php-format
+msgid "Issued to %s"
+msgstr ""
+
+#: includes/class-snn-admin.php:514
+msgid "Issuer ID"
+msgstr ""
+
+#: includes/class-snn-mailer.php:129
+msgid "Just the QR image"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:401
+msgid "Key"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:399
+msgid "Label"
+msgstr ""
+
+#: includes/class-snn-admin.php:393
+msgid "Leave blank to use whatever WordPress is configured to send as."
+msgstr ""
+
+#: includes/class-snn-admin.php:424
+msgid "Lets volunteers use the scanner page without a WordPress account. They stay signed in for 24 hours; changing the PIN signs everyone out. Without a PIN, only logged-in admins can check tickets in."
+msgstr ""
+
+#: includes/class-snn-mailer.php:131
+msgid "Link to the ticket page"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:630 includes/class-snn-tickets-admin.php:661
+msgid "List not found"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:234
+msgid "Live preview"
+msgstr ""
+
+#: includes/class-snn-scanner.php:265
+msgid "Lock scanner"
+msgstr ""
+
+#: includes/class-snn-scanner.php:246
+msgid "Log in"
+msgstr ""
+
+#: includes/class-snn-scanner.php:245
+msgid "Log in to check tickets in."
+msgstr ""
+
+#: includes/class-snn-design-admin.php:102
+msgid "Logo"
+msgstr ""
+
+#: includes/class-snn-design.php:99
+msgid "Logo bar, grey panel, blue accent. Conferences."
+msgstr ""
+
+#: snn-tickets.php:125
+msgid "Mail queue"
+msgstr ""
+
+#: includes/class-snn-admin.php:438
+msgid "Mail queue cron"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:34
+msgid "Mail queue cron is scheduled"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:45
+msgid "Manual review"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:403
+msgid "Maps to"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:264
+msgid "Maximum registrations"
+msgstr ""
+
+#: includes/class-snn-admin.php:991
+msgid "Message body"
+msgstr ""
+
+#: includes/class-snn-admin.php:1019
+msgid "Message removed."
+msgstr ""
+
+#: includes/class-snn-admin.php:1015
+msgid "Message requeued."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:326
+msgid "Messages"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:161
+msgid "Messages & style"
+msgstr ""
+
+#: includes/class-snn-design.php:66
+msgid "Midnight"
+msgstr ""
+
+#: includes/class-snn-design.php:34
+msgid "Minimal"
+msgstr ""
+
+#: includes/class-snn-scanner.php:120
+msgid "Missing code"
+msgstr ""
+
+#: includes/class-snn-design.php:23
+msgid "Muted text"
+msgstr ""
+
+#: includes/class-snn-forms.php:918 includes/class-snn-tickets-admin.php:249
+msgid "Name"
+msgstr ""
+
+#: includes/class-snn-submissions.php:427
+msgid "Name, email or answer"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:213
+msgid "Name, email or code"
+msgstr ""
+
+#: includes/class-snn-admin.php:478
+msgid "Needs a paid Apple Developer account. Create a Pass Type ID, generate its certificate, and export it (with its private key) as a .p12 file."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:455
+msgid "Needs a start date."
+msgstr ""
+
+#: includes/class-snn-admin.php:437
+msgid "Neither GD nor zlib is available. QR images cannot be generated."
+msgstr ""
+
+#: includes/class-snn-scanner.php:174
+msgid "Network error – try again."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:190
+msgid "New event named after this form"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:169
+msgid "New form"
+msgstr ""
+
+#: includes/class-snn-admin.php:682
+msgid "New template"
+msgstr ""
+
+#: includes/class-snn-admin.php:439 includes/class-snn-admin.php:884
+#, php-format
+msgid "Next run in %s."
+msgstr ""
+
+#: includes/class-snn-wallet.php:78
+msgid "No Pass Type ID certificate has been uploaded."
+msgstr ""
+
+#: includes/class-snn-submissions.php:625
+msgid "No emails for this submission."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:74
+msgid "No events yet"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:93
+msgid "No events yet. Build a registration form to create one."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:418
+msgid "No field is mapped to the ticket holder email, so tickets cannot be emailed. Save anyway?"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:411
+msgid "No fields yet. Add one below."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:62
+msgid "No forms yet"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:413
+msgid "No rules yet."
+msgstr ""
+
+#: includes/class-snn-submissions.php:471
+msgid "No submissions here yet."
+msgstr ""
+
+#: includes/class-snn-submissions.php:471
+msgid "No submissions match."
+msgstr ""
+
+#: includes/class-snn-tickets.php:118
+msgid "No ticket code supplied."
+msgstr ""
+
+#: includes/class-snn-submissions.php:654
+msgid "No ticket yet — it is created on approval."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:258
+msgid "No tickets in this event yet."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:258
+msgid "No tickets match."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:154
+msgid "Nobody has been checked in yet."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:971
+msgid "Nobody on this list has an email address."
+msgstr ""
+
+#: includes/class-snn-admin.php:735
+msgid "None yet. Forms use the built-in defaults, which already include the designed ticket and wallet buttons."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:163
+msgid "Not checked in"
+msgstr ""
+
+#: includes/class-snn-admin.php:440
+msgid "Not scheduled. Deactivate and reactivate the plugin to fix."
+msgstr ""
+
+#: includes/class-snn-admin.php:420
+msgid "Not set"
+msgstr ""
+
+#: includes/class-snn-admin.php:477 includes/class-snn-admin.php:510
+msgid "Not set up"
+msgstr ""
+
+#: includes/class-snn-qr.php:233 includes/class-snn-scanner.php:165
+msgid "Not valid"
+msgstr ""
+
+#: includes/class-snn-submissions.php:663
+msgid "Note"
+msgstr ""
+
+#: includes/class-snn-submissions.php:608
+msgid "Note (optional, kept with the decision)"
+msgstr ""
+
+#: includes/class-snn-admin.php:927
+msgid "Nothing here."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:404
+msgid "Nothing in particular"
+msgstr ""
+
+#: includes/class-snn-admin.php:1025 includes/class-snn-tickets-admin.php:505
+msgid "Nothing to do."
+msgstr ""
+
+#: includes/class-snn-admin.php:529
+msgid "Once a wallet is ready, its button appears under {wallet_buttons} in ticket emails and on the attendee ticket page. To attach the .pkpass file itself, tick it in the event settings of each list."
+msgstr ""
+
+#: includes/class-snn-design-admin.php:63
+msgid "One design styles the ticket email, the PDF, the wallet passes and the attendee ticket page. Each event can also pick its own preset in its event settings."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:267
+msgid "One registration per email address"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:198
+msgid "Open"
+msgstr ""
+
+#: includes/class-snn-admin.php:442
+msgid "OpenSSL is available."
+msgstr ""
+
+#: includes/class-snn-admin.php:442
+msgid "OpenSSL is missing, so wallet passes cannot be signed."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:419
+msgid "Option one"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:420
+msgid "Option two"
+msgstr ""
+
+#: includes/class-snn-admin.php:492
+msgid "Or PEM files"
+msgstr ""
+
+#: includes/class-snn-admin.php:485
+msgid "Organisation name"
+msgstr ""
+
+#: includes/class-snn-pdf.php:644
+#, php-format
+msgid "Organised by %s"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:440 includes/class-snn-wallet.php:119
+msgid "Organiser"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:258
+msgid "Otherwise:"
+msgstr ""
+
+#: includes/class-snn-mailer.php:132
+msgid "PDF download link"
+msgstr ""
+
+#: includes/class-snn-events.php:17
+msgid "PDF ticket"
+msgstr ""
+
+#: includes/class-snn-admin.php:420
+msgid "PIN is set – type to change"
+msgstr ""
+
+#: includes/class-snn-design.php:20
+msgid "Page background"
+msgstr ""
+
+#: includes/class-snn-admin.php:409
+msgid "Pages with the scanner:"
+msgstr ""
+
+#: includes/class-snn-admin.php:481
+msgid "Pass Type ID"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:118
+msgid "Pending"
+msgstr ""
+
+#: includes/class-snn-submissions.php:406
+#, php-format
+msgid "Pending (%d)"
+msgstr ""
+
+#: includes/class-snn-submissions.php:544
+#, php-format
+msgid "Permanently delete %d submission(s) and their tickets? This cannot be undone."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:328
+#, php-format
+msgid "Permanently delete %d ticket(s)? Their QR codes stop working. This cannot be undone."
+msgstr ""
+
+#: includes/class-snn-submissions.php:539
+msgid "Permanently delete this submission and its ticket? This cannot be undone."
+msgstr ""
+
+#: includes/class-snn-submissions.php:460
+msgid "Person"
+msgstr ""
+
+#: includes/class-snn-submissions.php:536 includes/class-snn-tickets-admin.php:325
+msgid "Pick a bulk action first."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:28
+msgid "Pick a ticket design"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:950
+msgid "Pick an event first."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:407
+msgid "Placeholder"
+msgstr ""
+
+#: includes/class-snn-forms.php:854
+msgid "Please tick this box to continue."
+msgstr ""
+
+#: includes/class-snn-scanner.php:171
+msgid "Point the camera at a ticket"
+msgstr ""
+
+#: includes/class-snn-admin.php:188 includes/class-snn-design-admin.php:115
+msgid "Preview"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:125
+msgid "Preview PDF"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:124
+msgid "Preview ticket email"
+msgstr ""
+
+#: includes/class-snn-admin.php:710
+msgid "Preview with event"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:127
+msgid "Previews use your unsaved changes."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:444
+msgid "Printed on the PDF, the back of the wallet pass and the ticket page."
+msgstr ""
+
+#: includes/class-snn-admin.php:494
+msgid "Private key"
+msgstr ""
+
+#: includes/class-snn-admin.php:1008
+#, php-format
+msgid "Processed a batch: %1$d sent, %2$d failed."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:24
+msgid "Publish the scanner page and set its URL"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:55
+#, php-format
+msgid "Put a form on any page with its shortcode (click to copy). Submissions land in %s."
+msgstr ""
+
+#: includes/class-snn-admin.php:437
+msgid "QR rendering"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:110
+msgid "Questions? Reply to this email."
+msgstr ""
+
+#: includes/class-snn-admin.php:59
+msgid "Queue"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:934
+msgid "Queue emails"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:330
+#, php-format
+msgid "Queue the ticket email for %d ticket(s)?"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:934
+msgid "Queue ticket emails for this whole list?"
+msgstr ""
+
+#: includes/class-snn-admin.php:987
+msgid "Queued"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:968
+#, php-format
+msgid "Queued %d email(s)."
+msgstr ""
+
+#: includes/class-snn-admin.php:971
+msgid "Queued message"
+msgstr ""
+
+#: includes/class-snn-admin.php:477 includes/class-snn-admin.php:510
+msgid "Ready"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:152
+msgid "Recent check-ins"
+msgstr ""
+
+#: includes/class-snn-admin.php:918
+msgid "Recipient"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:333
+msgid "Redirect after submit (optional)"
+msgstr ""
+
+#: includes/class-snn-admin.php:455
+msgid "Regenerate signing key"
+msgstr ""
+
+#: includes/class-snn-admin.php:451
+msgid "Regenerate the signing key? Every QR code and download link already sent out will stop working. Only do this if the key has leaked."
+msgstr ""
+
+#: includes/class-snn-mailer.php:577
+msgid "Registration"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:116
+msgid "Registration forms"
+msgstr ""
+
+#: includes/class-snn-submissions.php:443 includes/class-snn-submissions.php:514 includes/class-snn-submissions.php:606
+msgid "Reject"
+msgstr ""
+
+#: includes/class-snn-submissions.php:542
+#, php-format
+msgid "Reject %d submission(s)?"
+msgstr ""
+
+#: includes/class-snn-submissions.php:538
+msgid "Reject this submission?"
+msgstr ""
+
+#: includes/class-snn-mailer.php:61
+msgid "Rejected"
+msgstr ""
+
+#: includes/class-snn-submissions.php:408
+#, php-format
+msgid "Rejected (%d)"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:312
+msgid "Rejection email"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:397
+msgid "Remove"
+msgstr ""
+
+#: includes/class-snn-admin.php:504
+msgid "Remove Apple credentials"
+msgstr ""
+
+#: includes/class-snn-admin.php:523
+msgid "Remove Google credentials"
+msgstr ""
+
+#: includes/class-snn-admin.php:422
+msgid "Remove PIN"
+msgstr ""
+
+#: includes/class-snn-admin.php:902
+msgid "Remove every sent record from the log?"
+msgstr ""
+
+#: includes/class-snn-admin.php:947
+msgid "Remove this message from the queue?"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:298
+msgid "Removes the list, all its tickets and their queued emails. Forms that feed it are closed. This cannot be undone."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:410
+msgid "Required"
+msgstr ""
+
+#: includes/class-snn-submissions.php:511
+msgid "Resend"
+msgstr ""
+
+#: includes/class-snn-submissions.php:543
+#, php-format
+msgid "Resend the ticket email for %d submission(s)?"
+msgstr ""
+
+#: includes/class-snn-submissions.php:444 includes/class-snn-submissions.php:603
+msgid "Resend ticket"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:96
+msgid "Reset all colours to the preset"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:232 includes/class-snn-tickets-admin.php:286
+msgid "Restore"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:332
+#, php-format
+msgid "Restore %d ticket(s)?"
+msgstr ""
+
+#: includes/class-snn-admin.php:945
+msgid "Retry"
+msgstr ""
+
+#: includes/class-snn-admin.php:901
+msgid "Retry all failed"
+msgstr ""
+
+#: includes/class-snn-forms.php:921
+msgid "Review it in the dashboard"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:231 includes/class-snn-tickets-admin.php:284
+msgid "Revoke"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:329
+#, php-format
+msgid "Revoke %d ticket(s)? They will be refused at the door."
+msgstr ""
+
+#: includes/class-snn-pdf.php:629 includes/class-snn-tickets-admin.php:164
+msgid "Revoked"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:542
+msgid "Revoked tickets are not emailed."
+msgstr ""
+
+#: includes/class-snn-admin.php:712 includes/class-snn-design-admin.php:119
+msgid "Sample event"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:131
+msgid "Save design"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:471
+msgid "Save event"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:206 includes/class-snn-forms-admin.php:345
+msgid "Save form"
+msgstr ""
+
+#: includes/class-snn-admin.php:429
+msgid "Save settings"
+msgstr ""
+
+#: includes/class-snn-admin.php:719
+msgid "Save template"
+msgstr ""
+
+#: includes/class-snn-admin.php:532
+msgid "Save wallet settings"
+msgstr ""
+
+#: includes/class-snn-admin.php:733
+msgid "Saved templates"
+msgstr ""
+
+#: includes/class-snn-admin.php:491
+msgid "Saved – type to change"
+msgstr ""
+
+#: includes/class-snn-admin.php:623
+msgid "Saved, with problems: "
+msgstr ""
+
+#: includes/class-snn-admin.php:570
+#, php-format
+msgid "Scan URL changed, so %d cached QR image(s) were cleared and will be rebuilt."
+msgstr ""
+
+#: includes/class-snn-pdf.php:625
+msgid "Scan at the entrance"
+msgstr ""
+
+#: includes/class-snn-scanner.php:168
+#, php-format
+msgid "Scanned %d× · last %s"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:199
+msgid "Scanner for this event"
+msgstr ""
+
+#: includes/class-snn-admin.php:405
+msgid "Scanner page URL"
+msgstr ""
+
+#: includes/class-snn-admin.php:402
+msgid "Scanning"
+msgstr ""
+
+#: includes/class-snn-admin.php:909 includes/class-snn-submissions.php:428 includes/class-snn-tickets-admin.php:214
+msgid "Search"
+msgstr ""
+
+#: includes/class-snn-mailer.php:110
+msgid "See you there!"
+msgstr ""
+
+#: includes/class-snn-submissions.php:459 includes/class-snn-tickets-admin.php:248
+msgid "Select all"
+msgstr ""
+
+#: includes/class-snn-submissions.php:537
+msgid "Select at least one submission."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:326
+msgid "Select at least one ticket."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:278
+msgid "Send"
+msgstr ""
+
+#: includes/class-snn-admin.php:900
+msgid "Send a batch now"
+msgstr ""
+
+#: includes/class-snn-admin.php:189
+msgid "Send a test to"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:313
+msgid "Send an email when a registration is rejected"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:299
+msgid "Send it"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:270
+msgid "Send it to"
+msgstr ""
+
+#: includes/class-snn-admin.php:190
+msgid "Send test"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:230
+msgid "Send ticket email"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:906
+msgid "Send tickets to everyone on a list"
+msgstr ""
+
+#: includes/class-snn-admin.php:58 snn-tickets.php:124
+msgid "Send to a list"
+msgstr ""
+
+#: includes/class-snn-admin.php:384
+msgid "Sending"
+msgstr ""
+
+#: includes/class-snn-mailer.php:638
+#, php-format
+msgid "Sending failed: %s"
+msgstr ""
+
+#: includes/class-snn-admin.php:210
+msgid "Sending…"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:89
+msgid "Sends with ticket"
+msgstr ""
+
+#: includes/class-snn-admin.php:988
+msgid "Sent"
+msgstr ""
+
+#: includes/class-snn-admin.php:883
+#, php-format
+msgid "Sent in the background by WP-Cron, up to %d per minute — you can close this page."
+msgstr ""
+
+#: includes/class-snn-admin.php:516
+msgid "Service account key (.json)"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:26
+msgid "Set a From address for emails"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:30
+msgid "Set a door staff PIN for volunteers"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:454
+#, php-format
+msgid "Set up Apple Wallet under %s first."
+msgstr ""
+
+#: includes/class-snn-admin.php:443
+msgid "Set. QR codes carry a signature so scans can be trusted."
+msgstr ""
+
+#: includes/class-snn-admin.php:356 includes/class-snn-tickets-admin.php:454 snn-tickets.php:127
+msgid "Settings"
+msgstr ""
+
+#: includes/class-snn-admin.php:566
+msgid "Settings saved."
+msgstr ""
+
+#: includes/class-snn-dashboard.php:140
+msgid "Setup checklist"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:75
+msgid "Shortcode"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:167
+msgid "Shortcodes"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:266
+msgid "Show \"spots left\" above the form"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:112
+msgid "Show Wallet / PDF / calendar buttons where {wallet_buttons} is used"
+msgstr ""
+
+#: includes/class-snn-admin.php:910
+msgid "Show all"
+msgstr ""
+
+#: includes/class-snn-pdf.php:639
+msgid "Show this ticket on your phone or printed at the entrance. The QR code can only be used once."
+msgstr ""
+
+#: includes/class-snn-design-admin.php:107
+msgid "Shown in the email header and on the PDF. A wide PNG or JPG around 400×120 works best."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:427
+msgid "Shown on the ticket, in emails ({event_date}, {venue}…), in wallet passes and in the calendar invite."
+msgstr ""
+
+#: includes/class-snn-admin.php:443
+msgid "Signing key"
+msgstr ""
+
+#: includes/class-snn-admin.php:545
+#, php-format
+msgid "Signing key regenerated and %d cached QR image(s) cleared."
+msgstr ""
+
+#: includes/class-snn-wallet.php:350
+msgid "Signing the Google Wallet token failed."
+msgstr ""
+
+#: includes/class-snn-wallet.php:237
+msgid "Signing the pass failed: "
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:462
+#, php-format
+msgid "Site default (%s)"
+msgstr ""
+
+#: includes/class-snn-mailer.php:137
+msgid "Site name"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:928
+msgid "Skip anyone whose ticket email is already queued or sent"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:927
+msgid "Skip duplicates"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:785
+msgid "Skip emails that already have a ticket in this event"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:969
+#, php-format
+msgid "Skipped %d already handled."
+msgstr ""
+
+#: includes/class-snn-admin.php:211
+msgid "Something went wrong."
+msgstr ""
+
+#: includes/class-snn-forms.php:936
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: includes/class-snn-scanner.php:263
+msgid "Sound"
+msgstr ""
+
+#: includes/class-snn-scanner.php:239
+msgid "Staff PIN"
+msgstr ""
+
+#: includes/class-snn-scanner.php:236 includes/class-snn-scanner.php:244
+msgid "Staff only"
+msgstr ""
+
+#: includes/class-snn-design-admin.php:88
+msgid "Start from the preset and change what you like. \"Reset\" brings back the preset colour."
+msgstr ""
+
+#: includes/class-snn-mailer.php:124
+msgid "Start – end time"
+msgstr ""
+
+#: includes/class-snn-scanner.php:170 includes/class-snn-scanner.php:255
+msgid "Starting camera…"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:431
+msgid "Starts"
+msgstr ""
+
+#: includes/class-snn-admin.php:917 includes/class-snn-admin.php:983 includes/class-snn-forms-admin.php:197 includes/class-snn-forms.php:920 includes/class-snn-submissions.php:462 includes/class-snn-tickets-admin.php:252
+msgid "Status"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:336
+msgid "Style"
+msgstr ""
+
+#: includes/class-snn-admin.php:700 includes/class-snn-admin.php:919 includes/class-snn-admin.php:985 includes/class-snn-forms-admin.php:285 includes/class-snn-forms-admin.php:300
+msgid "Subject"
+msgstr ""
+
+#: includes/class-snn-mailer.php:330
+msgid "Subject and body are required."
+msgstr ""
+
+#: includes/class-snn-submissions.php:582
+msgid "Submission"
+msgstr ""
+
+#: includes/class-snn-submissions.php:582
+#, php-format
+msgid "Submission #%d"
+msgstr ""
+
+#: includes/class-snn-mailer.php:60
+msgid "Submission received (sent immediately)"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:56 includes/class-snn-forms-admin.php:74 includes/class-snn-submissions.php:400 snn-tickets.php:113 snn-tickets.php:119
+msgid "Submissions"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:327
+msgid "Submit button"
+msgstr ""
+
+#: includes/class-snn-submissions.php:465 includes/class-snn-submissions.php:661
+msgid "Submitted"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:185
+msgid "Summer Meetup Registration"
+msgstr ""
+
+#: includes/class-snn-admin.php:687
+msgid "Summer meetup ticket"
+msgstr ""
+
+#: includes/class-snn-admin.php:433
+msgid "System check"
+msgstr ""
+
+#: includes/class-snn-admin.php:754
+msgid "Tags"
+msgstr ""
+
+#: includes/class-snn-scanner.php:177
+msgid "Tap to scan the next ticket"
+msgstr ""
+
+#: includes/class-snn-admin.php:483
+msgid "Team ID"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:314 includes/class-snn-tickets-admin.php:921
+msgid "Template"
+msgstr ""
+
+#: includes/class-snn-admin.php:813
+msgid "Template deleted."
+msgstr ""
+
+#: includes/class-snn-admin.php:686
+msgid "Template name"
+msgstr ""
+
+#: includes/class-snn-admin.php:816
+msgid "Template not found."
+msgstr ""
+
+#: includes/class-snn-admin.php:800
+msgid "Template saved."
+msgstr ""
+
+#: includes/class-snn-admin.php:57 includes/class-snn-tickets-admin.php:926
+msgid "Templates"
+msgstr ""
+
+#: includes/class-snn-mailer.php:627
+msgid "Test"
+msgstr ""
+
+#: includes/class-snn-mailer.php:636
+#, php-format
+msgid "Test email sent to %s."
+msgstr ""
+
+#: includes/class-snn-design.php:22
+msgid "Text"
+msgstr ""
+
+#: includes/class-snn-mailer.php:98
+msgid "Thanks for your interest in <strong>{event}</strong>. Unfortunately we are not able to confirm a place for you this time."
+msgstr ""
+
+#: includes/class-snn-mailer.php:88
+msgid "Thanks, {name}!"
+msgstr ""
+
+#: includes/class-snn-scanner.php:75 includes/class-snn-scanner.php:178
+msgid "That PIN is not right."
+msgstr ""
+
+#: includes/class-snn-wallet.php:371
+msgid "That does not look like a service account key file (client_email and private_key are missing)."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:144 includes/class-snn-tickets-admin.php:408
+msgid "That event no longer exists."
+msgstr ""
+
+#: includes/class-snn-admin.php:973
+msgid "That message no longer exists."
+msgstr ""
+
+#: includes/class-snn-submissions.php:586
+msgid "That submission no longer exists."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:541
+msgid "That ticket has no email address."
+msgstr ""
+
+#: includes/class-snn-submissions.php:144
+msgid "That ticket is revoked, so it was not re-sent."
+msgstr ""
+
+#: includes/class-snn-wallet.php:82
+msgid "The .p12 file could not be opened. Check the password, or upload the certificate and key as PEM files instead (newer OpenSSL versions reject some older .p12 encryption)."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:811
+msgid "The CSV file is empty."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:833
+msgid "The CSV needs a header row with Name and Email columns."
+msgstr ""
+
+#: includes/class-snn-wallet.php:347
+msgid "The Google service account private key could not be read."
+msgstr ""
+
+#: includes/class-snn-admin.php:441
+msgid "The PHP zip extension is missing, so .pkpass files cannot be built."
+msgstr ""
+
+#: includes/class-snn-wallet.php:177
+msgid "The PHP zip extension is required for Apple Wallet passes."
+msgstr ""
+
+#: includes/class-snn-wallet.php:72
+msgid "The certificate PEM could not be read."
+msgstr ""
+
+#: includes/class-snn-mailer.php:128
+msgid "The designed ticket with QR"
+msgstr ""
+
+#: includes/class-snn-admin.php:414
+#, php-format
+msgid "The page holding the %s shortcode. Staff who scan a QR with their phone camera land there and the ticket is checked in. Attendees who open their own QR only see their ticket."
+msgstr ""
+
+#: includes/class-snn-wallet.php:71
+msgid "The private key could not be read. Check the password."
+msgstr ""
+
+#: includes/class-snn-admin.php:398
+msgid "The queue runs once a minute and sends up to this many messages each time. Keep it under what your host or SMTP provider allows."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:853
+msgid "The upload failed. Pick a CSV file and try again."
+msgstr ""
+
+#: includes/class-snn-admin.php:441
+msgid "The zip extension is available."
+msgstr ""
+
+#: includes/class-snn-mailer.php:121
+msgid "Their address"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:248
+msgid "They get the confirmation email now; the ticket follows when you approve."
+msgstr ""
+
+#: includes/class-snn-files.php:99
+msgid "This event has no date yet."
+msgstr ""
+
+#: includes/class-snn-tickets.php:129
+msgid "This ticket does not exist."
+msgstr ""
+
+#: includes/class-snn-files.php:170
+msgid "This ticket has been cancelled and will not be accepted at the entrance."
+msgstr ""
+
+#: includes/class-snn-tickets.php:140
+msgid "This ticket has been cancelled."
+msgstr ""
+
+#: includes/class-snn-tickets.php:151
+#, php-format
+msgid "This ticket is for %s."
+msgstr ""
+
+#: includes/class-snn-files.php:70 includes/class-snn-qr.php:196
+msgid "This ticket link is not valid."
+msgstr ""
+
+#: includes/class-snn-submissions.php:463 includes/class-snn-submissions.php:641
+msgid "Ticket"
+msgstr ""
+
+#: includes/class-snn-mailer.php:59
+msgid "Ticket + QR code (sent once approved)"
+msgstr ""
+
+#: includes/class-snn-design.php:321
+msgid "Ticket QR code"
+msgstr ""
+
+#: includes/class-snn-scanner.php:166
+msgid "Ticket cancelled"
+msgstr ""
+
+#: includes/class-snn-mailer.php:127 includes/class-snn-pdf.php:616 includes/class-snn-scanner.php:258 includes/class-snn-wallet.php:116
+msgid "Ticket code"
+msgstr ""
+
+#: includes/class-snn-wallet.php:404
+#, php-format
+msgid "Ticket code: %s"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:284
+msgid "Ticket email"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:574
+msgid "Ticket email queued."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:198
+msgid "Ticket emails sent"
+msgstr ""
+
+#: includes/class-snn-wallet.php:136
+#, php-format
+msgid "Ticket for %s"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:406
+msgid "Ticket holder email"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:405 includes/class-snn-mailer.php:120
+msgid "Ticket holder name"
+msgstr ""
+
+#: includes/class-snn-files.php:70 includes/class-snn-tickets-admin.php:581
+msgid "Ticket not found"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:540
+msgid "Ticket not found."
+msgstr ""
+
+#: includes/class-snn-submissions.php:649
+msgid "Ticket page"
+msgstr ""
+
+#: includes/class-snn-scanner.php:225
+msgid "Ticket scanner"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:73 includes/class-snn-tickets-admin.php:87 includes/class-snn-tickets-admin.php:122 snn-tickets.php:108 snn-tickets.php:120
+msgid "Tickets"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:188
+msgid "Tickets go to event"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:926
+#, php-format
+msgid "Tickets that came from a form use that form's own wording unless you pick a template here. Manage templates on the %s tab."
+msgstr ""
+
+#: includes/class-snn-design.php:307 includes/class-snn-pdf.php:598 includes/class-snn-wallet.php:113
+msgid "Time"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:435
+#, php-format
+msgid "Times are in the site timezone (%s)."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:288
+msgid "Tip: {ticket_card} draws the designed ticket with its QR; {wallet_buttons} adds Apple/Google Wallet, PDF and calendar buttons."
+msgstr ""
+
+#: includes/class-snn-admin.php:984
+msgid "To"
+msgstr ""
+
+#: includes/class-snn-mailer.php:138
+msgid "Today's date"
+msgstr ""
+
+#: includes/class-snn-scanner.php:67
+msgid "Too many attempts. Wait ten minutes and try again."
+msgstr ""
+
+#: includes/class-snn-scanner.php:112
+msgid "Too many scans from this address. Wait a minute and try again."
+msgstr ""
+
+#: includes/class-snn-admin.php:522
+msgid "Try a sample pass"
+msgstr ""
+
+#: includes/class-snn-admin.php:920 includes/class-snn-forms-admin.php:400
+msgid "Type"
+msgstr ""
+
+#: includes/class-snn-scanner.php:258
+msgid "Type a ticket code"
+msgstr ""
+
+#: includes/class-snn-scanner.php:169
+msgid "Typed in by hand – no QR signature."
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:233 includes/class-snn-tickets-admin.php:281
+msgid "Undo check-in"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:331
+#, php-format
+msgid "Undo the check-in for %d ticket(s)?"
+msgstr ""
+
+#: includes/class-snn-files.php:103
+msgid "Unknown file type."
+msgstr ""
+
+#: includes/class-snn-scanner.php:241
+msgid "Unlock scanner"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:706
+msgid "Unnamed tickets with unique codes — handy for walk-ins, printed ticket books or door sales. You can name them later."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:347
+msgid "Unsaved changes"
+msgstr ""
+
+#: includes/class-snn-admin.php:520
+msgid "Until Google approves your issuer for publishing, only accounts added as test users can save passes."
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:895
+msgid "Untitled form"
+msgstr ""
+
+#: includes/class-snn-admin.php:489 includes/class-snn-admin.php:495 includes/class-snn-admin.php:499
+msgid "Uploaded"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:723
+msgid "Uppercase letters and digits."
+msgstr ""
+
+#: includes/class-snn-admin.php:496
+msgid "Use these if your server refuses the .p12 (common with OpenSSL 3 and older exports)."
+msgstr ""
+
+#: includes/class-snn-admin.php:690
+msgid "Used for"
+msgstr ""
+
+#: includes/class-snn-qr.php:233
+msgid "Valid ticket"
+msgstr ""
+
+#: includes/class-snn-scanner.php:163
+msgid "Valid – welcome in"
+msgstr ""
+
+#: includes/class-snn-tickets.php:185
+#, php-format
+msgid "Valid, but already scanned %d time(s)."
+msgstr ""
+
+#: includes/class-snn-design.php:308 includes/class-snn-mailer.php:125 includes/class-snn-pdf.php:604 includes/class-snn-tickets-admin.php:436 includes/class-snn-wallet.php:114
+msgid "Venue"
+msgstr ""
+
+#: includes/class-snn-admin.php:943 includes/class-snn-tickets-admin.php:275
+msgid "View"
+msgstr ""
+
+#: includes/class-snn-mailer.php:130
+msgid "Wallet / PDF / calendar buttons"
+msgstr ""
+
+#: includes/class-snn-admin.php:360
+msgid "Wallet passes"
+msgstr ""
+
+#: includes/class-snn-admin.php:624
+msgid "Wallet settings saved."
+msgstr ""
+
+#: includes/class-snn-admin.php:442
+msgid "Wallet signing"
+msgstr ""
+
+#: includes/class-snn-mailer.php:89
+msgid "We have your registration for <strong>{event}</strong> and will review it shortly."
+msgstr ""
+
+#: includes/class-snn-mailer.php:87
+msgid "We received your registration"
+msgstr ""
+
+#: includes/class-snn-wallet.php:120
+msgid "Website"
+msgstr ""
+
+#: includes/class-snn-tickets.php:186
+msgid "Welcome. This ticket is valid."
+msgstr ""
+
+#: includes/class-snn-admin.php:921 includes/class-snn-dashboard.php:97
+msgid "When"
+msgstr ""
+
+#: includes/class-snn-tickets-admin.php:86
+msgid "When & where"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:289 includes/class-snn-forms-admin.php:303
+msgid "When empty, use"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:330
+msgid "When full or closed"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:244
+msgid "When someone submits"
+msgstr ""
+
+#: includes/class-snn-design.php:35
+msgid "White card, black type, thin rules."
+msgstr ""
+
+#: includes/class-snn-design-admin.php:117
+msgid "With event"
+msgstr ""
+
+#: includes/class-snn-scanner.php:167
+msgid "Wrong event"
+msgstr ""
+
+#: includes/class-snn-mailer.php:90
+msgid "You will get another email with your ticket once you are confirmed."
+msgstr ""
+
+#: includes/class-snn-mailer.php:106
+msgid "You're in, {name}!"
+msgstr ""
+
+#: includes/class-snn-mailer.php:206
+msgid "Your ticket QR code"
+msgstr ""
+
+#: includes/class-snn-mailer.php:105
+msgid "Your ticket for {event}"
+msgstr ""
+
+#: includes/class-snn-files.php:157
+#, php-format
+msgid "Your ticket – %s"
+msgstr ""
+
+#: includes/class-snn-forms.php:916
+#, php-format
+msgid "[%1$s] New registration: %2$s"
+msgstr ""
+
+#: includes/class-snn-admin.php:831
+msgid "active"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:254
+msgid "all"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:254
+msgid "any"
+msgstr ""
+
+#: includes/class-snn-admin.php:830 includes/class-snn-submissions.php:250
+msgid "approved"
+msgstr ""
+
+#: includes/class-snn-scanner.php:175 includes/class-snn-submissions.php:495
+msgid "checked in"
+msgstr ""
+
+#: includes/class-snn-submissions.php:646
+#, php-format
+msgid "checked in %s"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:125 includes/class-snn-forms-admin.php:89
+msgid "closed"
+msgstr ""
+
+#: includes/class-snn-submissions.php:253
+msgid "deleted"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:422
+msgid "email"
+msgstr ""
+
+#: includes/class-snn-admin.php:830
+msgid "failed"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:259
+msgid "hold for review"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:92
+msgid "missing"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:421
+msgid "name"
+msgstr ""
+
+#: includes/class-snn-submissions.php:647
+msgid "not checked in"
+msgstr ""
+
+#: includes/class-snn-scanner.php:176
+msgid "of"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:255
+msgid "of these match:"
+msgstr ""
+
+#: includes/class-snn-dashboard.php:145
+msgid "optional"
+msgstr ""
+
+#: includes/class-snn-admin.php:829
+msgid "pending"
+msgstr ""
+
+#: includes/class-snn-submissions.php:252
+msgid "queued for resend"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:259
+msgid "reject"
+msgstr ""
+
+#: includes/class-snn-admin.php:830 includes/class-snn-submissions.php:251
+msgid "rejected"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:396
+msgid "required"
+msgstr ""
+
+#: includes/class-snn-admin.php:831
+msgid "revoked"
+msgstr ""
+
+#: includes/class-snn-admin.php:829
+msgid "sending"
+msgstr ""
+
+#: includes/class-snn-admin.php:829
+msgid "sent"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:284
+msgid "sent when a registration is approved"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:298
+msgid "sent when a registration is held for review"
+msgstr ""
+
+#: includes/class-snn-submissions.php:255
+msgid "updated"
+msgstr ""
+
+#: includes/class-snn-forms-admin.php:414
+msgid "value"
+msgstr ""
+

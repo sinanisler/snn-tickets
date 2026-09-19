@@ -1,96 +1,119 @@
 
 # SNN Tickets
 
-WordPress plugin for event ticket generation, management, and validation with QR codes, batch email invitations, and public scanning capabilities.
+WordPress plugin for event registration and ticketing: a visual form builder, rule-based approval, designed ticket emails with PDF, Apple Wallet and Google Wallet passes, and a mobile door scanner. Pure PHP, no Composer, no external services required.
 <br><br>
 
 
 
 ### Registration forms
-- **Visual form builder** — drag to reorder fields, edit them inline, and watch a live preview update as you go
+- **Visual form builder** — drag to reorder, duplicate or edit fields inline, with a live preview; approval, emails and messages each have their own tab
 - **Field types** — text, email, phone, number, date, paragraph, dropdown, radio, checkboxes, consent checkbox, hidden
-- **Automatic ticket list** — saving a new form creates a ticket list named after it; pick an existing list only if you want the form to feed one you already have
+- **Automatic event** — saving a new form creates an event (ticket list) named after it
 - **Field mapping** — point one field at the ticket holder's name and one at their email; everything else is stored as custom answers
-- **Shortcode** — drop a form on any page with `[snn_ticket_form id="1"]`
-- **Capacity limits** — cap registrations per form and show a "fully booked" message once it fills
-- **One per email** — optionally block a second registration from the same address
-- **Spam protection** — honeypot field, minimum fill time, and a per-IP submission throttle
+- **Shortcode** — `[snn_ticket_form id="1"]`, click to copy anywhere it is shown
+- **No page reloads** — submits in the background, shows errors under each field, and still works without JavaScript
+- **Style** — accent colour for the button, focus rings and checkboxes; stable class names for custom CSS
+- **Capacity** — cap registrations, optionally show "N spots left", and show a "fully booked" message once it fills
+- **One per email**, **duplicate form**, and **spam protection** (honeypot, minimum fill time, per-IP throttle)
+- **Unsaved-changes warning** in the builder
 
 ### Approval logic
 Every form decides for itself what happens on submit:
-- **Issue a ticket automatically** — every submission gets a ticket, and the confirmation email carries its QR code
-- **Hold for review** — the submitter gets the plain confirmation email; the ticket follows when you approve from the Submissions screen
+- **Issue a ticket automatically**
+- **Hold for review** — the submitter gets the confirmation email; the ticket follows when you approve
 - **Decide by rules** — auto-approve only when the answers match, with the rest held or rejected
 
-Rules run against any field, with operators for *is exactly*, *is not*, *contains*, *starts with*, *is empty*, *is not empty*, *is checked*, *is not checked*, *email domain is*, and *is one of*. Match on **all** rules or **any**, and choose whether a non-match is held for review or rejected outright.
+Rules run against any field, with operators for *is exactly*, *is not*, *contains*, *starts with*, *is empty*, *is not empty*, *is checked*, *is not checked*, *email domain is*, and *is one of*. Match on **all** rules or **any**.
 
-### Submissions
-- Review screen with pending / approved / rejected tabs, filtered by form
-- Approve, reject, resend or delete — one at a time or in bulk
-- Every custom answer stored and viewable per submission
-- CSV export of submissions with all custom fields
-- Permanent delete removes the submission, its ticket, and its queued mail (GDPR erasure)
+### Events
+Each ticket list is an event with a **date and time, venue, address, organiser and "good to know" notes**. These appear on the ticket, in emails (`{event_date}`, `{venue}`…), in wallet passes and in the calendar invite. Each event also chooses its design and which files go with the ticket email.
 
-### QR codes, generated in PHP
-- **No browser needed** — QR codes are rendered on the server, so a form submitted at 3am still gets its ticket
-- **No dependencies** — pure PHP, using GD when it is available and a built-in PNG encoder when it is not
-- **Signed URLs** — each QR encodes a URL carrying an HMAC signature, so any phone camera opens your scan page and forged codes are rejected
-- **Unguessable filenames** — cached PNGs are named by hash, so the QR directory cannot be enumerated
-- **Automatic sizing** — the QR version is chosen to fit the payload rather than being fixed
+### Designs
+Six ready-made designs — **Minimal, Boarding pass, Midnight, Festival, Corporate, Classic stub** — picked from visual cards on the Design screen. One design styles every surface: the email, the PDF, the Apple/Google Wallet passes and the attendee ticket page.
+- Fine-tune any colour (page background, card, text, accent, header…), add a logo from the media library and an email footer
+- Preview the email and the PDF with unsaved changes before saving
+- Events can override the site-wide design
+
+### Ticket files
+- **PDF ticket** — generated by a built-in PDF writer (no libraries). The QR is vector-drawn, and names in Turkish and Central European alphabets (ş, ğ, ı, İ, ł, ž…) print correctly
+- **Apple Wallet (.pkpass)** — signed with your Pass Type ID certificate (.p12, or PEM certificate + key) and Apple's WWDR certificate; uses PHP's zip and openssl extensions
+- **Google Wallet** — "Add to Google Wallet" link signed with a service account key (RS256 JWT)
+- **Calendar invite (.ics)** — times converted from the site timezone to UTC
+- Any of these can be **attached to the ticket email** per event, and all are available as **signed download links** (`{pdf_url}`, `{pkpass_url}`, `{gwallet_url}`, `{ics_url}`) and as buttons via `{wallet_buttons}`
+- Revoked tickets print as REVOKED, and their wallet passes are voided / inactive
 
 ### Email
-- **Server-side queue** — sending runs on WP-Cron in the background; close the tab and it keeps going
-- **Rate limited** — set how many messages go out per minute to stay inside your host's limits
-- **Retries** — failed sends are retried up to three times, with the error recorded
-- **Inline QR** — the QR is attached to the message rather than hotlinked, so it renders even when a client blocks remote images
-- **Confirmation on every submission** — held registrations get the plain confirmation email; approved ones get the ticket email with the QR code embedded
-- **Per-form wording** — edit the confirmation and ticket subject and body right in the form builder, no template needed; blank falls back to the selected template, then the built-in default
-- **Three template roles** — ticket, submission confirmation, and rejection, each selectable per form
-- **Placeholders** — `{name}`, `{email}`, `{ticket}`, `{qr_inline}`, `{qr}`, `{scan_url}`, `{list}`, `{form}`, `{site}`, `{date}`, and `{field:key}` for any form field
-- **Queue monitor** — pending / sent / failed counts, per-message errors, retry and process-now controls
+- **Rich-text editor** (the WordPress editor, tuned for email) with text and background colour, and a **tag picker** that inserts placeholders at the cursor
+- **Designed email shell** — table-based layout with the design's colours, logo, preheader and footer, safe for Outlook and Gmail
+- **Preview** in a desktop / mobile frame, and **send a test** to yourself — both with sample or real event data
+- **`{ticket_card}`** draws the designed ticket with its QR; **`{qr_block}`** just the QR; **`{wallet_buttons}`** the Wallet / PDF / calendar buttons
+- **Plain-text alternative** added to every message
+- **Server-side queue** on WP-Cron with rate limiting and retries; close the tab and it keeps going
+- **Queue monitor** — search, view each message as it was sent, retry or delete single messages
+- **Templates** for ticket, confirmation and rejection emails, selectable per form; per-form wording wins over templates
+- **Placeholders** — `{name}`, `{email}`, `{event}`, `{event_date}`, `{event_time}`, `{venue}`, `{address}`, `{ticket}`, `{ticket_card}`, `{qr_block}`, `{wallet_buttons}`, `{ticket_url}`, `{pdf_url}`, `{ics_url}`, `{pkpass_url}`, `{gwallet_url}`, `{form}`, `{site}`, `{date}`, `{field:key}`; the older `{qr_inline}`, `{qr}`, `{scan_url}` and `{list}` still work
+
+### Submissions
+- Pending / approved / rejected tabs, filter by form, **search** by name, email or any answer
+- **Detail view** with every answer under its field label, the ticket and its QR, check-in status, and the email history
+- Approve, reject (with an optional note), resend or delete — one at a time or in bulk
+- CSV export with field labels as column headers (opens correctly in Excel)
 
 ### Tickets
-- Manual and bulk ticket generation with unique codes
-- CSV import with a downloadable template
-- Ticket lists with inline editing of name and email
-- Per-ticket QR preview and one-click ticket email
-- Batch email for a whole list, skipping anyone already sent
+- Events overview with check-in progress, attachments and linked forms
+- Per-event ticket table with **search, filters (checked in / not / revoked), pagination** and inline editing of name and email
+- **Revoke / restore, undo check-in, resend, delete** — per ticket or in bulk
+- **Export CSV** per event, including each attendee's ticket link
+- Generate blank tickets, or **import from CSV** — BOM, semicolon-separated (Excel TR) and Turkish headers (*Ad Soyad*, *E-posta*) are understood, duplicates can be skipped, and imports can go into an existing event
 
-### Scanning & validation
-- **Public scan page** via `[tickets_scan_page]`, using `BarcodeDetector` where available and jsQR elsewhere
-- **Camera or manual entry** — pasted scan URLs are accepted as well as bare codes
-- **Repeat scans flagged** — an already-scanned ticket is shown as a warning, not a silent pass
-- **Rate limited** — the public endpoint throttles per IP, and unsigned lookups never increment the scan count, so codes cannot be enumerated or burned through
+### Scanning & check-in
+- **Mobile-first scanner** via `[tickets_scan_page]`, or `[tickets_scan_page list="3"]` to lock it to one event
+- Full-screen **green / amber / red result** with sound and vibration, automatic resume, a live **"checked in X / Y"** counter and a list of recent scans
+- Camera (`BarcodeDetector`, jsQR fallback) or typed codes, any letter case
+- **Only staff check tickets in** — logged-in admins, or volunteers who enter the **door staff PIN** (24-hour session; changing the PIN signs everyone out)
+- **Attendees who open their own QR see their ticket** — with wallet and PDF buttons — and are never checked in by it
+- Repeat scans are flagged with when the ticket was first used; revoked tickets and tickets for another event are refused
+- Signed QR URLs (HMAC), per-IP throttling for the public endpoint
 
 ### Dashboard
-- Lists, tickets, validations, forms, submissions awaiting review, and mail queue at a glance
-- System check for GD/zlib availability, cron health, and the signing key
+- Active tickets, check-ins today, submissions awaiting review, and emails waiting or failed
+- Per-event check-in progress, form capacity, recent check-ins, copyable shortcodes
+- **Setup checklist** until everything is configured
+
+### Translation
+All strings use the `snn-tickets` text domain; `languages/snn-tickets.pot` is the template for translations (e.g. `snn-tickets-tr_TR.po`).
 
 ## Getting started
 
-1. **Set the scan page** — put `[tickets_scan_page]` on a page, then paste its URL into Tickets → Settings so QR codes point at it
-2. **Build a form** — Tickets → Forms → Add New, arrange the fields, and choose how submissions are approved. Saving it creates the matching ticket list for you; you can also make lists by hand under Tickets → Tickets Generator or import one from CSV
-3. **Write the emails** — the form builder's Emails panel holds the confirmation and ticket messages, with tags like `{name}` and `{qr_inline}`
-4. **Publish it** — paste the form's shortcode onto any page
-5. **Watch it work** — submissions land in Tickets → Submissions, tickets go out through Tickets → Mail Queue
+1. **Build a form** — Tickets → Forms → Add New. Saving creates its event.
+2. **Describe the event** — Tickets → Events & Tickets → Event settings: date, venue, notes, and which files to attach (PDF, Wallet pass, calendar invite).
+3. **Pick a design** — Tickets → Design.
+4. **Write the emails** — in the form builder's Emails tab, or as templates under Tickets → Emails. Use Preview and Send test.
+5. **Publish** — put the form's shortcode on a page, and `[tickets_scan_page]` on another. Set the scanner page URL (and optionally a door staff PIN) in Tickets → Settings.
+6. **Optional: wallets** — Tickets → Settings → Wallet passes. Apple Wallet needs a paid Apple Developer account and a Pass Type ID certificate. Google Wallet needs an issuer account and a service account key.
 
 ### Cron
 
-Sending relies on WP-Cron. If your site sets `DISABLE_WP_CRON`, point a real cron job at `wp-cron.php`; the Settings page will tell you if this needs attention. You can always press **Process now** on the Mail Queue screen.
+Sending relies on WP-Cron. If your site sets `DISABLE_WP_CRON`, point a real cron job at `wp-cron.php`; the Settings page will tell you if this needs attention. You can always press **Send a batch now** on the Queue tab.
 
 ## Tests
 
-The plugin ships with two standalone test suites that need only PHP — no WordPress install:
+Three standalone test suites that need only PHP — no WordPress install:
 
 ```bash
-php tests/qr-test.php      # QR encoder: full round-trip decode, all 40 versions x 4 EC levels
-php tests/logic-test.php   # signatures, placeholders, field sanitising, approval rules
+php tests/qr-test.php        # QR encoder: full round-trip decode, all 40 versions x 4 EC levels
+php tests/logic-test.php     # signatures, placeholders, field sanitising, approval rules
+php tests/features-test.php  # events, designs, PDF, Apple/Google Wallet, calendar, check-in rules, CSV import
 ```
 
 `qr-test.php` re-derives the GF(256) arithmetic, function-module map and format-info decoder from the spec, then decodes every generated matrix back to its payload and checks that the Reed-Solomon syndromes vanish — so a bug in the encoder cannot cancel itself out.
 
+`features-test.php` checks output with independent tools when they are installed: `pdftotext` reads the PDF back (including Turkish characters), and the `openssl` CLI verifies the Apple Wallet signature against a throwaway CA. Missing tools are reported as skipped.
+
 ## Requirements
 
 - WordPress 5.8+
-- PHP 8.1+
+- PHP 8.1+ with mbstring
 - zlib or GD (almost always present; the plugin uses whichever it finds)
+- Optional: zip + openssl extensions for Apple Wallet, openssl for Google Wallet

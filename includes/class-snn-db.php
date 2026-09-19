@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '2';
+    const DB_VERSION        = '3';
 
     public static function lists() {
         global $wpdb;
@@ -52,6 +52,14 @@ class SNN_T_DB {
         dbDelta("CREATE TABLE {$lists} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             name VARCHAR(255) NOT NULL,
+            event_start DATETIME NULL,
+            event_end DATETIME NULL,
+            venue VARCHAR(255) DEFAULT '' NOT NULL,
+            address VARCHAR(255) DEFAULT '' NOT NULL,
+            organizer VARCHAR(255) DEFAULT '' NOT NULL,
+            description TEXT NULL,
+            design VARCHAR(40) DEFAULT '' NOT NULL,
+            attachments VARCHAR(100) DEFAULT '' NOT NULL,
             created_at DATETIME NOT NULL,
             PRIMARY KEY (id)
         ) {$charset_collate};");
@@ -71,7 +79,8 @@ class SNN_T_DB {
             UNIQUE KEY ticket_code (ticket_code),
             KEY list_id (list_id),
             KEY submission_id (submission_id),
-            KEY email (email)
+            KEY email (email),
+            KEY last_validated (last_validated)
         ) {$charset_collate};");
 
         dbDelta("CREATE TABLE {$forms} (
@@ -117,6 +126,7 @@ class SNN_T_DB {
             subject TEXT NOT NULL,
             body LONGTEXT NOT NULL,
             attach_qr TINYINT(1) DEFAULT 0 NOT NULL,
+            attachments VARCHAR(100) DEFAULT '' NOT NULL,
             ticket_code VARCHAR(64) DEFAULT '' NOT NULL,
             status VARCHAR(20) DEFAULT 'pending' NOT NULL,
             attempts INT UNSIGNED NOT NULL DEFAULT 0,
