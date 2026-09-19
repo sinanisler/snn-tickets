@@ -449,7 +449,7 @@ class SNN_T_Submissions {
                     </div>
                     <div class="tablenav-pages">
                         <span class="displaying-num"><?php printf(esc_html(_n('%s item', '%s items', $total, 'snn-tickets')), number_format_i18n($total)); ?></span>
-                        <?php echo paginate_links(['base' => add_query_arg('paged', '%#%'), 'format' => '', 'current' => $paged, 'total' => max(1, (int)ceil($total / $per)), 'prev_text' => '‹', 'next_text' => '›']); ?>
+                        <?php echo SNN_T_Admin::pager($total, $per, $paged); ?>
                     </div>
                 </div>
 

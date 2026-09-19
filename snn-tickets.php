@@ -140,6 +140,18 @@ class SNN_Tickets_Plugin {
                 add_action('load-' . $hook, function () use ($title) { $GLOBALS['title'] = $title; });
             }
         }
+
+        // Parentless pages land in $submenu['']. WordPress runs
+        // get_admin_page_parent() after the parent_file filter, finds them
+        // there and resets the parent to '', which closes the Tickets menu.
+        // They stay registered (and reachable) without these entries.
+        global $submenu;
+        if (!empty($submenu[''])) {
+            $submenu[''] = array_values(array_filter($submenu[''], function ($item) {
+                return !isset(self::TAB_PAGES[$item[2] ?? '']);
+            }));
+            if (!$submenu['']) unset($submenu['']);
+        }
     }
 
     /** Open the Tickets menu on tab-only screens. */

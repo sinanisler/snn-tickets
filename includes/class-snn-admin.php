@@ -138,6 +138,34 @@ class SNN_T_Admin {
         .snn-dl dt{font-weight:600;color:#50575e}.snn-dl dd{margin:0}
         @media(max-width:782px){.snn-dl{grid-template-columns:1fr}.snn-dl dt{margin-top:8px}}
         .wp-list-table .column-check{width:2.2em}
+        .snn-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
+        .snn-card-head h2{margin:0}
+        .snn-table th,.snn-table td{padding:10px 12px;vertical-align:middle}
+        .snn-meter{display:flex;align-items:center;gap:10px;font-size:12px;white-space:nowrap}
+        .snn-meter .snn-progress{flex:1}
+        /* Pagination: real buttons instead of tiny links. */
+        .snn-wrap .tablenav{height:auto;margin:10px 0}
+        .snn-wrap .tablenav-pages{display:flex;align-items:center;gap:6px;flex-wrap:wrap;float:right;margin:0}
+        .snn-wrap .tablenav-pages .displaying-num{margin-right:8px;font-size:13px}
+        .snn-wrap .tablenav-pages .page-numbers{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;box-sizing:border-box;border:1px solid #c3c4c7;border-radius:6px;background:#fff;color:#2c3338;text-decoration:none;font-size:14px;font-weight:500}
+        .snn-wrap .tablenav-pages a.page-numbers:hover{border-color:#2271b1;color:#2271b1;background:#f6f7f7}
+        .snn-wrap .tablenav-pages .page-numbers.current{background:#2271b1;border-color:#2271b1;color:#fff}
+        .snn-wrap .tablenav-pages .page-numbers.dots{border:0;background:none;min-width:auto}
+        .snn-wrap .tablenav-pages .snn-page-of{color:#646970;font-size:13px;margin-left:4px}
+        .snn-wrap .tablenav.bottom{margin-top:14px}
+        /* Live email preview */
+        .snn-live{position:relative;background:#f0f0f1;border:1px solid #dcdcde;border-radius:8px;overflow:hidden;min-height:200px}
+        .snn-live iframe{display:block;border:0;background:#fff;transform-origin:0 0}
+        .snn-live-subject{padding:8px 12px;background:#fff;border-bottom:1px solid #dcdcde;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .snn-live-subject b{color:#646970;font-weight:500;margin-right:6px}
+        .snn-live.loading::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.55)}
+        .snn-live-err{padding:20px;color:#b3261e}
+        .snn-sticky{position:sticky;top:46px}
+        .snn-hint{background:#f0f6fc;border:1px solid #c5d9ed;border-radius:6px;padding:10px 12px;margin:8px 0 0;font-size:13px;line-height:1.5}
+        .snn-hint.warn{background:#fcf9e8;border-color:#e9d9a0}
+        .snn-hint p{margin:0 0 4px}.snn-hint p:last-child{margin:0}
+        .snn-design-chip{display:flex;gap:12px;align-items:center}
+        .snn-design-chip .snn-thumb{width:120px;flex:none;margin:0;padding:8px}
         </style>
         <?php
     }
@@ -191,6 +219,15 @@ class SNN_T_Admin {
            . '<span class="res" data-res></span>'
            . '</div>';
 
+        self::email_tools_script_only();
+    }
+
+    /** An inline preview that re-renders as the fields in $cfg change. */
+    public static function live_preview($cfg) {
+        echo '<div class="snn-live" data-cfg="' . esc_attr(wp_json_encode($cfg)) . '">'
+           . '<div class="snn-live-subject"><b>' . esc_html__('Subject', 'snn-tickets') . '</b><span data-live-subject>…</span></div>'
+           . '<div data-frame-wrap style="overflow:hidden"></div>'
+           . '</div>';
         self::email_tools_script_only();
     }
 
@@ -313,6 +350,60 @@ class SNN_T_Admin {
                 }
             });
 
+            // Live preview: an inline, scaled-down render that follows the
+            // fields named in its data-cfg as the user edits them.
+            var W = 640;
+            function fit(box){
+                var f = box.querySelector('iframe'), wrap = box.querySelector('[data-frame-wrap]');
+                if (!f || !f.contentDocument || !f.contentDocument.body) return;
+                var h = f.contentDocument.documentElement.scrollHeight, s = Math.min(1, box.clientWidth / W);
+                f.style.width = W + 'px'; f.style.height = h + 'px';
+                f.style.transform = 'scale(' + s + ')';
+                wrap.style.height = Math.ceil(h * s) + 'px';
+            }
+            function live(box){
+                box.classList.add('loading');
+                fetch(CFG.ajax, {method:'POST', body:payload(box, {action:'snn_email_preview'}), credentials:'same-origin'})
+                    .then(function(r){ return r.json(); }).then(function(j){
+                        box.classList.remove('loading');
+                        if (!j || !j.success) throw new Error((j && j.data && j.data.message) || CFG.i18n.error);
+                        box.querySelector('[data-live-subject]').textContent = j.data.subject || '';
+                        var wrap = box.querySelector('[data-frame-wrap]');
+                        var f = wrap.querySelector('iframe');
+                        if (!f) { f = document.createElement('iframe'); f.title = 'Email preview'; f.setAttribute('scrolling', 'no'); f.onload = function(){ fit(box); setTimeout(function(){ fit(box); }, 300); }; wrap.innerHTML = ''; wrap.appendChild(f); }
+                        f.srcdoc = j.data.html;
+                    }).catch(function(err){
+                        box.classList.remove('loading');
+                        box.querySelector('[data-frame-wrap]').innerHTML = '<div class="snn-live-err"></div>';
+                        box.querySelector('.snn-live-err').textContent = err.message;
+                    });
+            }
+            var timers = new WeakMap();
+            function schedule(box, ms){
+                clearTimeout(timers.get(box));
+                timers.set(box, setTimeout(function(){ live(box); }, ms == null ? 600 : ms));
+            }
+            function liveBoxes(){ return Array.prototype.slice.call(document.querySelectorAll('.snn-live[data-cfg]')); }
+            function watches(box, id){
+                var c = JSON.parse(box.getAttribute('data-cfg'));
+                return [c.role_el, c.subject_el, c.body_el, c.template_el, c.list_el].indexOf(id) !== -1;
+            }
+            window.snnLiveRefresh = function(){ liveBoxes().forEach(function(b){ schedule(b, 0); }); };
+            ['input', 'change'].forEach(function(ev){
+                document.addEventListener(ev, function(e){
+                    var id = e.target && e.target.id;
+                    if (id) liveBoxes().forEach(function(b){ if (watches(b, id)) schedule(b); });
+                });
+            });
+            if (window.jQuery) jQuery(document).on('tinymce-editor-init', function(e, ed){
+                liveBoxes().forEach(function(b){
+                    if (watches(b, ed.id)) ed.on('keyup change input undo redo SetContent ExecCommand', function(){ schedule(b); });
+                });
+            });
+            window.addEventListener('resize', function(){ liveBoxes().forEach(fit); });
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', window.snnLiveRefresh);
+            else setTimeout(window.snnLiveRefresh, 0);
+
             // Copy-to-clipboard for shortcodes.
             document.addEventListener('click', function(e){
                 var c = e.target.closest('.snn-copy');
@@ -325,6 +416,17 @@ class SNN_T_Admin {
         })();
         </script>
         <?php
+    }
+
+    /** Page buttons with "Page 2 of 14"; empty when everything fits on one page. */
+    public static function pager($total, $per, $paged) {
+        $pages = max(1, (int)ceil($total / max(1, $per)));
+        if ($pages < 2) return '';
+        return paginate_links([
+            'base' => add_query_arg('paged', '%#%'), 'format' => '', 'current' => $paged, 'total' => $pages,
+            'prev_text' => '‹ ' . __('Previous', 'snn-tickets'), 'next_text' => __('Next', 'snn-tickets') . ' ›',
+            'end_size' => 1, 'mid_size' => 2,
+        ]) . '<span class="snn-page-of">' . esc_html(sprintf(__('Page %1$s of %2$s', 'snn-tickets'), number_format_i18n($paged), number_format_i18n($pages))) . '</span>';
     }
 
     /** Clickable code snippet that copies itself. */
@@ -649,11 +751,36 @@ class SNN_T_Admin {
      * Email templates
      * ================================================================== */
 
+    /** When each kind of email goes out, and where a template of that kind gets picked. */
+    public static function role_help() {
+        return [
+            'ticket' => [
+                'short' => __('Ticket email', 'snn-tickets'),
+                'when'  => __('Goes out when an attendee gets their ticket: right after they register (or once you approve them), when you press Send on a ticket, or when you email a whole event.', 'snn-tickets'),
+                'where' => __('Pick it in a form\'s Emails settings, or on the "Send to a list" tab.', 'snn-tickets'),
+                'tip'   => __('Keep {ticket_card} or {qr_block} in the message, otherwise the attendee has no QR code to show at the door.', 'snn-tickets'),
+            ],
+            'confirmation' => [
+                'short' => __('Received email', 'snn-tickets'),
+                'when'  => __('Goes out immediately when someone registers through a form that needs your approval. It has no ticket yet — it just says "we got it, we will get back to you".', 'snn-tickets'),
+                'where' => __('Pick it in a form\'s Emails settings. Forms that approve automatically skip this email.', 'snn-tickets'),
+                'tip'   => '',
+            ],
+            'rejection' => [
+                'short' => __('Rejection email', 'snn-tickets'),
+                'when'  => __('Goes out when you reject a registration on the Submissions screen.', 'snn-tickets'),
+                'where' => __('Pick it in a form\'s Emails settings.', 'snn-tickets'),
+                'tip'   => '',
+            ],
+        ];
+    }
+
     public static function render_templates_page() {
         self::cap();
 
         $templates = SNN_T_Mailer::get_templates();
         $roles     = SNN_T_Mailer::roles();
+        $help      = self::role_help();
 
         $editing = isset($_GET['template']) ? sanitize_text_field(wp_unslash($_GET['template'])) : '';
         $current = $editing !== '' ? ($templates[$editing] ?? null) : null;
@@ -664,6 +791,10 @@ class SNN_T_Admin {
         $subject = $current['subject'] ?? $default['subject'];
         $body    = $current['body']    ?? $default['body'];
 
+        $design  = SNN_T_Design::settings();
+        $presets = SNN_T_Design::presets();
+        $preset  = $presets[$design['preset']] ?? reset($presets);
+
         global $wpdb;
         $lists = $wpdb->get_results("SELECT id, name FROM " . SNN_T_DB::lists() . " ORDER BY id DESC LIMIT 100");
         ?>
@@ -672,29 +803,61 @@ class SNN_T_Admin {
             <?php self::tabs('emails', 'snn-tickets-templates'); ?>
             <?php self::notice(); ?>
 
-            <div class="snn-grid snn-grid-side">
+            <div class="snn-card">
+                <div class="snn-card-head">
+                    <h2><?php esc_html_e('Your templates', 'snn-tickets'); ?></h2>
+                    <span class="snn-muted" style="font-size:12px"><?php esc_html_e('Kinds without a template use the built-in wording.', 'snn-tickets'); ?></span>
+                </div>
+                <div class="snn-tpl-groups">
+                    <?php foreach ($roles as $rkey => $rlabel): $in_role = SNN_T_Mailer::templates_for_role($rkey); ?>
+                        <div class="snn-tpl-group <?php echo $role === $rkey ? 'on' : ''; ?>">
+                            <strong><?php echo esc_html($help[$rkey]['short']); ?></strong>
+                            <div class="snn-muted" style="font-size:12px;margin:2px 0 8px"><?php echo esc_html($rlabel); ?></div>
+                            <?php if ($in_role): ?>
+                                <ul>
+                                <?php foreach ($in_role as $name => $t): ?>
+                                    <li><a class="<?php echo $editing === $name ? 'current' : ''; ?>" href="<?php echo esc_url(add_query_arg(['page' => 'snn-tickets-templates', 'template' => $name], admin_url('admin.php'))); ?>"><span class="dashicons dashicons-email"></span> <?php echo esc_html($name); ?></a></li>
+                                <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                <p class="snn-muted" style="font-size:12px;margin:0 0 8px"><?php esc_html_e('Using the built-in email.', 'snn-tickets'); ?></p>
+                            <?php endif; ?>
+                            <a class="button button-small" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-templates&role=' . $rkey)); ?>">+ <?php esc_html_e('New', 'snn-tickets'); ?></a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="snn-grid snn-grid-mail">
                 <div class="snn-card">
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <input type="hidden" name="action" value="snn_save_template">
                         <?php wp_nonce_field('snn_save_template'); ?>
                         <input type="hidden" name="original_name" value="<?php echo esc_attr($editing); ?>">
 
-                        <h2 style="margin-top:0"><?php echo $editing !== '' ? esc_html(sprintf(__('Edit "%s"', 'snn-tickets'), $editing)) : esc_html__('New template', 'snn-tickets'); ?></h2>
+                        <h2 style="margin-top:0"><?php echo $editing !== '' ? esc_html(sprintf(__('Edit "%s"', 'snn-tickets'), $editing)) : esc_html(sprintf(__('New %s', 'snn-tickets'), strtolower($help[$role]['short']))); ?></h2>
 
                         <table class="form-table" role="presentation">
                             <tr>
-                                <th scope="row"><label for="tpl_name"><?php esc_html_e('Template name', 'snn-tickets'); ?></label></th>
-                                <td><input type="text" id="tpl_name" name="name" class="regular-text" required value="<?php echo esc_attr($editing); ?>" placeholder="<?php esc_attr_e('Summer meetup ticket', 'snn-tickets'); ?>"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row"><label for="tpl_role"><?php esc_html_e('Used for', 'snn-tickets'); ?></label></th>
+                                <th scope="row"><label for="tpl_role"><?php esc_html_e('Kind of email', 'snn-tickets'); ?></label></th>
                                 <td>
                                     <select id="tpl_role" name="role">
                                         <?php foreach ($roles as $rkey => $rlabel): ?>
-                                            <option value="<?php echo esc_attr($rkey); ?>" <?php selected($role, $rkey); ?>><?php echo esc_html($rlabel); ?></option>
+                                            <option value="<?php echo esc_attr($rkey); ?>" <?php selected($role, $rkey); ?>><?php echo esc_html($help[$rkey]['short'] . ' — ' . $rlabel); ?></option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <?php foreach ($help as $rkey => $h): ?>
+                                        <div class="snn-hint" data-role-help="<?php echo esc_attr($rkey); ?>" <?php echo $rkey === $role ? '' : 'hidden'; ?>>
+                                            <p><strong><?php esc_html_e('When is it sent?', 'snn-tickets'); ?></strong> <?php echo esc_html($h['when']); ?></p>
+                                            <p><strong><?php esc_html_e('Where is it used?', 'snn-tickets'); ?></strong> <?php echo esc_html($h['where']); ?></p>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="tpl_name"><?php esc_html_e('Template name', 'snn-tickets'); ?></label></th>
+                                <td><input type="text" id="tpl_name" name="name" class="regular-text" required value="<?php echo esc_attr($editing); ?>" placeholder="<?php esc_attr_e('Summer meetup ticket', 'snn-tickets'); ?>">
+                                    <p class="description"><?php esc_html_e('Only you see this — it is how you find the template in a form or when sending to a list.', 'snn-tickets'); ?></p></td>
                             </tr>
                             <tr>
                                 <th scope="row"><label for="tpl_subject"><?php esc_html_e('Subject', 'snn-tickets'); ?></label></th>
@@ -702,24 +865,28 @@ class SNN_T_Admin {
                             </tr>
                         </table>
 
+                        <p style="margin:0 0 2px;font-weight:600"><?php esc_html_e('Message', 'snn-tickets'); ?></p>
+                        <p class="snn-muted" style="margin:0;font-size:12px"><?php esc_html_e('Click a tag to insert it. Tags are replaced with each attendee\'s details when the email goes out.', 'snn-tickets'); ?></p>
                         <?php self::editor('snntplbody', 'body', $body, 16); ?>
+                        <div class="snn-hint warn" data-qr-warn hidden><p><?php echo esc_html($help['ticket']['tip']); ?></p></div>
 
-                        <p class="description"><?php printf(esc_html__('Colours, logo and footer come from the %s screen and wrap this message automatically.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-design')) . '">' . esc_html__('Design', 'snn-tickets') . '</a>'); ?></p>
+                        <details style="margin:10px 0 0">
+                            <summary style="cursor:pointer;color:#2271b1"><?php esc_html_e('What does each tag do?', 'snn-tickets'); ?></summary>
+                            <dl class="snn-dl" style="font-size:12px;margin-top:8px;grid-template-columns:150px minmax(0,1fr)">
+                                <?php foreach (SNN_T_Mailer::tags() as $tag => $tag_help): ?>
+                                    <dt><code><?php echo esc_html($tag); ?></code></dt><dd class="snn-muted"><?php echo esc_html($tag_help); ?></dd>
+                                <?php endforeach; ?>
+                            </dl>
+                        </details>
 
-                        <p>
-                            <label for="tpl_list"><?php esc_html_e('Preview with event', 'snn-tickets'); ?></label>
-                            <select id="tpl_list">
-                                <option value="0"><?php esc_html_e('Sample event', 'snn-tickets'); ?></option>
-                                <?php foreach ($lists as $l): ?><option value="<?php echo (int)$l->id; ?>"><?php echo esc_html($l->name); ?></option><?php endforeach; ?>
-                            </select>
-                        </p>
+                        <h3 style="margin:20px 0 6px;font-size:13px"><?php esc_html_e('Send yourself a test', 'snn-tickets'); ?></h3>
                         <?php self::email_tools(['role_el' => 'tpl_role', 'subject_el' => 'tpl_subject', 'body_el' => 'snntplbody', 'list_el' => 'tpl_list']); ?>
 
                         <p class="submit">
-                            <button class="button button-primary"><?php esc_html_e('Save template', 'snn-tickets'); ?></button>
+                            <button class="button button-primary button-large"><?php esc_html_e('Save template', 'snn-tickets'); ?></button>
                             <?php if ($editing !== ''): ?>
                                 <button class="button button-link-delete" formaction="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                                        name="action" value="snn_delete_template"
+                                        name="action" value="snn_delete_template" formnovalidate
                                         onclick="return confirm(<?php echo esc_attr(wp_json_encode(__('Delete this template? Forms using it fall back to the built-in default.', 'snn-tickets'))); ?>);">
                                     <?php esc_html_e('Delete', 'snn-tickets'); ?>
                                 </button>
@@ -728,39 +895,55 @@ class SNN_T_Admin {
                     </form>
                 </div>
 
-                <div>
+                <div class="snn-sticky">
                     <div class="snn-card">
-                        <h2><?php esc_html_e('Saved templates', 'snn-tickets'); ?></h2>
-                        <?php if (!$templates): ?>
-                            <p class="snn-muted"><?php esc_html_e('None yet. Forms use the built-in defaults, which already include the designed ticket and wallet buttons.', 'snn-tickets'); ?></p>
-                        <?php endif; ?>
-                        <?php foreach ($roles as $rkey => $rlabel): $in_role = SNN_T_Mailer::templates_for_role($rkey); if (!$in_role) continue; ?>
-                            <p style="margin:12px 0 4px;font-weight:600;font-size:12px;color:#646970;text-transform:uppercase;"><?php echo esc_html($rkey); ?></p>
-                            <ul style="margin:0;">
-                            <?php foreach ($in_role as $name => $t): ?>
-                                <li><a href="<?php echo esc_url(add_query_arg(['page' => 'snn-tickets-templates', 'template' => $name], admin_url('admin.php'))); ?>"
-                                       <?php echo $editing === $name ? 'style="font-weight:700;"' : ''; ?>><?php echo esc_html($name); ?></a></li>
-                            <?php endforeach; ?>
-                            </ul>
-                        <?php endforeach; ?>
-                        <p style="margin-top:16px;">
-                            <?php foreach ($roles as $rkey => $rlabel): ?>
-                                <a class="button button-small" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-templates&role=' . $rkey)); ?>">+ <?php echo esc_html(ucfirst($rkey)); ?></a>
-                            <?php endforeach; ?>
-                        </p>
-                    </div>
-
-                    <div class="snn-card">
-                        <h2><?php esc_html_e('Tags', 'snn-tickets'); ?></h2>
-                        <dl style="margin:0;font-size:12px;line-height:1.5">
-                            <?php foreach (SNN_T_Mailer::tags() as $tag => $help): ?>
-                                <dt><code><?php echo esc_html($tag); ?></code></dt><dd style="margin:0 0 6px;color:#646970"><?php echo esc_html($help); ?></dd>
-                            <?php endforeach; ?>
-                        </dl>
+                        <div class="snn-card-head">
+                            <h2><?php esc_html_e('Live preview', 'snn-tickets'); ?></h2>
+                            <select id="tpl_list" aria-label="<?php esc_attr_e('Preview with event', 'snn-tickets'); ?>" style="max-width:55%">
+                                <option value="0"><?php esc_html_e('Sample event', 'snn-tickets'); ?></option>
+                                <?php foreach ($lists as $l): ?><option value="<?php echo (int)$l->id; ?>"><?php echo esc_html($l->name); ?></option><?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="snn-design-chip" style="margin:0 0 12px">
+                            <?php echo SNN_T_Design_Admin::thumb($preset); // built from sanitised preset values ?>
+                            <div style="font-size:12px;line-height:1.5">
+                                <strong><?php printf(esc_html__('Design: %s', 'snn-tickets'), esc_html($preset['label'])); ?></strong><br>
+                                <span class="snn-muted"><?php esc_html_e('The template is the words; the design is the frame around them — colours, logo, footer and the ticket card. An event with its own design uses that instead; pick it above to see.', 'snn-tickets'); ?></span><br>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-design')); ?>"><?php esc_html_e('Change design', 'snn-tickets'); ?> &rarr;</a>
+                            </div>
+                        </div>
+                        <?php self::live_preview(['role_el' => 'tpl_role', 'subject_el' => 'tpl_subject', 'body_el' => 'snntplbody', 'list_el' => 'tpl_list']); ?>
                     </div>
                 </div>
             </div>
         </div>
+        <style>
+        .snn-grid-mail{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
+        @media(max-width:1100px){.snn-grid-mail{grid-template-columns:1fr}.snn-grid-mail .snn-sticky{position:static}}
+        .snn-tpl-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+        @media(max-width:900px){.snn-tpl-groups{grid-template-columns:1fr}}
+        .snn-tpl-group{border:1px solid #dcdcde;border-radius:8px;padding:12px 14px}
+        .snn-tpl-group.on{border-color:#2271b1;background:#f6fafd}
+        .snn-tpl-group ul{margin:0 0 8px}
+        .snn-tpl-group li{margin:0 0 4px}
+        .snn-tpl-group li a{text-decoration:none}
+        .snn-tpl-group li a.current{font-weight:700}
+        .snn-tpl-group li .dashicons{font-size:16px;width:16px;height:16px;vertical-align:-3px;color:#8c8f94}
+        </style>
+        <script>
+        (function(){
+            var role = document.getElementById('tpl_role'), warn = document.querySelector('[data-qr-warn]');
+            role.addEventListener('change', function(){
+                document.querySelectorAll('[data-role-help]').forEach(function(el){ el.hidden = el.getAttribute('data-role-help') !== role.value; });
+                check();
+            });
+            function check(){
+                var b = window.snnEditorValue ? snnEditorValue('snntplbody') : '';
+                warn.hidden = !(role.value === 'ticket' && b.indexOf('{ticket_card}') === -1 && b.indexOf('{qr_block}') === -1);
+            }
+            setInterval(check, 1500); check();
+        })();
+        </script>
         <?php
     }
 
@@ -955,7 +1138,7 @@ class SNN_T_Admin {
             <div class="tablenav bottom">
                 <div class="tablenav-pages">
                     <span class="displaying-num"><?php printf(esc_html(_n('%s item', '%s items', $total, 'snn-tickets')), number_format_i18n($total)); ?></span>
-                    <?php echo paginate_links(['base' => add_query_arg('paged', '%#%'), 'format' => '', 'current' => $paged, 'total' => max(1, (int)ceil($total / $per)), 'prev_text' => '‹', 'next_text' => '›']); ?>
+                    <?php echo SNN_T_Admin::pager($total, $per, $paged); ?>
                 </div>
             </div>
         </div>

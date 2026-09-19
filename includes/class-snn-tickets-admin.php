@@ -238,7 +238,7 @@ class SNN_T_Tickets_Admin {
                     </div>
                     <div class="tablenav-pages">
                         <span class="displaying-num"><?php printf(esc_html(_n('%s ticket', '%s tickets', $total, 'snn-tickets')), number_format_i18n($total)); ?></span>
-                        <?php echo paginate_links(['base' => add_query_arg('paged', '%#%'), 'format' => '', 'current' => $paged, 'total' => max(1, (int)ceil($total / self::PER_PAGE)), 'prev_text' => '‹', 'next_text' => '›']); ?>
+                        <?php echo SNN_T_Admin::pager($total, self::PER_PAGE, $paged); ?>
                     </div>
                 </div>
 
@@ -291,6 +291,15 @@ class SNN_T_Tickets_Admin {
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php if ($total > self::PER_PAGE): ?>
+                <div class="tablenav bottom">
+                    <div class="tablenav-pages">
+                        <span class="displaying-num"><?php printf(esc_html(_n('%s ticket', '%s tickets', $total, 'snn-tickets')), number_format_i18n($total)); ?></span>
+                        <?php echo SNN_T_Admin::pager($total, self::PER_PAGE, $paged); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </form>
 
             <div class="snn-card" style="margin-top:24px;border-color:#f0c9c6">
@@ -893,48 +902,116 @@ class SNN_T_Tickets_Admin {
         SNN_T_Admin::cap();
         global $wpdb;
 
-        $lists     = $wpdb->get_results("SELECT id, name FROM " . SNN_T_DB::lists() . " ORDER BY id DESC");
+        $tickets_t = SNN_T_DB::tickets();
+        $queue_t   = SNN_T_DB::queue();
+        $lists     = $wpdb->get_results("
+            SELECT l.id, l.name,
+                   SUM(CASE WHEN t.email <> '' AND t.status = 'active' THEN 1 ELSE 0 END) AS with_email,
+                   SUM(CASE WHEN t.email <> '' AND t.status = 'active' AND EXISTS (
+                       SELECT 1 FROM {$queue_t} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')
+                   ) THEN 1 ELSE 0 END) AS handled
+            FROM " . SNN_T_DB::lists() . " l LEFT JOIN {$tickets_t} t ON t.list_id = l.id
+            GROUP BY l.id ORDER BY l.id DESC");
         $selected  = (int)($_GET['list_id'] ?? 0);
+        if (!$selected && $lists) $selected = (int)$lists[0]->id;
         $templates = SNN_T_Mailer::templates_for_role('ticket');
+        $rate      = (int)SNN_T_Mailer::batch_size();
         ?>
         <div class="wrap snn-wrap">
             <h1><?php esc_html_e('Emails', 'snn-tickets'); ?></h1>
             <?php SNN_T_Admin::tabs('emails', 'snn-tickets-mailer'); ?>
             <?php SNN_T_Admin::notice(); ?>
 
-            <div class="snn-card" style="max-width:860px">
-                <h2><?php esc_html_e('Send tickets to everyone on a list', 'snn-tickets'); ?></h2>
-                <p class="snn-muted"><?php printf(esc_html__('Each attendee with an email address gets their own ticket. Sending runs in the background at %d per minute — you can close this page.', 'snn-tickets'), (int)SNN_T_Mailer::batch_size()); ?></p>
+            <?php if (!$lists): ?>
+                <div class="snn-card snn-empty-state">
+                    <span class="dashicons dashicons-email-alt"></span>
+                    <p><?php esc_html_e('No events yet. Create an event with tickets first, then send them from here.', 'snn-tickets'); ?></p>
+                    <p><a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists')); ?>"><?php esc_html_e('Go to Events & Tickets', 'snn-tickets'); ?></a></p>
+                </div>
+            </div>
+            <?php return; endif; ?>
 
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <input type="hidden" name="action" value="snn_queue_list_emails">
-                    <?php wp_nonce_field('snn_queue_list_emails'); ?>
-                    <table class="form-table" role="presentation">
-                        <tr><th><label for="snn_list_id"><?php esc_html_e('Event', 'snn-tickets'); ?></label></th>
-                            <td><select id="snn_list_id" name="list_id" required>
-                                <option value=""><?php esc_html_e('Choose…', 'snn-tickets'); ?></option>
-                                <?php foreach ($lists as $l):
-                                    $n = (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND email <> '' AND status = 'active'", $l->id)); ?>
-                                    <option value="<?php echo (int)$l->id; ?>" <?php selected($selected, (int)$l->id); ?>><?php echo esc_html(sprintf(_n('%1$s (%2$d with email)', '%1$s (%2$d with email)', $n, 'snn-tickets'), $l->name, $n)); ?></option>
-                                <?php endforeach; ?>
-                            </select></td></tr>
-                        <tr><th><label for="snn_template"><?php esc_html_e('Template', 'snn-tickets'); ?></label></th>
-                            <td><select id="snn_template" name="template">
-                                    <option value=""><?php esc_html_e('Built-in ticket email', 'snn-tickets'); ?></option>
-                                    <?php foreach ($templates as $name => $t): ?><option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?>
-                                </select>
-                                <p class="description"><?php printf(esc_html__('Tickets that came from a form use that form\'s own wording unless you pick a template here. Manage templates on the %s tab.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-templates')) . '">' . esc_html__('Templates', 'snn-tickets') . '</a>'); ?></p></td></tr>
-                        <tr><th><?php esc_html_e('Skip duplicates', 'snn-tickets'); ?></th>
-                            <td><label><input type="checkbox" name="skip_sent" value="1" checked> <?php esc_html_e('Skip anyone whose ticket email is already queued or sent', 'snn-tickets'); ?></label></td></tr>
-                    </table>
+            <div class="snn-grid snn-grid-mail">
+                <div class="snn-card">
+                    <h2><?php esc_html_e('Send tickets to everyone in an event', 'snn-tickets'); ?></h2>
+                    <p class="snn-muted"><?php printf(esc_html__('Each attendee with an email address gets their own ticket. Sending runs in the background at %d per minute — you can close this page.', 'snn-tickets'), $rate); ?></p>
 
-                    <?php SNN_T_Admin::email_tools(['role' => 'ticket', 'template_el' => 'snn_template', 'list_el' => 'snn_list_id']); ?>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="snn-mailer-form">
+                        <input type="hidden" name="action" value="snn_queue_list_emails">
+                        <?php wp_nonce_field('snn_queue_list_emails'); ?>
+                        <table class="form-table" role="presentation">
+                            <tr><th><label for="snn_list_id"><?php esc_html_e('1. Event', 'snn-tickets'); ?></label></th>
+                                <td><select id="snn_list_id" name="list_id" required style="max-width:100%">
+                                    <?php foreach ($lists as $l): ?>
+                                        <option value="<?php echo (int)$l->id; ?>" data-n="<?php echo (int)$l->with_email; ?>" data-done="<?php echo (int)$l->handled; ?>" <?php selected($selected, (int)$l->id); ?>><?php echo esc_html(sprintf(__('%1$s (%2$d with email)', 'snn-tickets'), $l->name, (int)$l->with_email)); ?></option>
+                                    <?php endforeach; ?>
+                                </select></td></tr>
+                            <tr><th><label for="snn_template"><?php esc_html_e('2. Email', 'snn-tickets'); ?></label></th>
+                                <td><select id="snn_template" name="template" style="max-width:100%">
+                                        <option value=""><?php esc_html_e("Each form's own ticket email (or the built-in one)", 'snn-tickets'); ?></option>
+                                        <?php foreach ($templates as $name => $t): ?><option value="<?php echo esc_attr($name); ?>"><?php echo esc_html($name); ?></option><?php endforeach; ?>
+                                    </select>
+                                    <p class="description"><?php printf(esc_html__('Pick a saved ticket template to use the same wording for everyone. Write new ones on the %s tab.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-templates&role=ticket')) . '">' . esc_html__('Templates', 'snn-tickets') . '</a>'); ?></p></td></tr>
+                            <tr><th><?php esc_html_e('3. Who gets it', 'snn-tickets'); ?></th>
+                                <td><label><input type="checkbox" id="snn_skip_sent" name="skip_sent" value="1" checked> <?php esc_html_e('Skip anyone whose ticket email is already queued or sent', 'snn-tickets'); ?></label>
+                                    <div class="snn-hint" data-summary></div></td></tr>
+                        </table>
 
-                    <p class="submit"><button class="button button-primary button-large"
-                        onclick="return document.getElementById('snn_list_id').value ? confirm(<?php echo esc_attr(wp_json_encode(__('Queue ticket emails for this whole list?', 'snn-tickets'))); ?>) : true;"><?php esc_html_e('Queue emails', 'snn-tickets'); ?></button></p>
-                </form>
+                        <h3 style="margin:18px 0 6px;font-size:13px"><?php esc_html_e('Send yourself a test first', 'snn-tickets'); ?></h3>
+                        <?php SNN_T_Admin::email_tools(['role' => 'ticket', 'template_el' => 'snn_template', 'list_el' => 'snn_list_id']); ?>
+
+                        <p class="submit"><button class="button button-primary button-large" data-queue><?php esc_html_e('Queue emails', 'snn-tickets'); ?></button></p>
+                    </form>
+                </div>
+
+                <div class="snn-sticky">
+                    <div class="snn-card">
+                        <div class="snn-card-head">
+                            <h2><?php esc_html_e('Preview', 'snn-tickets'); ?></h2>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-design')); ?>"><?php esc_html_e('Change design', 'snn-tickets'); ?> &rarr;</a>
+                        </div>
+                        <p class="snn-muted" style="margin-top:0;font-size:12px"><?php esc_html_e('What an attendee of the chosen event will receive, filled in with sample details. Updates as you change the options.', 'snn-tickets'); ?></p>
+                        <?php SNN_T_Admin::live_preview(['role' => 'ticket', 'template_el' => 'snn_template', 'list_el' => 'snn_list_id']); ?>
+                    </div>
+                </div>
             </div>
         </div>
+        <style>.snn-grid-mail{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}@media(max-width:1100px){.snn-grid-mail{grid-template-columns:1fr}.snn-grid-mail .snn-sticky{position:static}}</style>
+        <script>
+        (function(){
+            var sel = document.getElementById('snn_list_id'), skip = document.getElementById('snn_skip_sent');
+            var out = document.querySelector('[data-summary]'), btn = document.querySelector('[data-queue]');
+            var T = <?php echo wp_json_encode([
+                'will' => __('%1$s email(s) will be queued — about %2$s to send.', 'snn-tickets'),
+                'skip' => __('%s already have their ticket and will be skipped.', 'snn-tickets'),
+                'none' => __('Nobody left to send to on this event.', 'snn-tickets'),
+                'dup'  => __('%s of them already got a ticket email and will get another one.', 'snn-tickets'),
+                'min'  => __('%s min', 'snn-tickets'),
+                'btn'  => __('Queue %s emails', 'snn-tickets'),
+                'ask'  => __('Queue %s ticket emails now?', 'snn-tickets'),
+                'rate' => max(1, $rate),
+            ]); ?>;
+            var count = 0;
+            function f(s, a, b){ return s.replace('%1$s', a).replace('%2$s', b).replace('%s', a); }
+            function update(){
+                var o = sel.options[sel.selectedIndex], n = +o.getAttribute('data-n'), done = +o.getAttribute('data-done');
+                count = skip.checked ? n - done : n;
+                var html = '';
+                out.classList.remove('warn');
+                if (count <= 0) { html = '<p>' + T.none + '</p>'; out.classList.add('warn'); }
+                else {
+                    html = '<p><strong>' + f(T.will, count, f(T.min, Math.max(1, Math.ceil(count / T.rate)))) + '</strong></p>';
+                    if (done && skip.checked) html += '<p>' + f(T.skip, done) + '</p>';
+                    if (done && !skip.checked) { html += '<p>' + f(T.dup, done) + '</p>'; out.classList.add('warn'); }
+                }
+                out.innerHTML = html;
+                btn.textContent = f(T.btn, Math.max(0, count));
+                btn.disabled = count <= 0;
+            }
+            sel.addEventListener('change', update); skip.addEventListener('change', update); update();
+            btn.addEventListener('click', function(e){ if (!confirm(f(T.ask, count))) e.preventDefault(); });
+        })();
+        </script>
         <?php
     }
 

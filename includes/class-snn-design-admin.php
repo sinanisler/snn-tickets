@@ -22,7 +22,7 @@ class SNN_T_Design_Admin {
     }
 
     /** A small CSS mock-up of a preset, for the picker. */
-    private static function thumb($p) {
+    public static function thumb($p) {
         $head = $p['header_bg2']
             ? "background:linear-gradient(120deg,{$p['header_bg']},{$p['header_bg2']});"
             : "background:{$p['header_bg']};" . ($p['header_bg'] === $p['card'] ? 'border-bottom:1px solid ' . SNN_T_Design::mix($p['card'], $p['text'], .12) . ';' : '');
@@ -60,7 +60,8 @@ class SNN_T_Design_Admin {
         ?>
         <div class="wrap snn-wrap">
             <h1><?php esc_html_e('Design', 'snn-tickets'); ?></h1>
-            <p class="snn-muted"><?php esc_html_e('One design styles the ticket email, the PDF, the wallet passes and the attendee ticket page. Each event can also pick its own preset in its event settings.', 'snn-tickets'); ?></p>
+            <p class="snn-muted"><?php esc_html_e('One design styles the ticket email, the PDF, the wallet passes and the attendee ticket page. Each event can also pick its own preset in its event settings.', 'snn-tickets'); ?>
+                <?php printf(esc_html__('The design is the frame; the words inside each email come from %s.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-templates')) . '">' . esc_html__('Email templates', 'snn-tickets') . '</a>'); ?></p>
             <?php SNN_T_Admin::notice(); ?>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="snn-design-form">

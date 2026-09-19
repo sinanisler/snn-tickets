@@ -60,10 +60,10 @@ class SNN_T_Dashboard {
             LIMIT 8");
 
         $recent = $wpdb->get_results("
-            SELECT t.name, t.ticket_code, t.last_validated, t.validate_count, l.name AS list_name
+            SELECT t.name, t.ticket_code, t.list_id, t.last_validated, t.validate_count, l.name AS list_name
             FROM {$tickets} t LEFT JOIN {$lists} l ON l.id = t.list_id
             WHERE t.last_validated IS NOT NULL
-            ORDER BY t.last_validated DESC LIMIT 8");
+            ORDER BY t.last_validated DESC LIMIT 10");
 
         $forms = SNN_T_Forms::all();
         $check = self::checklist();
@@ -88,13 +88,16 @@ class SNN_T_Dashboard {
             <div class="snn-grid snn-grid-side">
                 <div>
                     <div class="snn-card">
-                        <h2><?php esc_html_e('Events', 'snn-tickets'); ?></h2>
+                        <div class="snn-card-head">
+                            <h2><?php esc_html_e('Events', 'snn-tickets'); ?></h2>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists')); ?>"><?php esc_html_e('All events', 'snn-tickets'); ?> &rarr;</a>
+                        </div>
                         <?php if (!$events): ?>
                             <p class="snn-muted"><?php esc_html_e('No events yet. Build a registration form to create one.', 'snn-tickets'); ?></p>
                             <p><a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-forms&action=new')); ?>"><?php esc_html_e('Build a registration form', 'snn-tickets'); ?></a></p>
                         <?php else: ?>
-                        <table class="widefat striped">
-                            <thead><tr><th><?php esc_html_e('Event', 'snn-tickets'); ?></th><th style="width:180px"><?php esc_html_e('When', 'snn-tickets'); ?></th><th style="width:200px"><?php esc_html_e('Checked in', 'snn-tickets'); ?></th></tr></thead>
+                        <table class="widefat striped snn-table">
+                            <thead><tr><th><?php esc_html_e('Event', 'snn-tickets'); ?></th><th style="width:180px"><?php esc_html_e('When', 'snn-tickets'); ?></th><th style="width:260px"><?php esc_html_e('Checked in', 'snn-tickets'); ?></th></tr></thead>
                             <tbody>
                             <?php foreach ($events as $e): $e = SNN_T_Events::normalise($e);
                                 $pct = (int)$e->active ? round(100 * (int)$e->inside / (int)$e->active) : 0; ?>
@@ -102,8 +105,32 @@ class SNN_T_Dashboard {
                                     <td><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists&list=' . (int)$e->id)); ?>"><strong><?php echo esc_html($e->name); ?></strong></a>
                                         <?php if ($e->venue): ?><br><span class="snn-muted" style="font-size:12px"><?php echo esc_html($e->venue); ?></span><?php endif; ?></td>
                                     <td style="font-size:12px"><?php echo $e->event_start ? esc_html(SNN_T_Events::format_date($e)) . '<br><span class="snn-muted">' . esc_html(SNN_T_Events::format_time($e)) . '</span>' : '<span class="snn-muted">—</span>'; ?></td>
-                                    <td><div class="snn-progress"><i style="width:<?php echo (int)$pct; ?>%"></i></div>
-                                        <span class="snn-muted" style="font-size:12px"><?php echo (int)$e->inside; ?> / <?php echo (int)$e->active; ?></span></td>
+                                    <td><div class="snn-meter"><div class="snn-progress"><i style="width:<?php echo (int)$pct; ?>%"></i></div>
+                                        <span><?php echo (int)$e->inside; ?> / <?php echo (int)$e->active; ?> <span class="snn-muted">· <?php echo (int)$pct; ?>%</span></span></div></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="snn-card">
+                        <div class="snn-card-head">
+                            <h2><?php esc_html_e('Recent check-ins', 'snn-tickets'); ?></h2>
+                            <?php if ($today_in): ?><span class="snn-badge ok"><?php printf(esc_html__('%s today', 'snn-tickets'), number_format_i18n($today_in)); ?></span><?php endif; ?>
+                        </div>
+                        <?php if (!$recent): ?>
+                            <p class="snn-muted"><?php esc_html_e('Nobody has been checked in yet.', 'snn-tickets'); ?></p>
+                        <?php else: ?>
+                        <table class="widefat striped snn-table">
+                            <thead><tr><th><?php esc_html_e('Attendee', 'snn-tickets'); ?></th><th><?php esc_html_e('Event', 'snn-tickets'); ?></th><th style="width:90px"><?php esc_html_e('Scans', 'snn-tickets'); ?></th><th style="width:190px"><?php esc_html_e('Last scan', 'snn-tickets'); ?></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($recent as $r): ?>
+                                <tr>
+                                    <td><span class="dashicons dashicons-yes" style="color:#0a7d32"></span> <strong><?php echo esc_html($r->name ?: $r->ticket_code); ?></strong></td>
+                                    <td><?php if ($r->list_id): ?><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists&list=' . (int)$r->list_id)); ?>"><?php echo esc_html($r->list_name); ?></a><?php endif; ?></td>
+                                    <td><?php if ((int)$r->validate_count > 1): ?><span class="snn-badge warn" title="<?php esc_attr_e('Scanned more than once', 'snn-tickets'); ?>"><?php echo (int)$r->validate_count; ?>×</span><?php else: ?><span class="snn-muted">1×</span><?php endif; ?></td>
+                                    <td class="snn-muted"><?php echo SNN_T_Admin::when($r->last_validated); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>
@@ -114,7 +141,7 @@ class SNN_T_Dashboard {
                     <?php if ($forms): ?>
                     <div class="snn-card">
                         <h2><?php esc_html_e('Registration forms', 'snn-tickets'); ?></h2>
-                        <table class="widefat striped">
+                        <table class="widefat striped snn-table">
                             <thead><tr><th><?php esc_html_e('Form', 'snn-tickets'); ?></th><th style="width:200px"><?php esc_html_e('Capacity', 'snn-tickets'); ?></th><th style="width:120px"><?php esc_html_e('Pending', 'snn-tickets'); ?></th></tr></thead>
                             <tbody>
                             <?php foreach (array_slice($forms, 0, 8) as $f):
@@ -147,21 +174,6 @@ class SNN_T_Dashboard {
                         </ul>
                     </div>
                     <?php endif; ?>
-
-                    <div class="snn-card">
-                        <h2><?php esc_html_e('Recent check-ins', 'snn-tickets'); ?></h2>
-                        <?php if (!$recent): ?>
-                            <p class="snn-muted"><?php esc_html_e('Nobody has been checked in yet.', 'snn-tickets'); ?></p>
-                        <?php else: ?>
-                            <ul class="snn-check">
-                            <?php foreach ($recent as $r): ?>
-                                <li><span class="dashicons dashicons-yes yes"></span>
-                                    <div style="flex:1;min-width:0"><strong><?php echo esc_html($r->name ?: $r->ticket_code); ?></strong><?php if ((int)$r->validate_count > 1): ?> <span class="snn-badge warn"><?php echo (int)$r->validate_count; ?>×</span><?php endif; ?><br>
-                                        <span class="snn-muted" style="font-size:12px"><?php echo esc_html($r->list_name); ?> · <?php echo SNN_T_Admin::when($r->last_validated); ?></span></div></li>
-                            <?php endforeach; ?>
-                            </ul>
-                        <?php endif; ?>
-                    </div>
 
                     <div class="snn-card">
                         <h2><?php esc_html_e('Shortcodes', 'snn-tickets'); ?></h2>
