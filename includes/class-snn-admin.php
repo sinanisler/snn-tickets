@@ -263,7 +263,7 @@ class SNN_T_Admin {
         if ($with_site) {
             $site = SNN_T_Design::presets()[SNN_T_Design::settings()['preset']];
             $out .= '<label class="snn-look"><input type="radio" name="' . esc_attr($name) . '" value=""' . checked($selected, '', false) . '>'
-                  . SNN_T_Design::thumb(SNN_T_Design::resolve('')) . esc_html__('Site look', 'snn-tickets')
+                  . SNN_T_Design::thumb(SNN_T_Design::resolve('')) . esc_html__('Site style', 'snn-tickets')
                   . '<small>' . esc_html(sprintf(__('%s with your colours', 'snn-tickets'), $site['label'])) . '</small></label>';
         }
         foreach (SNN_T_Design::presets() as $k => $p) {

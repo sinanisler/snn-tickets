@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings that apply to every event: sender, look, door, the email log,
+ * Settings that apply to every event: sender, style, door, the email log,
  * saved email templates, wallet passes and the advanced corner.
  */
 
@@ -20,7 +20,7 @@ class SNN_T_Settings {
     private static function tabs() {
         return [
             'general'   => __('General', 'snn-tickets'),
-            'look'      => __('Look', 'snn-tickets'),
+            'look'      => __('Style', 'snn-tickets'),
             'door'      => __('Door & scanner', 'snn-tickets'),
             'log'       => __('Email log', 'snn-tickets'),
             'templates' => __('Email templates', 'snn-tickets'),
@@ -137,16 +137,16 @@ class SNN_T_Settings {
                     <?php if ($s['logo_url']): ?><label class="snn-check"><input type="checkbox" name="remove_logo" value="1"> <span><?php esc_html_e('Remove logo', 'snn-tickets'); ?></span></label><?php endif; ?>
                 </div>
             </div></div>
-            <div class="snn-set"><div><h3><?php esc_html_e('Default look', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Every event uses this unless it picks its own in Event settings.', 'snn-tickets'); ?></p></div><div class="body">
+            <div class="snn-set"><div><h3><?php esc_html_e('Default style', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Every event uses this unless it picks its own in Event settings.', 'snn-tickets'); ?></p></div><div class="body">
                 <?php echo SNN_T_Admin::looks_picker('design[preset]', $s['preset']); // escaped inside ?>
             </div></div>
-            <div class="snn-set"><div><h3><?php esc_html_e('Colours', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Fine-tune the default look. Events that pick a different look keep that look\'s own colours.', 'snn-tickets'); ?></p></div><div class="body">
+            <div class="snn-set"><div><h3><?php esc_html_e('Colours', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Fine-tune the default style. Events that pick a different style keep that style\'s own colours.', 'snn-tickets'); ?></p></div><div class="body">
                 <div class="snn-colors">
                     <?php foreach ($keys as $k => $l): ?>
                         <label class="snn-color"><input type="color" name="design[colors][<?php echo esc_attr($k); ?>]" data-key="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($s['colors'][$k] ?? $active[$k]); ?>"><span class="snn-small"><?php echo esc_html($l); ?></span></label>
                     <?php endforeach; ?>
                 </div>
-                <div><button type="button" class="button button-small" data-colors-reset><?php esc_html_e("Reset to the look's colours", 'snn-tickets'); ?></button></div>
+                <div><button type="button" class="button button-small" data-colors-reset><?php esc_html_e("Reset to the style's colours", 'snn-tickets'); ?></button></div>
                 <div data-mini></div>
             </div></div>
             <div class="snn-set"><div><h3><?php esc_html_e('Buttons in emails', 'snn-tickets'); ?></h3></div><div class="body">
@@ -155,7 +155,7 @@ class SNN_T_Settings {
                     <span class="snn-muted snn-small"><?php esc_html_e('Save first to see your changes. The ticket email preview is on each event\'s Emails tab.', 'snn-tickets'); ?></span></p>
             </div></div>
             </div>
-            <?php self::save_row(__('Save look', 'snn-tickets')); ?>
+            <?php self::save_row(__('Save style', 'snn-tickets')); ?>
         </form>
         <?php
     }
@@ -175,7 +175,7 @@ class SNN_T_Settings {
             if (strtolower($v) === strtolower($preset[$k])) unset($clean['colors'][$k]);
         }
         update_option(SNN_T_Design::OPTION, $clean);
-        SNN_T_Admin::go(self::url('look'), __('Look saved.', 'snn-tickets'));
+        SNN_T_Admin::go(self::url('look'), __('Style saved.', 'snn-tickets'));
     }
 
     public static function pdf_preview() {

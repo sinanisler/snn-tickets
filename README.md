@@ -13,7 +13,7 @@ The **Tickets** menu has four entries:
 | **Home** | What needs you (people waiting for approval, failed emails, full events), upcoming events, last check-ins, and a getting-started list |
 | **Events** | Every event: upcoming, past and undated. Each event has its own page (below) |
 | **Add New Event** | A five-step guide: the event, questions, who gets a ticket, ticket & email, go live |
-| **Settings** | Sender, look, door & scanner, email log, email templates, Apple & Google Wallet, advanced |
+| **Settings** | Sender, style, door & scanner, email log, email templates, Apple & Google Wallet, advanced |
 
 Each **event page** has these tabs (Sell tickets only when WooCommerce is active):
 
@@ -22,7 +22,7 @@ Each **event page** has these tabs (Sell tickets only when WooCommerce is active
 - **Sell tickets**: ticket types (WooCommerce products) with price, quantity and how many people each admits; add, reprice, stop and restart sales without leaving the event.
 - **Emails**: the event's own ticket, "we got your request", "sorry, no spot" and notice-to-you emails, already written, with a live preview, test send and a shared template library.
 - **Door**: live check-in count, recent check-ins with undo, and a QR that opens the scanner on a phone.
-- **Event settings**: date, venue, notes, web address, ticket look, attachments, duplicate, delete.
+- **Event settings**: date, venue, notes, web address, ticket style, attachments, duplicate, delete.
 
 ## Links, no pages to create
 
@@ -60,7 +60,7 @@ Every event is live as soon as it's created:
 
 ### Tickets
 - PDF (built-in writer, Turkish and Central European letters), Apple Wallet (.pkpass), Google Wallet, calendar invite (.ics)
-- Six looks (Minimal, Boarding pass, Midnight, Festival, Corporate, Classic stub) with colour tweaks and logo; events can pick their own
+- Six styles (Minimal, Boarding pass, Midnight, Festival, Corporate, Classic stub) with colour tweaks and logo; events can pick their own
 - Cancelled tickets print as cancelled and their wallet passes are voided
 
 ### Selling tickets with WooCommerce

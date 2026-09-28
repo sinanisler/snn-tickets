@@ -230,7 +230,7 @@ class SNN_T_Events_Admin {
                 <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="<?php esc_attr_e('Name, email, code or answer', 'snn-tickets'); ?>">
                 <button class="button"><?php esc_html_e('Search', 'snn-tickets'); ?></button>
             </form>
-            <button type="button" class="button button-primary" data-open="snn-add"><?php esc_html_e('+ Add people', 'snn-tickets'); ?></button>
+            <button type="button" class="button button-primary" data-open="snn-add"><?php esc_html_e('+ Add people & Import', 'snn-tickets'); ?></button>
             <button type="button" class="button" data-open="snn-send"><?php esc_html_e('Email everyone', 'snn-tickets'); ?></button>
             <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=snn_people_export&event=' . $id), 'snn_people_export')); ?>"><?php esc_html_e('Download list', 'snn-tickets'); ?></a>
         </div>
@@ -304,7 +304,7 @@ class SNN_T_Events_Admin {
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="snn_people_add"><input type="hidden" name="event" value="<?php echo (int)$event->id; ?>">
                 <?php wp_nonce_field('snn_people_add'); ?>
-                <div class="snn-dialog-h"><h2><?php esc_html_e('Add people', 'snn-tickets'); ?></h2><button type="button" class="snn-x" data-close aria-label="<?php esc_attr_e('Close', 'snn-tickets'); ?>">×</button></div>
+                <div class="snn-dialog-h"><h2><?php esc_html_e('Add people & Import', 'snn-tickets'); ?></h2><button type="button" class="snn-x" data-close aria-label="<?php esc_attr_e('Close', 'snn-tickets'); ?>">×</button></div>
                 <div class="snn-dialog-b">
                     <div class="snn-pills"><a href="#" class="on" data-dtab="one"><?php esc_html_e('One person', 'snn-tickets'); ?></a><a href="#" data-dtab="csv"><?php esc_html_e('From a spreadsheet', 'snn-tickets'); ?></a><a href="#" data-dtab="blank"><?php esc_html_e('Blank tickets', 'snn-tickets'); ?></a></div>
                     <div class="snn-col" data-dpane="one">
@@ -680,7 +680,7 @@ class SNN_T_Events_Admin {
                         <?php echo $on ? SNN_T_Admin::chip(__('On', 'snn-tickets'), 'ok') : SNN_T_Admin::chip(__('Off', 'snn-tickets')); ?>
                     </a>
                 <?php endforeach; ?>
-                <p class="snn-muted snn-small" style="margin:4px"><?php printf(esc_html__('Colours, logo and footer come from %s. Saved templates can be reused in any event.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=look')) . '">' . esc_html__('Settings → Look', 'snn-tickets') . '</a>'); ?></p>
+                <p class="snn-muted snn-small" style="margin:4px"><?php printf(esc_html__('Colours, logo and footer come from %s. Saved templates can be reused in any event.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=look')) . '">' . esc_html__('Settings → Style', 'snn-tickets') . '</a>'); ?></p>
             </div>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="snn-card" data-dirty>
@@ -818,7 +818,7 @@ class SNN_T_Events_Admin {
                 <?php endif; ?>
             </div></div>
 
-            <div class="snn-set"><div><h3><?php esc_html_e('Ticket look', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php printf(esc_html__('Colours and logo for every event are in %s.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=look')) . '">' . esc_html__('Settings → Look', 'snn-tickets') . '</a>'); ?></p></div><div class="body">
+            <div class="snn-set"><div><h3><?php esc_html_e('Ticket style', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php printf(esc_html__('Colours and logo for every event are in %s.', 'snn-tickets'), '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=look')) . '">' . esc_html__('Settings → Style', 'snn-tickets') . '</a>'); ?></p></div><div class="body">
                 <?php echo SNN_T_Admin::looks_picker('design', $event->design, true); // escaped inside ?>
                 <p style="margin:0"><a class="button" target="_blank" rel="noopener" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=snn_design_pdf&list_id=' . $event->id), 'snn_design_pdf')); ?>"><?php esc_html_e('Preview PDF ticket', 'snn-tickets'); ?> ↗</a></p>
             </div></div>
@@ -836,7 +836,7 @@ class SNN_T_Events_Admin {
 
         <div class="snn-card">
             <div class="snn-set"><div><h3><?php esc_html_e('Copy this event', 'snn-tickets'); ?></h3></div><div class="body">
-                <p class="snn-muted" style="margin:0"><?php esc_html_e('Makes a new event with the same questions, rules, emails and look. People and tickets are not copied, and the copy starts closed for sign-ups.', 'snn-tickets'); ?></p>
+                <p class="snn-muted" style="margin:0"><?php esc_html_e('Makes a new event with the same questions, rules, emails and style. People and tickets are not copied, and the copy starts closed for sign-ups.', 'snn-tickets'); ?></p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="snn_event_duplicate"><input type="hidden" name="event" value="<?php echo (int)$event->id; ?>"><?php wp_nonce_field('snn_event_duplicate'); ?><button class="button"><?php esc_html_e('Duplicate event', 'snn-tickets'); ?></button></form>
             </div></div>
             <div class="snn-set"><div><h3 style="color:#b32d2e"><?php esc_html_e('Delete event', 'snn-tickets'); ?></h3></div><div class="body">
