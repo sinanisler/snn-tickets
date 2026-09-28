@@ -65,7 +65,7 @@ Every event is live as soon as it's created:
 
 ### Selling tickets with WooCommerce
 - Optional: without WooCommerce the plugin works as before
-- Any simple or variable product can be a ticket: tick **Ticket** next to Virtual / Downloadable, then pick the event on the **Tickets** tab. Variations make tiers (VIP, Student…)
+- Any simple or variable product can be a ticket: tick **Ticket** next to Virtual / Downloadable and the **Tickets** tab opens. It starts as **+ New event**, named after the product ("Jazz Night – VIP" → "Jazz Night"): add a date, publish, and the event exists with sign-ups closed. Or pick an existing event; its date, venue and spots show in the same fields and edits there update the event. Variations make tiers (VIP, Student…)
 - **Tickets per purchase** for couple or family tickets
 - **Attendee details** (optional per product): the product page asks the event's sign-up questions once per ticket, and each ticket is emailed to its attendee. Without it, every ticket goes to the buyer
 - Tickets are issued when an order is paid (processing / completed) and cancelled when it is cancelled, refunded, failed or trashed. Partial refunds cancel that many tickets, newest and unused first. Reopened orders get their old codes back

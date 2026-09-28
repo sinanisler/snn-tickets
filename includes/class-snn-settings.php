@@ -74,7 +74,7 @@ class SNN_T_Settings {
             <div class="snn-set"><div><h3><?php esc_html_e('Emails come from', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('What attendees see in their inbox.', 'snn-tickets'); ?></p></div><div class="body">
                 <div class="snn-grid2">
                     <label class="snn-field"><span><?php esc_html_e('Name', 'snn-tickets'); ?></span><input type="text" name="from_name" value="<?php echo esc_attr(get_option(SNN_T_Mailer::FROM_NAME_OPTION, get_bloginfo('name'))); ?>"></label>
-                    <label class="snn-field"><span><?php esc_html_e('Address', 'snn-tickets'); ?></span><input type="email" name="from_email" value="<?php echo esc_attr(get_option(SNN_T_Mailer::FROM_EMAIL_OPTION, '')); ?>" placeholder="<?php echo esc_attr(get_option('admin_email')); ?>"><small><?php esc_html_e('Leave empty to use WordPress\'s default sender.', 'snn-tickets'); ?></small></label>
+                    <label class="snn-field"><span><?php esc_html_e('Address', 'snn-tickets'); ?></span><input type="email" name="from_email" value="<?php echo esc_attr(get_option(SNN_T_Mailer::FROM_EMAIL_OPTION, '')); ?>" placeholder="<?php echo esc_attr(get_option('admin_email')); ?>"><small><?php esc_html_e('Leave empty to keep your site\'s usual sending address. The name above is used either way.', 'snn-tickets'); ?></small></label>
                 </div>
             </div></div>
             <div class="snn-set"><div><h3><?php esc_html_e('Email footer', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Under every email.', 'snn-tickets'); ?></p></div><div class="body">

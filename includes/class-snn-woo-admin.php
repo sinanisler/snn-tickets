@@ -48,64 +48,169 @@ class SNN_T_Woo_Admin {
         return $tabs;
     }
 
+    /** "Summer Gala – VIP" → "Summer Gala": the event a ticket type belongs to. */
+    public static function event_name_from($title) {
+        $title = trim((string)$title);
+        foreach ([' – ', ' — ', ' - ', ' | ', ': '] as $sep) {
+            $pos = strpos($title, $sep);
+            if ($pos !== false && $pos > 0) return trim(substr($title, 0, $pos));
+        }
+        return $title;
+    }
+
+    /** Events for the picker: upcoming (soonest first), undated, past. */
+    private static function event_groups() {
+        $today = substr(current_time('mysql'), 0, 10);
+        $groups = ['up' => [], 'none' => [], 'past' => []];
+        foreach (SNN_T_Events::all() as $e) {
+            if (!$e->event_start) $groups['none'][] = $e;
+            elseif (substr($e->event_end ?: $e->event_start, 0, 10) >= $today) $groups['up'][] = $e;
+            else $groups['past'][] = $e;
+        }
+        usort($groups['up'], function ($a, $b) { return strcmp($a->event_start, $b->event_start); });
+        return $groups;
+    }
+
+    /** The values the tab's event fields show for one event. */
+    private static function event_fields($e) {
+        $start = $e ? $e->event_start : '';
+        $end   = $e ? $e->event_end : '';
+        $limit = $e ? SNN_T_Events::spot_limit($e->id) : 0;
+        return [
+            'name'     => $e ? $e->name : '',
+            'date'     => $start ? substr($start, 0, 10) : '',
+            'start'    => $start ? substr($start, 11, 5) : '',
+            'end'      => $end ? substr($end, 11, 5) : '',
+            // A multi-day event keeps its end date; the tab only shows times.
+            'end_date' => $end && substr($end, 0, 10) !== substr($start, 0, 10) ? substr($end, 0, 10) : '',
+            'venue'    => $e ? $e->venue : '',
+            'spots'    => $limit ? (string)$limit : '',
+            'url'      => $e ? SNN_T_Admin::event_admin_url($e->id, ['tab' => 'sale']) : '',
+        ];
+    }
+
+    /**
+     * The Tickets tab. It reads as one short form: which event (a new one by
+     * default, named after the product), when and where, and how many
+     * spots. Picking an existing event fills the fields with its details;
+     * editing them updates that event.
+     */
     public static function product_panel() {
         global $product_object;
-        $p = $product_object instanceof WC_Product ? $product_object : null;
-        $events = [0 => __('Choose an event…', 'snn-tickets')];
-        foreach (SNN_T_Events::all() as $e) {
-            $events[$e->id] = $e->name . ($e->event_start ? ' · ' . SNN_T_Events::format_date($e) : '');
-        }
-        $event_id = $p ? (int)$p->get_meta(SNN_T_Woo::META_EVENT) : 0;
+        $p      = $product_object instanceof WC_Product ? $product_object : null;
+        $linked = $p ? SNN_T_Events::get((int)$p->get_meta(SNN_T_Woo::META_EVENT)) : null;
+        $groups = self::event_groups();
+        $data   = [];
+        foreach ($groups as $list) foreach ($list as $e) $data[$e->id] = self::event_fields($e);
+        $f      = self::event_fields($linked);
+        if (!$linked) $f['name'] = $p ? self::event_name_from($p->get_name()) : '';
+        $pick   = $linked ? (string)$linked->id : 'new';
+        $per    = $p ? max(1, (int)$p->get_meta(SNN_T_Woo::META_PER)) : 1;
+        $ask    = $p && $p->get_meta(SNN_T_Woo::META_ASK) === 'yes';
+        $labels = ['up' => __('Upcoming', 'snn-tickets'), 'none' => __('No date yet', 'snn-tickets'), 'past' => __('Past', 'snn-tickets')];
         ?>
         <div id="snn_tickets_data" class="panel woocommerce_options_panel hidden">
-            <div class="options_group">
-                <?php
-                woocommerce_wp_select([
-                    'id'          => SNN_T_Woo::META_EVENT,
-                    'label'       => __('Event', 'snn-tickets'),
-                    'options'     => $events,
-                    'value'       => $event_id,
-                    'desc_tip'    => true,
-                    'description' => __('Tickets bought here are for this event: its emails, ticket look and door scanner.', 'snn-tickets'),
-                ]);
-                woocommerce_wp_text_input([
-                    'id'                => SNN_T_Woo::META_PER,
-                    'label'             => __('Tickets per purchase', 'snn-tickets'),
-                    'type'              => 'number',
-                    'value'             => $p ? max(1, (int)$p->get_meta(SNN_T_Woo::META_PER)) : 1,
-                    'custom_attributes' => ['min' => 1, 'max' => 50, 'step' => 1],
-                    'desc_tip'          => true,
-                    'description'       => __('How many people one purchase lets in. For example 2 for a couples ticket, 4 for a family pass.', 'snn-tickets'),
-                ]);
-                woocommerce_wp_checkbox([
-                    'id'          => SNN_T_Woo::META_ASK,
-                    'label'       => __('Attendee details', 'snn-tickets'),
-                    'value'       => $p && $p->get_meta(SNN_T_Woo::META_ASK) === 'yes' ? 'yes' : 'no',
-                    'description' => __("Ask for each attendee's details on the product page, using the event's sign-up questions. Each ticket is emailed to its attendee. Without this, every ticket goes to the buyer.", 'snn-tickets'),
-                ]);
-                ?>
-            </div>
+            <input type="hidden" name="snn_ev[for]" value="<?php echo esc_attr($pick); ?>" data-snn-for>
+            <input type="hidden" name="snn_ev[end_date]" value="<?php echo esc_attr($f['end_date']); ?>" data-snn-f="end_date">
             <div class="options_group">
                 <p class="form-field">
-                    <?php if ($event_id && SNN_T_Events::get($event_id)): ?>
-                        <a href="<?php echo esc_url(SNN_T_Admin::event_admin_url($event_id, ['tab' => 'sale'])); ?>"><?php esc_html_e('Open this event in Tickets', 'snn-tickets'); ?> →</a>
-                    <?php elseif (count($events) === 1): ?>
-                        <?php esc_html_e('There are no events yet.', 'snn-tickets'); ?> <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-new')); ?>"><?php esc_html_e('Add an event', 'snn-tickets'); ?> →</a>
-                    <?php endif; ?>
+                    <label for="snn_ev_pick"><?php esc_html_e('Event', 'snn-tickets'); ?></label>
+                    <select id="snn_ev_pick" name="<?php echo esc_attr(SNN_T_Woo::META_EVENT); ?>" class="select short">
+                        <option value="new" <?php selected($pick, 'new'); ?>><?php esc_html_e('+ New event', 'snn-tickets'); ?></option>
+                        <?php foreach ($groups as $g => $list): if (!$list) continue; ?>
+                            <optgroup label="<?php echo esc_attr($labels[$g]); ?>">
+                                <?php foreach ($list as $e): ?>
+                                    <option value="<?php echo (int)$e->id; ?>" <?php selected($pick, (string)$e->id); ?>><?php echo esc_html($e->name . ($e->event_start ? ' · ' . SNN_T_Events::format_date($e) : '')); ?></option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        <?php endforeach; ?>
+                    </select>
+                    <span class="description" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>><a href="<?php echo esc_url($f['url']); ?>" data-snn-link><?php esc_html_e('Open in Tickets', 'snn-tickets'); ?> →</a></span>
                 </p>
+                <p class="form-field" data-snn-new <?php echo $linked ? 'hidden' : ''; ?>>
+                    <label for="snn_ev_name"><?php esc_html_e('Event name', 'snn-tickets'); ?></label>
+                    <input type="text" class="short" id="snn_ev_name" name="snn_ev[name]" value="<?php echo esc_attr($f['name']); ?>" placeholder="<?php esc_attr_e('Taken from the product name', 'snn-tickets'); ?>" data-snn-f="name">
+                </p>
+                <p class="form-field">
+                    <label for="snn_ev_date"><?php esc_html_e('Date', 'snn-tickets'); ?></label>
+                    <input type="date" class="short" id="snn_ev_date" name="snn_ev[date]" value="<?php echo esc_attr($f['date']); ?>" data-snn-f="date">
+                </p>
+                <p class="form-field">
+                    <label for="snn_ev_start"><?php esc_html_e('Time', 'snn-tickets'); ?></label>
+                    <input type="time" id="snn_ev_start" name="snn_ev[start]" value="<?php echo esc_attr($f['start']); ?>" style="width:auto" data-snn-f="start" aria-label="<?php esc_attr_e('Starts', 'snn-tickets'); ?>">
+                    <span style="float:left;margin:0 8px;line-height:30px">–</span>
+                    <input type="time" name="snn_ev[end]" value="<?php echo esc_attr($f['end']); ?>" style="width:auto" data-snn-f="end" aria-label="<?php esc_attr_e('Ends', 'snn-tickets'); ?>">
+                </p>
+                <p class="form-field">
+                    <label for="snn_ev_venue"><?php esc_html_e('Venue', 'snn-tickets'); ?></label>
+                    <input type="text" class="short" id="snn_ev_venue" name="snn_ev[venue]" value="<?php echo esc_attr($f['venue']); ?>" placeholder="<?php esc_attr_e('Optional', 'snn-tickets'); ?>" data-snn-f="venue">
+                </p>
+                <p class="form-field">
+                    <label for="snn_ev_spots"><?php esc_html_e('Spots', 'snn-tickets'); ?></label>
+                    <input type="number" min="0" class="short" id="snn_ev_spots" name="snn_ev[spots]" value="<?php echo esc_attr($f['spots']); ?>" placeholder="<?php esc_attr_e('No limit', 'snn-tickets'); ?>" data-snn-f="spots">
+                    <span class="description"><?php esc_html_e('For the whole event, every ticket type together.', 'snn-tickets'); ?></span>
+                </p>
+                <p class="form-field" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>>
+                    <span class="description"><?php esc_html_e('Changes here update the event, for every ticket type it has.', 'snn-tickets'); ?></span>
+                </p>
+            </div>
+            <div class="options_group">
+                <details style="padding:0 12px 4px" <?php echo ($per > 1 || $ask) ? 'open' : ''; ?>>
+                    <summary style="cursor:pointer;padding:10px 0;font-weight:600"><?php esc_html_e('More options', 'snn-tickets'); ?></summary>
+                    <?php
+                    woocommerce_wp_text_input([
+                        'id'                => SNN_T_Woo::META_PER,
+                        'label'             => __('People per purchase', 'snn-tickets'),
+                        'type'              => 'number',
+                        'value'             => $per,
+                        'custom_attributes' => ['min' => 1, 'max' => 50, 'step' => 1],
+                        'description'       => __('2 for a couples ticket, 4 for a family pass. Each person gets their own ticket.', 'snn-tickets'),
+                    ]);
+                    woocommerce_wp_checkbox([
+                        'id'          => SNN_T_Woo::META_ASK,
+                        'label'       => __('Guest details', 'snn-tickets'),
+                        'value'       => $ask ? 'yes' : 'no',
+                        'description' => __("Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise every ticket goes to the buyer.", 'snn-tickets'),
+                    ]);
+                    ?>
+                </details>
             </div>
         </div>
         <script>
         jQuery(function($){
-            var box = $('#<?php echo esc_js(SNN_T_Woo::META_ON); ?>');
+            var events = <?php echo wp_json_encode((object)$data); ?>;
+            var panel = $('#snn_tickets_data'), box = $('#<?php echo esc_js(SNN_T_Woo::META_ON); ?>');
+            var pick = $('#snn_ev_pick'), name = $('#snn_ev_name'), title = $('#title');
+            function fromTitle(t){ t = String(t || '').trim(); var seps = [' – ', ' — ', ' - ', ' | ', ': ']; for (var i = 0; i < seps.length; i++) { var p = t.indexOf(seps[i]); if (p > 0) return t.slice(0, p).trim(); } return t; }
+            // The name follows the product title until someone types their own.
+            var named = name.val() !== '' && name.val() !== fromTitle(title.val());
             function sync(){
                 var type = $('select#product-type').val();
                 var on = box.is(':checked') && (type === 'simple' || type === 'variable');
                 $('.snn_tickets_tab').toggle(on);
                 if (!on && $('.snn_tickets_tab').hasClass('active')) $('.general_options > a').trigger('click');
             }
-            box.on('change', sync);
+            function fill(){
+                var id = pick.val(), e = events[id], isNew = !e;
+                panel.find('[data-snn-new]').prop('hidden', !isNew);
+                panel.find('[data-snn-existing]').prop('hidden', isNew);
+                panel.find('[data-snn-for]').val(id);
+                panel.find('[data-snn-f]').each(function(){
+                    var k = $(this).data('snn-f');
+                    if (k === 'name') { if (isNew && !named) $(this).val(fromTitle(title.val())); return; }
+                    $(this).val(e ? (e[k] || '') : '');
+                });
+                if (e) panel.find('[data-snn-link]').attr('href', e.url);
+            }
+            box.on('change', function(){
+                sync();
+                // Straight to the tab that needs filling in.
+                if (box.is(':checked')) $('.snn_tickets_tab a').trigger('click');
+            });
             $(document.body).on('woocommerce-product-type-change', function(){ setTimeout(sync, 0); });
+            pick.on('change', fill);
+            name.on('input', function(){ named = name.val() !== ''; });
+            title.on('input', function(){ if (pick.val() === 'new' && !named) name.val(fromTitle(title.val())); });
             sync();
         });
         </script>
@@ -115,16 +220,54 @@ class SNN_T_Woo_Admin {
     public static function save_product($product) {
         $on = isset($_POST[SNN_T_Woo::META_ON]) && $product->is_type(['simple', 'variable']);
         $product->update_meta_data(SNN_T_Woo::META_ON, $on ? 'yes' : 'no');
-        if (isset($_POST[SNN_T_Woo::META_EVENT])) {
-            $event = absint(wp_unslash($_POST[SNN_T_Woo::META_EVENT]));
-            $product->update_meta_data(SNN_T_Woo::META_EVENT, SNN_T_Events::get($event) ? $event : 0);
+
+        $in = isset($_POST['snn_ev']) && is_array($_POST['snn_ev']) ? wp_unslash($_POST['snn_ev']) : null;
+        if ($on && $in !== null) {
+            $pick     = sanitize_key(wp_unslash($_POST[SNN_T_Woo::META_EVENT] ?? 'new'));
+            $event_id = ($pick !== 'new' && SNN_T_Events::get((int)$pick)) ? (int)$pick : 0;
+            $details  = array_merge(['venue' => $in['venue'] ?? ''], SNN_T_Events_Admin::datetimes($in));
+            $spots    = max(0, (int)($in['spots'] ?? 0));
+            // The fields belong to the event they were filled in for. Without
+            // JavaScript, switching events leaves the old event's details in
+            // them, and those must not overwrite the newly picked event.
+            $fresh    = (string)($in['for'] ?? '') === ($event_id ? (string)$event_id : 'new');
+
+            if (!$event_id) {
+                $name = sanitize_text_field($in['name'] ?? '');
+                if ($name === '') $name = self::event_name_from($product->get_name());
+                $event_id = SNN_T_Events::create(array_merge(['name' => $name], $fresh ? $details : []));
+                // Sign-ups start closed: the event page sells this product.
+                if ($event_id) SNN_T_Forms::save(0, [
+                    'name' => $name, 'list_id' => $event_id, 'status' => 'closed',
+                    'fields' => SNN_T_Forms::default_fields(), 'settings' => ['max_tickets' => $fresh ? $spots : 0],
+                ]);
+            } elseif ($fresh) {
+                SNN_T_Events::save($event_id, $details);
+                self::save_spots($event_id, $spots);
+            }
+            if ($event_id) $product->update_meta_data(SNN_T_Woo::META_EVENT, $event_id);
         }
+
         if (isset($_POST[SNN_T_Woo::META_PER])) {
             $product->update_meta_data(SNN_T_Woo::META_PER, max(1, min(50, absint(wp_unslash($_POST[SNN_T_Woo::META_PER])))));
         }
         $product->update_meta_data(SNN_T_Woo::META_ASK, isset($_POST[SNN_T_Woo::META_ASK]) ? 'yes' : 'no');
         // Tickets never ship.
         if ($on && $product->is_type('simple')) $product->set_virtual(true);
+    }
+
+    /** Set the event-wide spot limit, which lives with its sign-up form. */
+    public static function save_spots($event_id, $spots) {
+        $form = SNN_T_Forms::for_list($event_id);
+        if ($form && (int)$form->settings['max_tickets'] === (int)$spots) return;
+        $event = SNN_T_Events::get($event_id);
+        SNN_T_Forms::save($form ? $form->id : 0, [
+            'name'     => $form ? $form->name : $event->name,
+            'list_id'  => $event_id,
+            'status'   => $form ? $form->status : 'closed',
+            'fields'   => $form ? $form->fields : SNN_T_Forms::default_fields(),
+            'settings' => array_merge($form ? $form->settings : [], ['max_tickets' => (int)$spots]),
+        ]);
     }
 
     /* ------------------------------------------------------------------

@@ -612,9 +612,16 @@ class SNN_T_Mailer {
         $headers = ['Content-Type: text/html; charset=UTF-8'];
 
         $from_email = sanitize_email((string)get_option(self::FROM_EMAIL_OPTION, ''));
+        // Name and address are set separately. A blank name is the site's
+        // name (never "WordPress"); a blank address is WordPress's (or the
+        // SMTP plugin's) own sender, still shown under the chosen name.
         $from_name  = sanitize_text_field((string)get_option(self::FROM_NAME_OPTION, ''));
+        if ($from_name === '') $from_name = sanitize_text_field(get_bloginfo('name'));
+        $name_only = null;
         if ($from_email && is_email($from_email)) {
-            $headers[] = 'From: ' . ($from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email);
+            $headers[] = 'From: ' . ($from_name !== '' ? sprintf('%s <%s>', $from_name, $from_email) : $from_email);
+        } elseif ($from_name !== '') {
+            $name_only = function () use ($from_name) { return $from_name; };
         }
 
         // Embed the QR as a CID attachment. Remote images are commonly
@@ -660,10 +667,12 @@ class SNN_T_Mailer {
             $error = $wp_error->get_error_message();
         };
         add_action('wp_mail_failed', $capture);
+        if ($name_only) add_filter('wp_mail_from_name', $name_only, 20);
 
         $sent = wp_mail($row->to_email, $row->subject, $html, $headers);
 
         remove_action('wp_mail_failed', $capture);
+        if ($name_only) remove_filter('wp_mail_from_name', $name_only, 20);
         self::reset_message();
 
         if ($sent) return true;
