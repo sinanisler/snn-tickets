@@ -1,4 +1,4 @@
-
+ 
 # SNN Tickets
 
 WordPress plugin for event sign-ups and tickets: a guided event setup, sign-up forms with automatic or rule-based approval, designed ticket emails with PDF, Apple Wallet and Google Wallet passes, and a mobile door scanner. Pure PHP, no Composer, no external services required.
