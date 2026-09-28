@@ -110,6 +110,7 @@ class SNN_T_Woo_Admin {
         $labels = ['up' => __('Upcoming', 'snn-tickets'), 'none' => __('No date yet', 'snn-tickets'), 'past' => __('Past', 'snn-tickets')];
         ?>
         <div id="snn_tickets_data" class="panel woocommerce_options_panel hidden">
+            <style>#snn_tickets_data [hidden]{display:none!important}</style>
             <input type="hidden" name="snn_ev[for]" value="<?php echo esc_attr($pick); ?>" data-snn-for>
             <input type="hidden" name="snn_ev[end_date]" value="<?php echo esc_attr($f['end_date']); ?>" data-snn-f="end_date">
             <div class="options_group">

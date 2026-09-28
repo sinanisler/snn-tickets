@@ -360,6 +360,8 @@ check(SNN_T_Woo::plan([$t(1), $t(2)], 0)['revoke'] === [2, 1], 'cancelled order 
 check(SNN_T_Woo::plan([$t(1, 'revoked'), $t(2, 'revoked')], 3) === ['restore' => [1, 2], 'revoke' => [], 'create' => 1], 'reopened order restores old codes before making new ones');
 check(SNN_T_Woo::plan([$t(1), $t(2, 'revoked')], 1) === ['restore' => [], 'revoke' => [], 'create' => 0], 'partly refunded order keeps its one ticket');
 check(SNN_T_Woo::plan([$t(1)], -2)['revoke'] === [1], 'negative counts are treated as none');
+check(SNN_T_Woo::plan([$t(1)], 3, 1) === ['restore' => [], 'revoke' => [], 'create' => 1], 'never makes more than the line paid for');
+check(SNN_T_Woo::plan([$t(1, 'revoked')], 3, 0) === ['restore' => [1], 'revoke' => [], 'create' => 0], 'restores even when nothing new may be made');
 
 /* ================= results ================= */
 

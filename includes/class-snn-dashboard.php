@@ -19,7 +19,8 @@ class SNN_T_Dashboard {
              'url' => admin_url('admin.php?page=snn-tickets-new')],
             ['done' => $dated > 0, 'optional' => false, 'label' => __('Give an event a date and venue', 'snn-tickets'),
              'url' => admin_url('admin.php?page=snn-tickets-events')],
-            ['done' => $from !== '', 'optional' => false, 'label' => __('Set the sender name and address for emails', 'snn-tickets'),
+            // Optional: with no address, emails use the site's own sender.
+            ['done' => $from !== '', 'optional' => true, 'label' => __('Set the sender name and address for emails', 'snn-tickets'),
              'url' => admin_url('admin.php?page=snn-tickets-settings')],
             ['done' => (bool)SNN_T_Design::settings()['logo_url'], 'optional' => true, 'label' => __('Add your logo to tickets and emails', 'snn-tickets'),
              'url' => admin_url('admin.php?page=snn-tickets-settings&tab=look')],

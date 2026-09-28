@@ -29,6 +29,8 @@ class SNN_T_Woo {
     const ITEM_ATTENDEES = '_snn_attendees';
     const ITEM_EVENT     = '_snn_event';
     const ITEM_PER       = '_snn_per_unit';
+    const ITEM_ISSUED    = '_snn_issued';        // tickets ever made for the line
+    const ITEM_AUTO_OFF  = '_snn_auto_revoked';  // ticket ids the order itself cancelled
 
     /** Order meta: spots an unpaid order holds, per event. */
     const HOLD_PREFIX = '_snn_hold_';
@@ -49,6 +51,8 @@ class SNN_T_Woo {
         if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
             \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', SNN_TICKETS_FILE, true);
             \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', SNN_TICKETS_FILE, true);
+            // The Ticket box and Tickets tab live in the classic product editor.
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('product_block_editor', SNN_TICKETS_FILE, false);
         }
     }
 
@@ -89,6 +93,10 @@ class SNN_T_Woo {
         add_action('woocommerce_trash_order', [__CLASS__, 'cancel_order']);
         add_action('woocommerce_before_delete_order', [__CLASS__, 'cancel_order']);
         add_action('woocommerce_untrash_order', [__CLASS__, 'sync_order']);
+        // Line items edited on a paid order in the admin.
+        add_action('woocommerce_saved_order_items', [__CLASS__, 'sync_order']);
+        add_action('woocommerce_process_shop_order_meta', [__CLASS__, 'sync_order'], 60);
+        add_action('woocommerce_before_delete_order_item', [__CLASS__, 'item_deleted']);
 
         // Showing the tickets
         add_action('woocommerce_order_details_after_order_table', [__CLASS__, 'order_tickets_html']);
@@ -509,12 +517,13 @@ JS
      *
      * Cancelled tickets come back before new ones are made, so a code that
      * was already sent keeps working. Extra tickets are cancelled newest
-     * first, and tickets already used at the door last.
+     * first, and tickets already used at the door last. At most $max_new
+     * tickets are made, so a line never issues more than it paid for.
      *
      * @param array $tickets [['id' =>, 'status' =>, 'vc' =>], ...] oldest first
      * @return array ['restore' => ids, 'revoke' => ids, 'create' => n]
      */
-    public static function plan($tickets, $want) {
+    public static function plan($tickets, $want, $max_new = PHP_INT_MAX) {
         $active  = array_values(array_filter($tickets, function ($t) { return $t['status'] === 'active'; }));
         $revoked = array_values(array_filter($tickets, function ($t) { return $t['status'] !== 'active'; }));
         $want    = max(0, (int)$want);
@@ -532,7 +541,7 @@ JS
         $need = $want - count($active);
         $back = array_slice($revoked, 0, $need);
         $out['restore'] = array_map('intval', array_column($back, 'id'));
-        $out['create']  = $need - count($back);
+        $out['create']  = max(0, min($need - count($back), (int)$max_new));
         return $out;
     }
 
@@ -570,7 +579,7 @@ JS
                 list($list_id, $per) = self::item_ticket_info($item);
                 if (!$list_id) continue;
                 $units = $paid ? max(0, (int)$item->get_quantity() + (int)$order->get_qty_refunded_for_item($item_id)) : 0;
-                self::sync_item($order, $item, $list_id, $units * $per);
+                self::sync_item($order, $item, $list_id, $units * $per, (int)$item->get_quantity() * $per);
             }
             if (!$order->has_status(['pending', 'on-hold', 'checkout-draft'])) self::clear_holds($order);
         } finally {
@@ -578,14 +587,32 @@ JS
         }
     }
 
-    private static function sync_item($order, $item, $list_id, $want) {
+    /**
+     * @param int $want tickets the line should have now
+     * @param int $paid tickets the line paid for, before refunds
+     */
+    private static function sync_item($order, $item, $list_id, $want, $paid) {
         $tickets = self::item_tickets($item->get_id());
-        $plan = self::plan(array_map(function ($t) {
-            return ['id' => (int)$t->id, 'status' => $t->status, 'vc' => (int)$t->validate_count];
-        }, $tickets), $want);
+        $auto    = array_map('intval', (array)$item->get_meta(self::ITEM_AUTO_OFF));
+        $issued  = max((int)$item->get_meta(self::ITEM_ISSUED), count($tickets));
+
+        // A ticket cancelled by hand in People stays cancelled and still
+        // uses up its place; only the order's own cancellations come back.
+        // A deleted ticket is gone for good: $issued remembers it.
+        $pool = []; $by_hand = 0;
+        foreach ($tickets as $t) {
+            if ($t->status !== 'active' && !in_array((int)$t->id, $auto, true)) { $by_hand++; continue; }
+            $pool[] = ['id' => (int)$t->id, 'status' => $t->status, 'vc' => (int)$t->validate_count];
+        }
+        $plan = self::plan($pool, max(0, $want - $by_hand), max(0, $paid - $issued));
 
         foreach ($plan['revoke'] as $id) SNN_T_Tickets::set_status($id, 'revoked');
         foreach ($plan['restore'] as $id) SNN_T_Tickets::set_status($id, 'active');
+        if ($plan['revoke'] || $plan['restore']) {
+            $auto = array_values(array_diff(array_unique(array_merge($auto, $plan['revoke'])), $plan['restore']));
+            $item->update_meta_data(self::ITEM_AUTO_OFF, $auto);
+            $item->save_meta_data();
+        }
         if (!$plan['create'] || !SNN_T_Events::get($list_id)) return;
 
         $attendees = (array)$item->get_meta(self::ITEM_ATTENDEES);
@@ -595,10 +622,10 @@ JS
         ];
         $form = SNN_T_Forms::for_list($list_id);
         $send = SNN_T_Mailer::event_template($list_id, 'ticket')['on'];
-        $n = count($tickets);
+        $made = 0;
 
         for ($i = 0; $i < $plan['create']; $i++) {
-            $a = $attendees[$n + $i] ?? null;
+            $a = $attendees[$issued + $i] ?? null;
             $name  = is_array($a) && ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
             $email = is_array($a) && ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
             $sid = 0;
@@ -615,6 +642,7 @@ JS
                 'product_id'    => $item->get_product_id(),
             ]);
             if (!$ticket_id) continue;
+            $made++;
             if ($sid) {
                 global $wpdb;
                 $wpdb->update(SNN_T_DB::submissions(), [
@@ -625,8 +653,17 @@ JS
             if ($send && $email !== '') SNN_T_Mailer::queue_ticket(SNN_T_Tickets::get($ticket_id));
         }
 
-        $order->add_order_note(sprintf(_n('%1$d ticket issued for %2$s.', '%1$d tickets issued for %2$s.', $plan['create'], 'snn-tickets'),
-            $plan['create'], SNN_T_Events::get($list_id)->name));
+        $item->update_meta_data(self::ITEM_ISSUED, $issued + $made);
+        $item->save_meta_data();
+        $order->add_order_note(sprintf(_n('%1$d ticket issued for %2$s.', '%1$d tickets issued for %2$s.', $made, 'snn-tickets'),
+            $made, SNN_T_Events::get($list_id)->name));
+    }
+
+    /** A ticket line removed from an order in the admin takes its tickets with it. */
+    public static function item_deleted($item_id) {
+        foreach (self::item_tickets($item_id) as $t) {
+            if ($t->status === 'active') SNN_T_Tickets::set_status((int)$t->id, 'revoked');
+        }
     }
 
     /** A trashed or deleted order's tickets stop working at the door. */

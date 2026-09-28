@@ -29,6 +29,8 @@ jobs:
           current_version=$(grep -oP 'Version:\s*\K[0-9.]+' snn-tickets.php)
           next_version=$(awk -F. '{print $1 "." ($2+1)}' <<< "$current_version")
           sed -i "s/Version: $current_version/Version: $next_version/" snn-tickets.php
+          # The constant busts the admin CSS/JS cache; keep it in step with the header.
+          sed -i "s/define('SNN_TICKETS_VERSION', '[0-9.]*')/define('SNN_TICKETS_VERSION', '$next_version')/" snn-tickets.php
           echo "new_version=$next_version" >> $GITHUB_ENV
 
       - name: Commit version bump
