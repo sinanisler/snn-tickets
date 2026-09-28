@@ -6,6 +6,8 @@
  *   /events/{slug}/door/   door scanner for that event only
  *   /events/door/          door scanner for every event
  *   /events/ticket/{code}/ the attendee's own ticket (?k=signature)
+ *   /events/claim/{key}/   a passed-on ticket, waiting for its guest's name
+ *   /events/tickets/{id}/  a shop order's tickets, for the buyer (?key=order key)
  *
  * "events" is the base slug, changeable in Settings. Without pretty
  * permalinks the same pages answer to ?snn_route=... query strings.
@@ -17,7 +19,7 @@ class SNN_T_Router {
 
     const BASE_OPTION    = 'snn_tickets_base_slug';
     const REWRITE_OPTION = 'snn_tickets_rewrite_ver';
-    const REWRITE_VER    = '1';
+    const REWRITE_VER    = '2';
 
     public static function init() {
         add_action('init', [__CLASS__, 'rewrites']);
@@ -39,6 +41,8 @@ class SNN_T_Router {
         $b = preg_quote(self::base(), '#');
         add_rewrite_rule("^{$b}/door/?$", 'index.php?snn_route=door', 'top');
         add_rewrite_rule("^{$b}/ticket/([^/]+)/?$", 'index.php?snn_route=ticket&snn_code=$matches[1]', 'top');
+        add_rewrite_rule("^{$b}/claim/([^/]+)/?$", 'index.php?snn_route=claim&snn_code=$matches[1]', 'top');
+        add_rewrite_rule("^{$b}/tickets/([^/]+)/?$", 'index.php?snn_route=tickets&snn_code=$matches[1]', 'top');
         add_rewrite_rule("^{$b}/([^/]+)/door/?$", 'index.php?snn_route=door&snn_event=$matches[1]', 'top');
         add_rewrite_rule("^{$b}/([^/]+)/?$", 'index.php?snn_route=event&snn_event=$matches[1]', 'top');
 
@@ -69,7 +73,7 @@ class SNN_T_Router {
             if ($route === 'event') $parts[] = $args['snn_event'];
             if ($route === 'door' && !empty($args['snn_event'])) $parts[] = $args['snn_event'];
             if ($route === 'door') $parts[] = 'door';
-            if ($route === 'ticket') { $parts[] = 'ticket'; $parts[] = $args['snn_code']; }
+            if (in_array($route, ['ticket', 'claim', 'tickets'], true)) { $parts[] = $route; $parts[] = $args['snn_code']; }
             $url = home_url(user_trailingslashit(implode('/', array_map('rawurlencode', $parts))));
             $extra = array_diff_key($args, ['snn_event' => 1, 'snn_code' => 1]);
             return $extra ? add_query_arg($extra, $url) : $url;
@@ -92,6 +96,16 @@ class SNN_T_Router {
 
     public static function ticket_url($code) {
         return self::url('ticket', ['snn_code' => $code, 'k' => SNN_T_Files::key($code)]);
+    }
+
+    /** Where a guest fills in their name for a passed-on ticket. */
+    public static function claim_url($key) {
+        return self::url('claim', ['snn_code' => $key]);
+    }
+
+    /** A shop order's tickets, for the buyer: the order key is the password. */
+    public static function manage_url($order_id, $order_key) {
+        return self::url('tickets', ['snn_code' => (string)(int)$order_id, 'key' => $order_key]);
     }
 
     /** A real page already using the base path would be hidden by our URLs. */
@@ -117,8 +131,21 @@ class SNN_T_Router {
                 ? SNN_T_Tickets::get_by_code($code) : null;
             nocache_headers();
             if (!$ticket) self::not_found(__('This ticket link is not valid.', 'snn-tickets'));
-            SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket));
+            SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket),
+                !empty($_GET['claimed']) ? __("It's yours! Your ticket is also on its way to your inbox.", 'snn-tickets') : '');
             exit;
+        }
+
+        if ($route === 'claim') {
+            nocache_headers();
+            SNN_T_Claims::route(sanitize_key(wp_unslash(get_query_var('snn_code'))));
+            exit;
+        }
+
+        if ($route === 'tickets') {
+            nocache_headers();
+            do_action('snn_tickets_route_tickets', (int)get_query_var('snn_code'));
+            self::not_found(__('This link is not valid.', 'snn-tickets'));
         }
 
         $event = $slug !== '' ? SNN_T_Events::get_by_slug($slug) : null;

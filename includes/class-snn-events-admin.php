@@ -220,7 +220,7 @@ class SNN_T_Events_Admin {
         <div class="snn-row">
             <div class="snn-pills">
                 <?php foreach (SNN_T_People::filters() as $k => $l):
-                    if (in_array($k, ['problems', 'off'], true) && !$counts[$k] && $filter !== $k) continue; ?>
+                    if (in_array($k, ['unnamed', 'problems', 'off'], true) && !$counts[$k] && $filter !== $k) continue; ?>
                     <a class="<?php echo $filter === $k ? 'on' : ''; ?>" href="<?php echo esc_url(add_query_arg(['filter' => $k, 's' => $search], $base)); ?>"><?php echo esc_html($l . ' · ' . number_format_i18n($counts[$k])); ?></a>
                 <?php endforeach; ?>
             </div>
@@ -458,6 +458,12 @@ class SNN_T_Events_Admin {
                             <p><?php esc_html_e('Correct the address below and press "Save & email ticket".', 'snn-tickets'); ?></p></div>
                     <?php endif; ?>
 
+                    <?php if ($ticket && SNN_T_Claims::is_open($ticket)): ?>
+                        <div class="snn-hint"><p><b><?php echo $ticket->holder === SNN_T_Claims::SENT
+                            ? esc_html(sprintf(__('Link sent to %s; they have not filled in their name yet.', 'snn-tickets'), $ticket->claim_email))
+                            : esc_html__('This ticket has no name yet. The buyer can pass it on with this link:', 'snn-tickets'); ?></b></p>
+                            <p class="snn-row"><span class="snn-mono snn-small" style="word-break:break-all"><?php echo esc_html(SNN_T_Claims::url($ticket)); ?></span> <?php echo SNN_T_Admin::copy_button(SNN_T_Claims::url($ticket), __('Copy link', 'snn-tickets')); ?></p></div>
+                    <?php endif; ?>
                     <?php if ($ticket): ?>
                         <div><h3><?php esc_html_e('Ticket', 'snn-tickets'); ?></h3>
                             <div class="snn-ticketbox">
@@ -655,9 +661,10 @@ class SNN_T_Events_Admin {
 
     private static function tab_emails($event, $form) {
         $roles  = SNN_T_Mailer::roles();
+        if (!SNN_T_Woo::active()) $roles = array_diff_key($roles, array_flip(SNN_T_Mailer::shop_roles()));
         $when   = SNN_T_Mailer::role_when();
         $emails = SNN_T_Events::emails($event);
-        $icons  = ['ticket' => '🎟', 'confirmation' => '⏳', 'rejection' => '✉', 'admin' => '🔔'];
+        $icons  = ['ticket' => '🎟', 'confirmation' => '⏳', 'rejection' => '✉', 'admin' => '🔔', 'order' => '🛒', 'gift' => '🎁'];
         $mail   = isset($_GET['mail']) ? sanitize_key(wp_unslash($_GET['mail'])) : 'ticket';
         if (!isset($roles[$mail])) $mail = 'ticket';
         $cur    = $emails[$mail];

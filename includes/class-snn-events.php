@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_Events {
 
     /** Words the built-in URLs use for themselves. */
-    const RESERVED_SLUGS = ['door', 'ticket', 'page', 'feed'];
+    const RESERVED_SLUGS = ['door', 'ticket', 'page', 'feed', 'claim', 'tickets'];
 
     const OLD_SLUGS_OPTION = 'snn_tickets_old_slugs';
 
@@ -58,6 +58,7 @@ class SNN_T_Events {
             $row->$k = ($v === '' || strpos($v, '0000') === 0) ? '' : $v;
         }
         $row->id = (int)($row->id ?? 0);
+        $row->require_names = (int)($row->require_names ?? 0);
         $row->attachment_list = self::parse_attachments($row->attachments);
         return $row;
     }
@@ -94,6 +95,7 @@ class SNN_T_Events {
         if (array_key_exists('attachments', $data)) {
             $row['attachments'] = implode(',', self::parse_attachments(implode(',', (array)$data['attachments'])));
         }
+        if (array_key_exists('require_names', $data)) $row['require_names'] = !empty($data['require_names']) ? 1 : 0;
 
         // An end before the start is a typo, not a plan.
         $start = $row['event_start'] ?? null;
@@ -303,6 +305,9 @@ class SNN_T_Events {
             'confirmation' => ['on' => 1, 'subject' => '', 'body' => ''],
             'rejection'    => ['on' => 0, 'subject' => '', 'body' => ''],
             'admin'        => ['on' => 1, 'subject' => '', 'body' => '', 'when' => 'waiting', 'to' => ''],
+            // Shop orders: the buyer's list of tickets, and a ticket passed on to someone.
+            'order'        => ['on' => 1, 'subject' => '', 'body' => ''],
+            'gift'         => ['on' => 1, 'subject' => '', 'body' => ''],
         ];
     }
 

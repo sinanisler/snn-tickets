@@ -17,7 +17,21 @@ class SNN_T_Woo_Admin {
         add_action('woocommerce_admin_process_product_object', [__CLASS__, 'save_product']);
         add_action('woocommerce_after_order_itemmeta', [__CLASS__, 'order_item_tickets'], 10, 3);
 
-        foreach (['tier_add', 'tier_save'] as $a) {
+        // Orders list: how many tickets still wait for a name, with a filter.
+        add_filter('manage_woocommerce_page_wc-orders_columns', [__CLASS__, 'orders_column'], 20);
+        add_filter('manage_edit-shop_order_columns', [__CLASS__, 'orders_column'], 20);
+        add_action('manage_woocommerce_page_wc-orders_custom_column', [__CLASS__, 'orders_column_value'], 20, 2);
+        add_action('manage_shop_order_posts_custom_column', [__CLASS__, 'orders_column_value'], 20, 2);
+        add_action('woocommerce_order_list_table_restrict_manage_orders', [__CLASS__, 'orders_filter']);
+        add_action('restrict_manage_posts', function ($type) { if ($type === 'shop_order') self::orders_filter(); });
+        add_filter('woocommerce_order_list_table_prepare_items_query_args', [__CLASS__, 'orders_filter_hpos']);
+        add_filter('request', [__CLASS__, 'orders_filter_legacy']);
+
+        // Order screen: send the buyer their tickets email again.
+        add_filter('woocommerce_order_actions', [__CLASS__, 'order_actions'], 10, 2);
+        add_action('woocommerce_order_action_snn_resend_tickets', [__CLASS__, 'resend_tickets']);
+
+        foreach (['tier_add', 'tier_save', 'event_guests'] as $a) {
             add_action('admin_post_snn_' . $a, [__CLASS__, 'handle_' . $a]);
         }
     }
@@ -171,7 +185,7 @@ class SNN_T_Woo_Admin {
                         'id'          => SNN_T_Woo::META_ASK,
                         'label'       => __('Guest details', 'snn-tickets'),
                         'value'       => $ask ? 'yes' : 'no',
-                        'description' => __("Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise every ticket goes to the buyer.", 'snn-tickets'),
+                        'description' => __("Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name.", 'snn-tickets'),
                     ]);
                     ?>
                 </details>
@@ -386,8 +400,21 @@ class SNN_T_Woo_Admin {
                     <label class="snn-field"><span><?php esc_html_e('How many', 'snn-tickets'); ?> <small><?php esc_html_e('(optional)', 'snn-tickets'); ?></small></span><input type="number" min="0" name="stock" placeholder="∞"></label>
                     <label class="snn-field"><span><?php esc_html_e('Admits', 'snn-tickets'); ?></span><input type="number" min="1" max="50" name="per" value="1"></label>
                 </div>
-                <label class="snn-check"><input type="checkbox" name="ask" value="1"> <span><?php esc_html_e('Ask for each attendee\'s name and answers', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(uses the Sign-up form questions; otherwise every ticket goes to the buyer)', 'snn-tickets'); ?></span></span></label>
+                <label class="snn-check"><input type="checkbox" name="ask" value="1"> <span><?php esc_html_e('Ask for each guest\'s name and answers when buying', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(otherwise the buyer gets the first ticket and passes the others on with a link)', 'snn-tickets'); ?></span></span></label>
                 <div><button class="button button-primary"><?php esc_html_e('Add and put on sale', 'snn-tickets'); ?></button></div>
+            </div></div>
+        </form>
+
+        <form method="post" action="<?php echo $post; ?>" class="snn-card">
+            <input type="hidden" name="action" value="snn_event_guests"><input type="hidden" name="event" value="<?php echo (int)$event->id; ?>">
+            <?php wp_nonce_field('snn_event_guests'); ?>
+            <div class="snn-set"><div><h3><?php esc_html_e('Guests', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Someone buying several tickets gets the first one, and a link for each of the others to send to their guests. Each guest fills in their own name and gets their own ticket.', 'snn-tickets'); ?></p></div><div class="body">
+                <label class="snn-check"><input type="checkbox" name="require_names" value="1" <?php checked($event->require_names); ?>>
+                    <span><?php esc_html_e('Tickets need a name to get in', 'snn-tickets'); ?><br><span class="snn-muted snn-small"><?php esc_html_e('Off: a ticket nobody has claimed still works at the door, for the buyer. On: the scanner refuses it until its guest fills in their name.', 'snn-tickets'); ?></span></span></label>
+                <?php $unnamed = SNN_T_People::counts($event->id)['unnamed']; if ($unnamed): ?>
+                    <p class="snn-small" style="margin:0"><a href="<?php echo esc_url(SNN_T_Admin::event_admin_url($event->id, ['filter' => 'unnamed'])); ?>"><?php echo esc_html(sprintf(_n('%d ticket has no name yet', '%d tickets have no name yet', $unnamed, 'snn-tickets'), $unnamed)); ?> →</a></p>
+                <?php endif; ?>
+                <div><button class="button"><?php esc_html_e('Save', 'snn-tickets'); ?></button></div>
             </div></div>
         </form>
 
@@ -448,6 +475,81 @@ class SNN_T_Woo_Admin {
         $p->save();
 
         self::back($id, sprintf(__('"%s" is on sale.', 'snn-tickets'), $tier));
+    }
+
+    public static function handle_event_guests() {
+        $id = self::guard('snn_event_guests');
+        SNN_T_Events::save($id, ['require_names' => !empty($_POST['require_names'])]);
+        self::back($id, __('Saved.', 'snn-tickets'));
+    }
+
+    /* ------------------------------------------------------------------
+     * Orders list and order actions
+     * ---------------------------------------------------------------- */
+
+    public static function orders_column($columns) {
+        $out = [];
+        foreach ($columns as $k => $v) {
+            $out[$k] = $v;
+            if ($k === 'order_status') $out['snn_tickets'] = __('Tickets', 'snn-tickets');
+        }
+        if (!isset($out['snn_tickets'])) $out['snn_tickets'] = __('Tickets', 'snn-tickets');
+        return $out;
+    }
+
+    /** "4 · 2 without a name", counted live so older orders show too. */
+    public static function orders_column_value($column, $order_or_id) {
+        if ($column !== 'snn_tickets') return;
+        $order = $order_or_id instanceof WC_Order ? $order_or_id : wc_get_order($order_or_id);
+        if (!$order) return;
+        $active = array_filter(SNN_T_Woo::order_tickets($order->get_id()), function ($t) { return $t->status === 'active'; });
+        if (!$active) { echo '<span style="color:#a7aaad">–</span>'; return; }
+        $open = count(array_filter($active, ['SNN_T_Claims', 'is_open']));
+        echo (int)count($active);
+        if ($open) echo '<br><small style="color:#8a5a00;font-weight:600">' . esc_html(sprintf(_n('%d without a name', '%d without a name', $open, 'snn-tickets'), $open)) . '</small>';
+    }
+
+    public static function orders_filter() {
+        $on = !empty($_GET['snn_unnamed']);
+        echo '<select name="snn_unnamed"><option value="">' . esc_html__('All tickets', 'snn-tickets') . '</option>'
+            . '<option value="1"' . selected($on, true, false) . '>' . esc_html__('Tickets without a name', 'snn-tickets') . '</option></select>';
+    }
+
+    public static function orders_filter_hpos($args) {
+        if (!empty($_GET['snn_unnamed'])) {
+            $args['meta_query'] = array_merge((array)($args['meta_query'] ?? []), [['key' => SNN_T_Woo::ORDER_UNNAMED, 'compare' => 'EXISTS']]);
+        }
+        return $args;
+    }
+
+    public static function orders_filter_legacy($vars) {
+        global $typenow;
+        if ($typenow === 'shop_order' && !empty($_GET['snn_unnamed'])) {
+            $vars['meta_query'] = array_merge((array)($vars['meta_query'] ?? []), [['key' => SNN_T_Woo::ORDER_UNNAMED, 'compare' => 'EXISTS']]);
+        }
+        return $vars;
+    }
+
+    public static function order_actions($actions, $order = null) {
+        $order = $order ?: ($GLOBALS['theorder'] ?? null);
+        if ($order instanceof WC_Order && array_filter(SNN_T_Woo::order_tickets($order->get_id()), function ($t) { return $t->status === 'active'; })) {
+            $actions['snn_resend_tickets'] = __('Email the buyer their tickets again', 'snn-tickets');
+        }
+        return $actions;
+    }
+
+    public static function resend_tickets($order) {
+        $buyer = SNN_T_Woo::buyer_email($order);
+        $groups = [];
+        foreach (SNN_T_Woo::order_tickets($order->get_id()) as $t) {
+            if ($t->status !== 'active') continue;
+            if (SNN_T_Claims::is_open($t) || $t->email === $buyer) $groups[(int)$t->list_id][] = $t;
+        }
+        $n = 0;
+        foreach ($groups as $list_id => $tickets) {
+            if (!is_wp_error(SNN_T_Woo::send_buyer_email($order, $list_id, $tickets))) $n++;
+        }
+        $order->add_order_note($n ? __('Tickets email sent to the buyer again.', 'snn-tickets') : __('No tickets email to send: the buyer has no tickets of their own left in this order.', 'snn-tickets'));
     }
 
     public static function handle_tier_save() {

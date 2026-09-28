@@ -35,6 +35,12 @@ class SNN_T_Woo {
     /** Order meta: spots an unpaid order holds, per event. */
     const HOLD_PREFIX = '_snn_hold_';
 
+    /** Order meta: the buyer's own ticket, and how many still wait for a name. */
+    const ORDER_BUYER_TICKET = '_snn_buyer_ticket';
+    const ORDER_UNNAMED      = '_snn_unnamed';
+
+    const MANAGE_NONCE = 'snn_manage_';
+
     /** Attendee details checked in add-to-cart validation, used when the item is added. */
     private static $attendees = null;
 
@@ -98,9 +104,12 @@ class SNN_T_Woo {
         add_action('woocommerce_process_shop_order_meta', [__CLASS__, 'sync_order'], 60);
         add_action('woocommerce_before_delete_order_item', [__CLASS__, 'item_deleted']);
 
-        // Showing the tickets
+        // Showing the tickets, and passing them on
         add_action('woocommerce_order_details_after_order_table', [__CLASS__, 'order_tickets_html']);
         add_action('woocommerce_email_after_order_table', [__CLASS__, 'email_tickets'], 10, 4);
+        add_action('snn_tickets_route_tickets', [__CLASS__, 'manage_page']);
+        add_filter('snn_tickets_claim_from', [__CLASS__, 'claim_from'], 10, 2);
+        add_action('snn_tickets_claim_changed', [__CLASS__, 'claim_changed']);
     }
 
     /* ------------------------------------------------------------------
@@ -575,12 +584,15 @@ JS
 
         try {
             $paid = $order->has_status(wc_get_is_paid_statuses());
+            $made = [];
             foreach ($order->get_items() as $item_id => $item) {
                 list($list_id, $per) = self::item_ticket_info($item);
                 if (!$list_id) continue;
                 $units = $paid ? max(0, (int)$item->get_quantity() + (int)$order->get_qty_refunded_for_item($item_id)) : 0;
-                self::sync_item($order, $item, $list_id, $units * $per, (int)$item->get_quantity() * $per);
+                $made = array_merge($made, self::sync_item($order, $item, $list_id, $units * $per, (int)$item->get_quantity() * $per));
             }
+            if ($made) self::send_order_emails($order, $made);
+            self::refresh_unnamed($order);
             if (!$order->has_status(['pending', 'on-hold', 'checkout-draft'])) self::clear_holds($order);
         } finally {
             delete_option($lock);
@@ -590,6 +602,7 @@ JS
     /**
      * @param int $want tickets the line should have now
      * @param int $paid tickets the line paid for, before refunds
+     * @return int[] ids of the tickets made now
      */
     private static function sync_item($order, $item, $list_id, $want, $paid) {
         $tickets = self::item_tickets($item->get_id());
@@ -613,7 +626,7 @@ JS
             $item->update_meta_data(self::ITEM_AUTO_OFF, $auto);
             $item->save_meta_data();
         }
-        if (!$plan['create'] || !SNN_T_Events::get($list_id)) return;
+        if (!$plan['create'] || !SNN_T_Events::get($list_id)) return [];
 
         $attendees = (array)$item->get_meta(self::ITEM_ATTENDEES);
         $buyer = [
@@ -621,13 +634,21 @@ JS
             'email' => strtolower((string)$order->get_billing_email()),
         ];
         $form = SNN_T_Forms::for_list($list_id);
-        $send = SNN_T_Mailer::event_template($list_id, 'ticket')['on'];
-        $made = 0;
+        $made = 0; $ids = [];
 
         for ($i = 0; $i < $plan['create']; $i++) {
             $a = $attendees[$issued + $i] ?? null;
-            $name  = is_array($a) && ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
-            $email = is_array($a) && ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
+            // Named at purchase; else the buyer's own (the order's first
+            // ticket); else waiting for the buyer to pass it on.
+            $open = false; $mine = false;
+            if (is_array($a)) {
+                $name  = ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
+                $email = ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
+            } elseif (!self::buyer_ticket($order)) {
+                $name = $buyer['name']; $email = $buyer['email']; $mine = true;
+            } else {
+                $name = ''; $email = $buyer['email']; $open = true;
+            }
             $sid = 0;
             if (is_array($a) && $form && !empty($a['data'])) {
                 // Answers live on a sign-up record, as they do for the form.
@@ -643,6 +664,9 @@ JS
             ]);
             if (!$ticket_id) continue;
             $made++;
+            $ids[] = $ticket_id;
+            if ($open) SNN_T_Claims::open($ticket_id);
+            if ($mine) { $order->update_meta_data(self::ORDER_BUYER_TICKET, $ticket_id); $order->save_meta_data(); }
             if ($sid) {
                 global $wpdb;
                 $wpdb->update(SNN_T_DB::submissions(), [
@@ -650,13 +674,232 @@ JS
                     'decision_reason' => sprintf(__('Paid, order #%s', 'snn-tickets'), $order->get_order_number()),
                 ], ['id' => $sid]);
             }
-            if ($send && $email !== '') SNN_T_Mailer::queue_ticket(SNN_T_Tickets::get($ticket_id));
         }
 
         $item->update_meta_data(self::ITEM_ISSUED, $issued + $made);
         $item->save_meta_data();
         $order->add_order_note(sprintf(_n('%1$d ticket issued for %2$s.', '%1$d tickets issued for %2$s.', $made, 'snn-tickets'),
             $made, SNN_T_Events::get($list_id)->name));
+        return $ids;
+    }
+
+    /** The buyer's own ticket, if the order already gave them one. */
+    private static function buyer_ticket($order) {
+        $id = (int)$order->get_meta(self::ORDER_BUYER_TICKET);
+        return $id && SNN_T_Tickets::get($id) ? $id : 0;
+    }
+
+    public static function buyer_email($order) {
+        return strtolower((string)$order->get_billing_email());
+    }
+
+    /* ------------------------------------------------------------------
+     * Emails: one per person
+     * ---------------------------------------------------------------- */
+
+    /**
+     * New tickets named for someone else get their own ticket email. The
+     * buyer gets one email per event: their ticket alone, or the list of
+     * all their tickets with links to pass them on.
+     */
+    public static function send_order_emails($order, $ids) {
+        $buyer = self::buyer_email($order);
+        $mine  = [];
+        foreach ($ids as $id) {
+            $t = SNN_T_Tickets::get($id);
+            if (!$t || $t->status !== 'active') continue;
+            if ($t->email !== '' && $t->email !== $buyer) {
+                if (SNN_T_Mailer::event_template((int)$t->list_id, 'ticket')['on']) SNN_T_Mailer::queue_ticket($t);
+                continue;
+            }
+            $mine[(int)$t->list_id][] = $t;
+        }
+        foreach ($mine as $list_id => $tickets) self::send_buyer_email($order, $list_id, $tickets);
+    }
+
+    /** @param object[] $new the tickets this email is about */
+    public static function send_buyer_email($order, $list_id, $new) {
+        $buyer = self::buyer_email($order);
+        if ($buyer === '' || !is_email($buyer)) return false;
+        $all  = array_values(array_filter(self::order_tickets($order->get_id()), function ($t) use ($list_id) {
+            return $t->status === 'active' && (int)$t->list_id === (int)$list_id;
+        }));
+        $open = array_filter($all, ['SNN_T_Claims', 'is_open']);
+
+        // One ticket, theirs, nothing to pass on: the plain ticket email.
+        if (count($new) === 1 && !SNN_T_Claims::is_open($new[0]) && !$open) {
+            return SNN_T_Mailer::event_template($list_id, 'ticket')['on'] ? SNN_T_Mailer::queue_ticket($new[0]) : false;
+        }
+        $own = null;
+        foreach ($all as $t) if (!SNN_T_Claims::is_open($t) && $t->email === $buyer) { $own = $t; break; }
+
+        if (!SNN_T_Mailer::event_template($list_id, 'order')['on']) {
+            return $own && SNN_T_Mailer::event_template($list_id, 'ticket')['on'] ? SNN_T_Mailer::queue_ticket($own) : false;
+        }
+        $manage = self::manage_url($order);
+        return SNN_T_Mailer::send_event_email('order', $list_id, [
+            'name'        => $order->get_billing_first_name() ?: ($own ? $own->name : ''),
+            'email'       => $buyer,
+            'ticket_code' => $own ? $own->ticket_code : '',
+            'ticket_id'   => $own ? (int)$own->id : null,
+            'vars'        => [
+                '{count}'         => (string)count($all),
+                '{tickets_list}'  => SNN_T_Mailer::tickets_list_html(self::list_rows($all, $buyer)),
+                '{manage_url}'    => $manage,
+                '{manage_button}' => SNN_T_Mailer::button_html($manage, __('Manage your tickets', 'snn-tickets')),
+            ],
+        ]);
+    }
+
+    /** Rows for {tickets_list}: what the buyer should know about each ticket. */
+    public static function list_rows($tickets, $buyer) {
+        $rows = [];
+        foreach ($tickets as $t) {
+            if (($t->holder ?? '') === SNN_T_Claims::OPEN) {
+                $rows[] = ['label' => __('Not named yet', 'snn-tickets'), 'note' => __('Send this link to your guest:', 'snn-tickets'), 'url' => SNN_T_Claims::url($t), 'link_label' => ''];
+            } elseif (($t->holder ?? '') === SNN_T_Claims::SENT) {
+                $rows[] = ['label' => sprintf(__('Sent to %s', 'snn-tickets'), $t->claim_email), 'note' => __('Waiting for them to fill in their name', 'snn-tickets'), 'url' => '', 'link_label' => ''];
+            } elseif ($t->email === $buyer) {
+                $rows[] = ['label' => $t->name !== '' ? $t->name : __('Your ticket', 'snn-tickets'), 'note' => __('Your ticket', 'snn-tickets'), 'url' => '', 'link_label' => ''];
+            } else {
+                $rows[] = ['label' => $t->name, 'note' => sprintf(__('Ticket emailed to %s', 'snn-tickets'), $t->email), 'url' => '', 'link_label' => ''];
+            }
+        }
+        return $rows;
+    }
+
+    /* ------------------------------------------------------------------
+     * Passing tickets on
+     * ---------------------------------------------------------------- */
+
+    public static function manage_url($order) {
+        return SNN_T_Router::manage_url($order->get_id(), $order->get_order_key());
+    }
+
+    /** How many of an order's tickets still wait for a name, kept on the order for the admin list. */
+    public static function refresh_unnamed($order) {
+        $n = count(array_filter(self::order_tickets($order->get_id()), function ($t) {
+            return $t->status === 'active' && SNN_T_Claims::is_open($t);
+        }));
+        if ($n) $order->update_meta_data(self::ORDER_UNNAMED, $n);
+        else $order->delete_meta_data(self::ORDER_UNNAMED);
+        $order->save_meta_data();
+    }
+
+    public static function claim_changed($ticket_id) {
+        $t = SNN_T_Tickets::get($ticket_id);
+        $order = ($t && $t->order_id) ? wc_get_order((int)$t->order_id) : null;
+        if ($order) self::refresh_unnamed($order);
+    }
+
+    /** "Sinan got you a ticket": the buyer's first name on the claim page. */
+    public static function claim_from($from, $ticket) {
+        $order = !empty($ticket->order_id) ? wc_get_order((int)$ticket->order_id) : null;
+        return $order ? ($order->get_billing_first_name() ?: $from) : $from;
+    }
+
+    /** Buyer's view of a ticket they may act on, or null. */
+    private static function own_ticket($order, $id) {
+        $t = SNN_T_Tickets::get((int)$id);
+        return ($t && (int)$t->order_id === (int)$order->get_id() && $t->status === 'active') ? $t : null;
+    }
+
+    /**
+     * /events/tickets/{order}/?key=... : the buyer's tickets, no account
+     * needed; the order key in the link is the password. Posts from the
+     * thank-you page and My Account land here too.
+     */
+    public static function manage_page($order_id) {
+        $order = $order_id ? wc_get_order($order_id) : null;
+        if (!$order || $order->get_type() !== 'shop_order') return;
+        $key = sanitize_text_field(wp_unslash($_GET['key'] ?? ''));
+        $ok  = ($key !== '' && hash_equals($order->get_order_key(), $key))
+            || (get_current_user_id() && (int)$order->get_customer_id() === get_current_user_id())
+            || current_user_can('manage_woocommerce');
+        if (!$ok) return;
+
+        $msg = ''; $bad = false;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!wp_verify_nonce(wp_unslash($_POST['_snn_manage'] ?? ''), self::MANAGE_NONCE . $order->get_id())) {
+                $msg = __('That did not work. Please try again.', 'snn-tickets'); $bad = true;
+            } else {
+                $t  = self::own_ticket($order, $_POST['ticket'] ?? 0);
+                $do = sanitize_key($_POST['do'] ?? '');
+                $r  = $t ? true : new WP_Error('x', __('That ticket is not in this order.', 'snn-tickets'));
+                if ($t && ($do === 'send' || $do === 'resend')) {
+                    $to = $do === 'resend' ? $t->claim_email : wp_unslash($_POST['email'] ?? '');
+                    $r  = SNN_T_Claims::send($t, $to, $order->get_billing_first_name());
+                    if (!is_wp_error($r)) $msg = sprintf(__('Sent to %s. They fill in their name and get the ticket.', 'snn-tickets'), sanitize_email($to));
+                } elseif ($t && $do === 'takeback') {
+                    $r = SNN_T_Claims::take_back($t);
+                    if (!is_wp_error($r)) $msg = __('Taken back. The link you sent no longer works.', 'snn-tickets');
+                }
+                if (is_wp_error($r)) { $msg = $r->get_error_message(); $bad = true; }
+            }
+            $back = add_query_arg(['snn_msg' => rawurlencode($msg), 'snn_bad' => $bad ? 1 : 0], self::manage_url($order));
+            wp_safe_redirect($back . '#snn-tickets');
+            exit;
+        }
+
+        ob_start();
+        echo '<div class="snn-event-page snn-manage-page" style="max-width:720px;margin:0 auto;padding:32px 16px 48px">';
+        echo '<h1>' . esc_html(sprintf(__('Your tickets · Order #%s', 'snn-tickets'), $order->get_order_number())) . '</h1>';
+        if (!empty($_GET['snn_msg'])) {
+            echo '<p class="snn-manage-msg" role="status" style="padding:12px 14px;border-radius:6px;background:' . (!empty($_GET['snn_bad']) ? '#fcf0f1' : '#edf7ed') . '">' . esc_html(sanitize_text_field(wp_unslash($_GET['snn_msg']))) . '</p>';
+        }
+        self::manage_html($order);
+        echo '</div>';
+        SNN_T_Router::render_in_theme(__('Your tickets', 'snn-tickets'), ob_get_clean(), true);
+        exit;
+    }
+
+    /**
+     * The buyer's ticket list with its actions: open your own ticket, copy
+     * or email a link for the others, resend or take back a sent one.
+     */
+    public static function manage_html($order) {
+        $tickets = array_values(array_filter(self::order_tickets($order->get_id()), function ($t) { return $t->status === 'active'; }));
+        if (!$tickets) return;
+        $buyer  = self::buyer_email($order);
+        $action = esc_url(self::manage_url($order));
+        $nonce  = wp_create_nonce(self::MANAGE_NONCE . $order->get_id());
+        $groups = [];
+        foreach ($tickets as $t) $groups[(int)$t->list_id][] = $t;
+        $form = function ($t, $do, $label, $extra = '') use ($action, $nonce) {
+            return '<form method="post" action="' . $action . '" class="snn-mt-form">'
+                . '<input type="hidden" name="_snn_manage" value="' . esc_attr($nonce) . '"><input type="hidden" name="ticket" value="' . (int)$t->id . '"><input type="hidden" name="do" value="' . esc_attr($do) . '">'
+                . $extra . '<button type="submit" class="button">' . esc_html($label) . '</button></form>';
+        };
+
+        echo '<section id="snn-tickets" class="snn-order-tickets woocommerce-order-tickets">';
+        foreach ($groups as $list_id => $list) {
+            $event = SNN_T_Events::get($list_id);
+            echo '<h2 class="woocommerce-column__title">' . esc_html(sprintf(__('Your tickets for %s', 'snn-tickets'), $event ? $event->name : '')) . '</h2>';
+            if ($event && ($when = SNN_T_Events::format_when($event)) !== '') echo '<p class="snn-mt-when">' . esc_html($when) . '</p>';
+            echo '<table class="woocommerce-table shop_table snn-mt"><tbody>';
+            foreach ($list as $i => $t) {
+                echo '<tr><td class="snn-mt-n">' . ((int)$i + 1) . '</td><td>';
+                if (($t->holder ?? '') === SNN_T_Claims::OPEN) {
+                    $url = SNN_T_Claims::url($t);
+                    echo '<strong>' . esc_html__('Not named yet', 'snn-tickets') . '</strong><br><small>' . esc_html__('Send it on: your guest fills in their name and gets their own ticket.', 'snn-tickets') . '</small>';
+                    echo '<div class="snn-mt-share"><input type="text" readonly value="' . esc_attr($url) . '" onclick="this.select()" aria-label="' . esc_attr__('Ticket link', 'snn-tickets') . '">'
+                        . '<button type="button" class="button" onclick="var i=this.previousElementSibling;i.select();(navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).catch(function(){document.execCommand(\'copy\')});this.textContent=' . esc_attr(wp_json_encode(__('Copied', 'snn-tickets'))) . '">' . esc_html__('Copy link', 'snn-tickets') . '</button></div>';
+                    echo $form($t, 'send', __('Email it', 'snn-tickets'), '<input type="email" name="email" required placeholder="' . esc_attr__("Guest's email", 'snn-tickets') . '"> ');
+                } elseif (($t->holder ?? '') === SNN_T_Claims::SENT) {
+                    echo '<strong>' . esc_html(sprintf(__('Sent to %s', 'snn-tickets'), $t->claim_email)) . '</strong><br><small>' . esc_html__('Waiting for them to fill in their name.', 'snn-tickets') . '</small>';
+                    echo '<div class="snn-mt-actions">' . $form($t, 'resend', __('Send again', 'snn-tickets')) . $form($t, 'takeback', __('Take back', 'snn-tickets')) . '</div>';
+                } elseif ($t->email === $buyer) {
+                    echo '<strong>' . esc_html($t->name !== '' ? $t->name : __('Your ticket', 'snn-tickets')) . '</strong> <small>' . esc_html__('(you)', 'snn-tickets') . '</small>';
+                    echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html__('Open ticket', 'snn-tickets') . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a></div>';
+                } else {
+                    echo '<strong>' . esc_html($t->name) . '</strong><br><small>' . esc_html(sprintf(__('Has their ticket (%s)', 'snn-tickets'), $t->email)) . '</small>';
+                }
+                echo '</td></tr>';
+            }
+            echo '</tbody></table>';
+        }
+        echo '</section>';
+        echo '<style>.snn-mt td{vertical-align:top}.snn-mt-n{width:28px;opacity:.6}.snn-mt-when{margin:-4px 0 10px;opacity:.75}.snn-mt-share{display:flex;gap:6px;margin:8px 0}.snn-mt-share input{flex:1;min-width:0;font-size:13px}.snn-mt-form{display:inline-flex;gap:6px;flex-wrap:wrap;margin:4px 6px 0 0}.snn-mt-form input[type=email]{min-width:200px}.snn-mt-actions{margin-top:6px}</style>';
     }
 
     /** A ticket line removed from an order in the admin takes its tickets with it. */
@@ -691,37 +934,27 @@ JS
         return array_values(array_filter(self::order_tickets($order->get_id()), function ($t) { return $t->status === 'active'; }));
     }
 
-    /** Thank-you page and My Account → Orders. */
+    /** Thank-you page and My Account → Orders: the same list as the manage page. */
     public static function order_tickets_html($order) {
-        $tickets = self::display_tickets($order);
-        if (!$tickets) return;
-        echo '<section class="snn-order-tickets woocommerce-order-tickets"><h2 class="woocommerce-column__title">' . esc_html__('Your tickets', 'snn-tickets') . '</h2>';
-        echo '<table class="woocommerce-table shop_table"><tbody>';
-        foreach ($tickets as $t) {
-            $event = SNN_T_Events::get((int)$t->list_id);
-            echo '<tr><td><strong>' . esc_html($t->name ?: $t->email) . '</strong><br><small>' . esc_html($event ? $event->name : '') . ' · <code>' . esc_html($t->ticket_code) . '</code></small></td>';
-            echo '<td style="text-align:right"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html__('Open ticket', 'snn-tickets') . '</a> ';
-            echo '<a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a></td></tr>';
-        }
-        echo '</tbody></table>';
-        echo '<p><small>' . esc_html__('Each ticket has also been emailed to the person named on it.', 'snn-tickets') . '</small></p></section>';
+        if ($order instanceof WC_Order) self::manage_html($order);
     }
 
+    /** The buyer's WooCommerce order emails list the tickets too, with the manage link. */
     public static function email_tickets($order, $sent_to_admin = false, $plain_text = false, $email = null) {
         if ($sent_to_admin || !$order instanceof WC_Order) return;
         $tickets = self::display_tickets($order);
         if (!$tickets) return;
+        $rows   = self::list_rows($tickets, self::buyer_email($order));
+        $manage = self::manage_url($order);
         if ($plain_text) {
             echo "\n" . strtoupper(__('Your tickets', 'snn-tickets')) . "\n\n";
-            foreach ($tickets as $t) echo ($t->name ?: $t->email) . ' (' . $t->ticket_code . '): ' . SNN_T_Router::ticket_url($t->ticket_code) . "\n";
-            echo "\n";
+            foreach ($rows as $i => $r) echo ((int)$i + 1) . '. ' . $r['label'] . ($r['url'] !== '' ? ' ' . $r['url'] : '') . "\n";
+            echo "\n" . __('Manage your tickets', 'snn-tickets') . ': ' . $manage . "\n\n";
             return;
         }
-        echo '<h2>' . esc_html__('Your tickets', 'snn-tickets') . '</h2><ul style="margin:0 0 24px;padding-left:18px">';
-        foreach ($tickets as $t) {
-            echo '<li style="margin:0 0 6px"><a href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html($t->name ?: $t->email) . '</a> · ' . esc_html($t->ticket_code) . '</li>';
-        }
-        echo '</ul>';
+        echo '<h2>' . esc_html__('Your tickets', 'snn-tickets') . '</h2>';
+        echo SNN_T_Mailer::tickets_list_html($rows); // escaped inside
+        echo SNN_T_Mailer::button_html($manage, __('Manage your tickets', 'snn-tickets'));
     }
 
     /* ------------------------------------------------------------------

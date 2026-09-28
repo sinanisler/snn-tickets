@@ -178,6 +178,20 @@ class SNN_T_Tickets {
             ];
         }
 
+        if (SNN_T_Claims::is_open($ticket)) {
+            $event = SNN_T_Events::get((int)$ticket->list_id);
+            if ($event && $event->require_names) {
+                return [
+                    'valid'       => false,
+                    'reason'      => 'unnamed',
+                    'message'     => __('This ticket has no name yet. The buyer has to pass it on to its guest first.', 'snn-tickets'),
+                    'ticket_code' => $ticket->ticket_code,
+                    'name'        => $ticket->name,
+                    'list_name'   => $list_name,
+                ];
+            }
+        }
+
         if ($list_id && (int)$ticket->list_id !== (int)$list_id) {
             return [
                 'valid'       => false,

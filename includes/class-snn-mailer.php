@@ -60,7 +60,14 @@ class SNN_T_Mailer {
             'confirmation' => __('We got your request', 'snn-tickets'),
             'rejection'    => __('Sorry, no spot', 'snn-tickets'),
             'admin'        => __('Notice to you', 'snn-tickets'),
+            'order'        => __('Your tickets (to the buyer)', 'snn-tickets'),
+            'gift'         => __('A ticket for you', 'snn-tickets'),
         ];
+    }
+
+    /** Emails that only exist when tickets are sold in the shop. */
+    public static function shop_roles() {
+        return ['order', 'gift'];
     }
 
     /** When each email goes out, in plain words. */
@@ -70,6 +77,8 @@ class SNN_T_Mailer {
             'confirmation' => __('When someone has to wait for your approval.', 'snn-tickets'),
             'rejection'    => __('When you decline someone.', 'snn-tickets'),
             'admin'        => __('To you, when someone signs up.', 'snn-tickets'),
+            'order'        => __('To the buyer, once an order is paid: every ticket, and links to pass them on.', 'snn-tickets'),
+            'gift'         => __('When a buyer passes a ticket on to someone by email.', 'snn-tickets'),
         ];
     }
 
@@ -116,6 +125,29 @@ class SNN_T_Mailer {
                     'body'    => '<p>' . __('<strong>{name}</strong> ({email}) signed up for <strong>{event}</strong>.', 'snn-tickets') . "</p>\n"
                         . '<p>' . __('Status: {status}', 'snn-tickets') . "</p>\n"
                         . "{review_button}",
+                ];
+
+            case 'order':
+                return [
+                    'subject' => __('Your tickets for {event}', 'snn-tickets'),
+                    'body'    => '<h2 style="margin:0 0 12px;">' . __('Thanks, {name}!', 'snn-tickets') . "</h2>\n"
+                        . '<p>' . __('Your order is confirmed. Here are your {count} tickets for <strong>{event}</strong>.', 'snn-tickets') . "</p>\n"
+                        . "{ticket_card}\n"
+                        . "{tickets_list}\n"
+                        . '<p>' . __('Tickets without a name are waiting for their guests. Send each one on: the guest fills in their name and gets their own ticket.', 'snn-tickets') . "</p>\n"
+                        . "{manage_button}\n"
+                        . '<p>— {site}</p>',
+                ];
+
+            case 'gift':
+                return [
+                    'subject' => __('{buyer} got you a ticket to {event}', 'snn-tickets'),
+                    'body'    => '<h2 style="margin:0 0 12px;">' . __('A ticket for you!', 'snn-tickets') . "</h2>\n"
+                        . '<p>' . __('{buyer} got you a ticket to <strong>{event}</strong>.', 'snn-tickets') . "</p>\n"
+                        . "<p>{event_date} {event_time}<br>{venue}</p>\n"
+                        . '<p>' . __("Tell us who's coming and your ticket arrives straight away.", 'snn-tickets') . "</p>\n"
+                        . "{claim_button}\n"
+                        . '<p>— {site}</p>',
                 ];
 
             case 'ticket':
@@ -179,13 +211,20 @@ class SNN_T_Mailer {
             '{venue}'          => [__('Venue', 'snn-tickets'), $event, false, null],
             '{address}'        => [__('Address', 'snn-tickets'), $event, false, null],
             '{event_url}'      => [__('Sign-up link', 'snn-tickets'), $event, false, null],
-            '{ticket_card}'    => [__('Ticket with QR', 'snn-tickets'), $ticket, true, ['ticket']],
-            '{qr_block}'       => [__('QR code only', 'snn-tickets'), $ticket, true, ['ticket']],
-            '{wallet_buttons}' => [__('Wallet, PDF & calendar buttons', 'snn-tickets'), $ticket, true, ['ticket']],
-            '{ticket}'         => [__('Ticket code', 'snn-tickets'), $ticket, false, ['ticket']],
-            '{ticket_url}'     => [__('Ticket page link', 'snn-tickets'), $ticket, false, ['ticket']],
+            '{ticket_card}'    => [__('Ticket with QR', 'snn-tickets'), $ticket, true, ['ticket', 'order']],
+            '{qr_block}'       => [__('QR code only', 'snn-tickets'), $ticket, true, ['ticket', 'order']],
+            '{wallet_buttons}' => [__('Wallet, PDF & calendar buttons', 'snn-tickets'), $ticket, true, ['ticket', 'order']],
+            '{ticket}'         => [__('Ticket code', 'snn-tickets'), $ticket, false, ['ticket', 'order']],
+            '{ticket_url}'     => [__('Ticket page link', 'snn-tickets'), $ticket, false, ['ticket', 'order']],
             '{status}'         => [__('Status', 'snn-tickets'), $person, false, ['admin']],
             '{review_button}'  => [__('Review button', 'snn-tickets'), $person, true, ['admin']],
+            '{count}'          => [__('Number of tickets', 'snn-tickets'), $ticket, false, ['order']],
+            '{tickets_list}'   => [__('List of the tickets', 'snn-tickets'), $ticket, true, ['order']],
+            '{manage_button}'  => [__('Manage tickets button', 'snn-tickets'), $ticket, true, ['order']],
+            '{manage_url}'     => [__('Manage tickets link', 'snn-tickets'), $ticket, false, ['order']],
+            '{buyer}'          => [__('Who sent it', 'snn-tickets'), $person, false, ['gift']],
+            '{claim_button}'   => [__('Claim button', 'snn-tickets'), $ticket, true, ['gift']],
+            '{claim_url}'      => [__('Claim link', 'snn-tickets'), $ticket, false, ['gift']],
             '{site}'           => [__('Site name', 'snn-tickets'), $site, false, null],
             '{date}'           => [__("Today's date", 'snn-tickets'), $site, false, null],
         ];
@@ -215,6 +254,7 @@ class SNN_T_Mailer {
             'ticket_data' => null,
             'status'      => '',
             'person'      => '',
+            'vars'        => [],
         ];
         $a = array_merge($defaults, $args);
 
@@ -289,7 +329,19 @@ class SNN_T_Mailer {
             $vars['{field:' . $key . '}'] = is_array($value) ? implode(', ', $value) : (string)$value;
         }
 
+        // Shop tags are filled by whoever sends those emails; blank otherwise.
+        foreach (['{count}', '{tickets_list}', '{manage_button}', '{manage_url}', '{buyer}', '{claim_button}', '{claim_url}'] as $k) {
+            $vars[$k] = '';
+        }
+        foreach ((array)$a['vars'] as $k => $v) $vars[$k] = (string)$v;
+
         return $vars;
+    }
+
+    /** A plain, Outlook-safe button for emails. */
+    public static function button_html($url, $label) {
+        return '<p style="margin:18px 0;"><a href="' . esc_url($url) . '" style="display:inline-block;padding:11px 20px;border-radius:6px;background:#111111;color:#ffffff;font-weight:600;text-decoration:none;">'
+            . esc_html($label) . '</a></p>';
     }
 
     private static function event($list_id) {
@@ -329,7 +381,7 @@ class SNN_T_Mailer {
         $subject = self::render($tpl['subject'] ?? '', $vars);
         // The visual editor wraps block tags in <p>; a table inside a
         // paragraph breaks in several mail clients.
-        $body    = preg_replace('#<p[^>]*>\s*(\{(?:ticket_card|wallet_buttons|qr_block|review_button)\})\s*</p>#i', '$1', (string)($tpl['body'] ?? ''));
+        $body    = preg_replace('#<p[^>]*>\s*(\{(?:ticket_card|wallet_buttons|qr_block|review_button|tickets_list|manage_button|claim_button)\})\s*</p>#i', '$1', (string)($tpl['body'] ?? ''));
         $inner   = self::render($body, $vars);
 
         $list_id = (int)($args['list_id'] ?? 0);
@@ -344,11 +396,11 @@ class SNN_T_Mailer {
             ? $inner
             : SNN_T_Design::email_html($inner, $design, [
                 'title'     => $subject,
-                'preheader' => $role === 'ticket' ? $vars['{event}'] . ($vars['{event_date}'] !== '' ? ' · ' . $vars['{event_date}'] : '') : '',
+                'preheader' => in_array($role, ['ticket', 'order'], true) ? $vars['{event}'] . ($vars['{event_date}'] !== '' ? ' · ' . $vars['{event_date}'] : '') : '',
             ]);
 
         $attachments = '';
-        if ($role === 'ticket' && !empty($args['ticket_code']) && $event) {
+        if (in_array($role, ['ticket', 'order'], true) && !empty($args['ticket_code']) && $event) {
             $attachments = implode(',', $event->attachment_list);
         }
 
@@ -732,10 +784,28 @@ class SNN_T_Mailer {
     /** Sample arguments for a role, tied to a list when one is chosen. */
     public static function sample_args($role, $list_id = 0) {
         $t = SNN_T_Events::sample_ticket_data($list_id);
+        $vars = [];
+        if ($role === 'order') {
+            $manage = home_url('/');
+            $vars = [
+                '{count}'         => '3',
+                '{tickets_list}'  => self::sample_tickets_list($t['name']),
+                '{manage_url}'    => $manage,
+                '{manage_button}' => self::button_html($manage, __('Manage your tickets', 'snn-tickets')),
+            ];
+        } elseif ($role === 'gift') {
+            $claim = home_url('/');
+            $vars = [
+                '{buyer}'        => $t['name'],
+                '{claim_url}'    => $claim,
+                '{claim_button}' => self::button_html($claim, __('Claim my ticket', 'snn-tickets')),
+            ];
+        }
         return [
+            'vars'        => $vars,
             'name'        => $t['name'],
             'email'       => $t['email'],
-            'ticket_code' => $role === 'ticket' ? $t['code'] : '',
+            'ticket_code' => in_array($role, ['ticket', 'order'], true) ? $t['code'] : '',
             'list_name'   => $t['event'],
             'list_id'     => $list_id,
             'form_name'   => __('Registration', 'snn-tickets'),
@@ -743,6 +813,32 @@ class SNN_T_Mailer {
             'ticket_data' => $t,
             'status'      => __('Waiting for your approval', 'snn-tickets'),
         ];
+    }
+
+    /** What {tickets_list} looks like, for previews. */
+    private static function sample_tickets_list($buyer) {
+        return self::tickets_list_html([
+            ['label' => $buyer, 'note' => __('Your ticket', 'snn-tickets'), 'url' => '', 'link_label' => ''],
+            ['label' => __('Not named yet', 'snn-tickets'), 'note' => __('Send this link to your guest', 'snn-tickets'), 'url' => home_url('/'), 'link_label' => __('Ticket link', 'snn-tickets')],
+            ['label' => 'Grace Hopper', 'note' => 'grace@example.com', 'url' => '', 'link_label' => ''],
+        ]);
+    }
+
+    /**
+     * The {tickets_list} block: one row per ticket.
+     *
+     * @param array $rows [['label' =>, 'note' =>, 'url' =>, 'link_label' =>], ...]
+     */
+    public static function tickets_list_html($rows) {
+        $out = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:16px 0;">';
+        foreach ($rows as $i => $r) {
+            $out .= '<tr><td style="padding:10px 0;border-top:1px solid #e5e5e5;vertical-align:top;width:28px;color:#888;">' . ((int)$i + 1) . '</td>'
+                . '<td style="padding:10px 0;border-top:1px solid #e5e5e5;"><strong>' . esc_html($r['label']) . '</strong>'
+                . ($r['note'] !== '' ? '<br><span style="color:#666;font-size:13px;">' . esc_html($r['note']) . '</span>' : '')
+                . ($r['url'] !== '' ? '<br><a href="' . esc_url($r['url']) . '" style="font-size:13px;word-break:break-all;">' . esc_html($r['url']) . '</a>' : '')
+                . '</td></tr>';
+        }
+        return $out . '</table>';
     }
 
     /** Believable answers for an event's own questions, for previews. */

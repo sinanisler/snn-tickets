@@ -70,7 +70,11 @@ Every event is live as soon as it's created:
 - **Attendee details** (optional per product): the product page asks the event's sign-up questions once per ticket, and each ticket is emailed to its attendee. Without it, every ticket goes to the buyer
 - Tickets are issued when an order is paid (processing / completed) and cancelled when it is cancelled, refunded, failed or trashed. Partial refunds cancel that many tickets, newest and unused first. Reopened orders get their old codes back
 - The event's spot limit is shared by the shop and the sign-up form; unpaid orders hold their spots (pending for WooCommerce's hold-stock time, on-hold until paid)
-- Buyers see their tickets on the thank-you page, in My Account → Orders and in the order emails. The order screen lists each line's ticket codes; People shows the order number
+- **Passing tickets on**: someone buying several tickets gets the first one; each of the others waits for a name and has a private link. The buyer copies the link or emails it from their ticket list, and the guest fills in their name (and the event's questions) on a page that needs no account. Claiming gives the ticket a new code, so a QR the buyer kept stops working. Links can be sent again or taken back until they are claimed
+- **One email per person**: the buyer gets one "Your tickets" email per event (their own ticket plus the links), each guest gets their own ticket email. Both are editable in the event's Emails tab, like every other email
+- The buyer's ticket list is on the thank-you page, in My Account → Orders, in the order emails and at a private link (`/events/tickets/{order}/`) that works without an account
+- Unclaimed tickets work at the door for the buyer by default; **Tickets need a name to get in** (Sell tickets → Guests) makes the scanner refuse them
+- People has a "Not named yet" filter and shows each waiting ticket's link; WooCommerce → Orders gets a Tickets column ("4 · 2 without a name"), a filter, and an "Email the buyer their tickets again" action. The order screen lists each line's ticket codes
 - The event page lists what is for sale with Buy buttons
 - Works with the block and classic cart and checkout, and with HPOS
 

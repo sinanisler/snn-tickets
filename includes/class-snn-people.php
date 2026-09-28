@@ -20,6 +20,7 @@ class SNN_T_People {
             'waiting'  => __('Waiting for you', 'snn-tickets'),
             'ticket'   => __('Has ticket', 'snn-tickets'),
             'in'       => __('Checked in', 'snn-tickets'),
+            'unnamed'  => __('Not named yet', 'snn-tickets'),
             'problems' => __('Problems', 'snn-tickets'),
             'off'      => __('Cancelled & declined', 'snn-tickets'),
         ];
@@ -39,11 +40,11 @@ class SNN_T_People {
                    t.ticket_code AS code, t.source AS source, t.submission_id AS sid, sd.data AS answers,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status = 'failed') AS failed,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')) AS mailed,
-                   '' AS reason, t.order_id AS oid
+                   '' AS reason, t.order_id AS oid, t.holder AS holder
             FROM {$t} t LEFT JOIN {$s} sd ON sd.id = t.submission_id
             WHERE t.list_id = %d
             UNION ALL
-            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0
+            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0, ''
             FROM {$s} s JOIN {$f} f ON f.id = s.form_id
             WHERE f.list_id = %d AND (s.ticket_id IS NULL OR s.ticket_id = 0) AND s.status IN ('pending','rejected')
         ", (int)$list_id, (int)$list_id);
@@ -54,6 +55,7 @@ class SNN_T_People {
             case 'waiting':  return "p.kind = 's' AND p.st = 'pending'";
             case 'ticket':   return "p.kind = 't' AND p.st = 'active'";
             case 'in':       return "p.kind = 't' AND p.st = 'active' AND p.vc > 0";
+            case 'unnamed':  return "p.kind = 't' AND p.st = 'active' AND p.holder IN ('open','sent')";
             case 'problems': return "p.kind = 't' AND p.st = 'active' AND p.failed > 0";
             case 'off':      return "((p.kind = 't' AND p.st = 'revoked') OR (p.kind = 's' AND p.st = 'rejected'))";
         }
@@ -109,6 +111,10 @@ class SNN_T_People {
             $r->state = 'in';
         } elseif ((int)$r->failed > 0) {
             $r->state = 'bounced';
+        } elseif (($r->holder ?? '') === 'sent') {
+            $r->state = 'linksent';
+        } elseif (($r->holder ?? '') === 'open') {
+            $r->state = 'unnamed';
         } elseif ($r->name === '' && $r->email === '') {
             $r->state = 'blank';
         } elseif ((int)$r->mailed > 0) {
@@ -128,6 +134,8 @@ class SNN_T_People {
             'in'        => [__('Checked in', 'snn-tickets'), 'ok'],
             'bounced'   => [__('Email failed', 'snn-tickets'), 'bad'],
             'blank'     => [__('Blank ticket', 'snn-tickets'), ''],
+            'unnamed'   => [__('Not named yet', 'snn-tickets'), 'warn'],
+            'linksent'  => [__('Link sent, waiting', 'snn-tickets'), 'info'],
             'sent'      => [__('Ticket sent', 'snn-tickets'), 'info'],
             'unsent'    => [__('Not emailed yet', 'snn-tickets'), ''],
         ];
