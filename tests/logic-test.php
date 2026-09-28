@@ -180,7 +180,7 @@ check($settings['max_tickets'] === 0, 'a negative capacity clamps to 0');
 check($settings['one_per_email'] === 1, 'truthy values normalise to 1');
 check($settings['notify_email'] === '', 'an invalid notification address is dropped');
 check($settings['redirect_url'] === '', 'a javascript: redirect is rejected');
-check($settings['submit_label'] === 'Register', 'a blank message falls back to the default');
+check($settings['submit_label'] === 'Get my ticket', 'a blank message falls back to the default');
 
 // Per-form email wording
 $mail_settings = SNN_T_Forms::sanitize_settings([

@@ -203,6 +203,33 @@ class SNN_T_Design {
         return $d;
     }
 
+    /** A small CSS mock-up of a look, for the pickers. */
+    public static function thumb($p) {
+        $head = $p['header_bg2']
+            ? "background:linear-gradient(120deg,{$p['header_bg']},{$p['header_bg2']});"
+            : "background:{$p['header_bg']};" . ($p['header_bg'] === $p['card'] ? 'border-bottom:1px solid ' . self::mix($p['card'], $p['text'], .12) . ';' : '');
+        $font = $p['font'] === 'serif' ? 'Georgia,serif' : 'inherit';
+        $line = self::mix($p['card'], $p['text'], .15);
+        $qr = '<span style="display:block;width:34px;height:34px;background:'
+            . 'repeating-linear-gradient(90deg,' . $p['text'] . ' 0 4px,transparent 4px 7px),'
+            . 'repeating-linear-gradient(0deg,' . $p['text'] . ' 0 4px,transparent 4px 7px);background-blend-mode:multiply;opacity:.85;border:3px solid #fff;outline:1px solid ' . $line . '"></span>';
+
+        $details = '<span style="display:block;height:5px;width:60%;background:' . $p['muted'] . ';opacity:.5;border-radius:2px;margin:0 0 5px"></span>'
+                 . '<span style="display:block;height:7px;width:80%;background:' . $p['text'] . ';border-radius:2px;margin:0 0 8px"></span>'
+                 . '<span style="display:block;height:5px;width:45%;background:' . $p['muted'] . ';opacity:.5;border-radius:2px;margin:0 0 5px"></span>'
+                 . '<span style="display:block;height:7px;width:55%;background:' . $p['text'] . ';border-radius:2px"></span>';
+
+        $body = $p['layout'] === 'stub'
+            ? '<span style="display:flex"><span style="flex:1;padding:10px">' . $details . '</span>'
+              . '<span style="width:58px;display:flex;align-items:center;justify-content:center;border-left:2px dashed ' . $line . ';background:' . self::mix($p['card'], $p['text'], .04) . '">' . $qr . '</span></span>'
+            : '<span style="display:flex;align-items:center;gap:8px;padding:10px"><span style="flex:1">' . $details . '</span>' . $qr . '</span>';
+
+        return '<span class="snn-thumb" style="background:' . $p['bg'] . ';font-family:' . $font . '">'
+             . '<span style="display:block;background:' . $p['card'] . ';border-radius:' . min(10, $p['radius']) . 'px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15)">'
+             . '<span style="display:block;' . $head . 'padding:8px 10px;color:' . $p['header_text'] . ';font-weight:700;font-size:12px">Summit 2026</span>'
+             . $body . '</span></span>';
+    }
+
     public static function for_list($event) {
         return self::resolve($event ? (string)$event->design : '');
     }

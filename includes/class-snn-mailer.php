@@ -56,9 +56,20 @@ class SNN_T_Mailer {
 
     public static function roles() {
         return [
-            'ticket'       => __('Ticket + QR code (sent once approved)', 'snn-tickets'),
-            'confirmation' => __('Submission received (sent immediately)', 'snn-tickets'),
-            'rejection'    => __('Rejected', 'snn-tickets'),
+            'ticket'       => __('Ticket email', 'snn-tickets'),
+            'confirmation' => __('We got your request', 'snn-tickets'),
+            'rejection'    => __('Sorry, no spot', 'snn-tickets'),
+            'admin'        => __('Notice to you', 'snn-tickets'),
+        ];
+    }
+
+    /** When each email goes out, in plain words. */
+    public static function role_when() {
+        return [
+            'ticket'       => __('When someone gets a ticket.', 'snn-tickets'),
+            'confirmation' => __('When someone has to wait for your approval.', 'snn-tickets'),
+            'rejection'    => __('When you decline someone.', 'snn-tickets'),
+            'admin'        => __('To you, when someone signs up.', 'snn-tickets'),
         ];
     }
 
@@ -97,6 +108,14 @@ class SNN_T_Mailer {
                     'body'    => '<p>' . __('Hi {name},', 'snn-tickets') . "</p>\n"
                         . '<p>' . __('Thanks for your interest in <strong>{event}</strong>. Unfortunately we are not able to confirm a place for you this time.', 'snn-tickets') . "</p>\n"
                         . '<p>— {site}</p>',
+                ];
+
+            case 'admin':
+                return [
+                    'subject' => __('New sign-up: {name} for {event}', 'snn-tickets'),
+                    'body'    => '<p>' . __('<strong>{name}</strong> ({email}) signed up for <strong>{event}</strong>.', 'snn-tickets') . "</p>\n"
+                        . '<p>' . __('Status: {status}', 'snn-tickets') . "</p>\n"
+                        . "{review_button}",
                 ];
 
             case 'ticket':
@@ -140,6 +159,38 @@ class SNN_T_Mailer {
         ];
     }
 
+    /**
+     * Tags as the email editor shows them: a short name, a group, and
+     * whether the tag becomes a block (a card or buttons) rather than text.
+     *
+     * @return array tag => [label, group, is_block, roles|null]
+     */
+    public static function tag_catalog() {
+        $person = __('Person', 'snn-tickets');
+        $event  = __('Event', 'snn-tickets');
+        $ticket = __('Ticket', 'snn-tickets');
+        $site   = __('Site', 'snn-tickets');
+        return [
+            '{name}'           => [__('Name', 'snn-tickets'), $person, false, null],
+            '{email}'          => [__('Email', 'snn-tickets'), $person, false, null],
+            '{event}'          => [__('Event', 'snn-tickets'), $event, false, null],
+            '{event_date}'     => [__('Date', 'snn-tickets'), $event, false, null],
+            '{event_time}'     => [__('Time', 'snn-tickets'), $event, false, null],
+            '{venue}'          => [__('Venue', 'snn-tickets'), $event, false, null],
+            '{address}'        => [__('Address', 'snn-tickets'), $event, false, null],
+            '{event_url}'      => [__('Sign-up link', 'snn-tickets'), $event, false, null],
+            '{ticket_card}'    => [__('Ticket with QR', 'snn-tickets'), $ticket, true, ['ticket']],
+            '{qr_block}'       => [__('QR code only', 'snn-tickets'), $ticket, true, ['ticket']],
+            '{wallet_buttons}' => [__('Wallet, PDF & calendar buttons', 'snn-tickets'), $ticket, true, ['ticket']],
+            '{ticket}'         => [__('Ticket code', 'snn-tickets'), $ticket, false, ['ticket']],
+            '{ticket_url}'     => [__('Ticket page link', 'snn-tickets'), $ticket, false, ['ticket']],
+            '{status}'         => [__('Status', 'snn-tickets'), $person, false, ['admin']],
+            '{review_button}'  => [__('Review button', 'snn-tickets'), $person, true, ['admin']],
+            '{site}'           => [__('Site name', 'snn-tickets'), $site, false, null],
+            '{date}'           => [__("Today's date", 'snn-tickets'), $site, false, null],
+        ];
+    }
+
     /* ------------------------------------------------------------------
      * Placeholders
      * ---------------------------------------------------------------- */
@@ -162,6 +213,8 @@ class SNN_T_Mailer {
             'form_name'   => '',
             'fields'      => [],
             'ticket_data' => null,
+            'status'      => '',
+            'person'      => '',
         ];
         $a = array_merge($defaults, $args);
 
@@ -188,7 +241,18 @@ class SNN_T_Mailer {
             '{event_time}' => $event ? SNN_T_Events::format_time($event) : '',
             '{venue}'      => $event ? $event->venue : '',
             '{address}'    => $event ? $event->address : '',
+            '{event_url}'  => ($event && class_exists('SNN_T_Router')) ? SNN_T_Router::event_url($event) : '',
+            '{status}'     => (string)$a['status'],
         ];
+
+        $review = ($list_id && function_exists('admin_url'))
+            ? admin_url('admin.php?page=snn-tickets-events&event=' . $list_id . ($a['person'] !== '' ? '&person=' . rawurlencode($a['person']) : '&filter=waiting'))
+            : '';
+        $vars['{review_url}']    = $review;
+        $vars['{review_button}'] = $review !== ''
+            ? '<p style="margin:18px 0;"><a href="' . esc_url($review) . '" style="display:inline-block;padding:10px 18px;border-radius:6px;background:#2271b1;color:#ffffff;font-weight:600;text-decoration:none;">'
+              . esc_html__('Review in WordPress', 'snn-tickets') . '</a></p>'
+            : '';
 
         foreach (['{qr}', '{qr_inline}', '{scan_url}', '{qr_block}', '{ticket_card}', '{wallet_buttons}',
                   '{ticket_url}', '{pdf_url}', '{ics_url}', '{pkpass_url}', '{gwallet_url}'] as $k) {
@@ -265,7 +329,7 @@ class SNN_T_Mailer {
         $subject = self::render($tpl['subject'] ?? '', $vars);
         // The visual editor wraps block tags in <p>; a table inside a
         // paragraph breaks in several mail clients.
-        $body    = preg_replace('#<p[^>]*>\s*(\{(?:ticket_card|wallet_buttons|qr_block)\})\s*</p>#i', '$1', (string)($tpl['body'] ?? ''));
+        $body    = preg_replace('#<p[^>]*>\s*(\{(?:ticket_card|wallet_buttons|qr_block|review_button)\})\s*</p>#i', '$1', (string)($tpl['body'] ?? ''));
         $inner   = self::render($body, $vars);
 
         $list_id = (int)($args['list_id'] ?? 0);
@@ -380,6 +444,97 @@ class SNN_T_Mailer {
             'attach_qr'     => strpos($msg['html'], 'cid:' . self::QR_CID) !== false,
             'attachments'   => $msg['attachments'],
         ]);
+    }
+
+    /**
+     * The subject and body an event uses for an email, with the built-in
+     * wording filling in whatever the event left blank.
+     *
+     * @return array ['on' =>, 'subject' =>, 'body' =>]
+     */
+    public static function event_template($list_id, $role) {
+        $event   = $list_id ? SNN_T_Events::get($list_id) : null;
+        $emails  = SNN_T_Events::emails($event);
+        $cfg     = $emails[$role] ?? ['on' => 1, 'subject' => '', 'body' => ''];
+        $default = self::default_template($role);
+        return [
+            'on'      => (int)$cfg['on'],
+            'subject' => $cfg['subject'] !== '' ? $cfg['subject'] : $default['subject'],
+            'body'    => $cfg['body'] !== '' ? $cfg['body'] : $default['body'],
+        ];
+    }
+
+    /**
+     * Queue one of an event's emails, if the event has it switched on.
+     * $template_name, when given, sends a saved template instead of the
+     * event's own text.
+     *
+     * @return int|WP_Error|false queue id, error, or false when switched off
+     */
+    public static function send_event_email($role, $list_id, $args, $template_name = '') {
+        $tpl = self::event_template($list_id, $role);
+        if (!$tpl['on'] && $template_name === '') return false;
+        if ($template_name !== '' && ($saved = self::get_template($template_name))) {
+            $tpl = ['subject' => $saved['subject'], 'body' => $saved['body']];
+        }
+        $args['list_id'] = (int)$list_id;
+        $msg = self::compose($role, $tpl, $args);
+
+        return self::enqueue([
+            'to_email'      => $args['to_email'] ?? ($args['email'] ?? ''),
+            'to_name'       => $role === 'admin' ? '' : ($args['name'] ?? ''),
+            'subject'       => $msg['subject'],
+            'body'          => $msg['html'],
+            'role'          => $role,
+            'ticket_id'     => $args['ticket_id'] ?? null,
+            'submission_id' => $args['submission_id'] ?? null,
+            'ticket_code'   => $args['ticket_code'] ?? '',
+            'attach_qr'     => strpos($msg['html'], 'cid:' . self::QR_CID) !== false,
+            'attachments'   => $msg['attachments'],
+        ]);
+    }
+
+    /**
+     * Queue the ticket email for one ticket, with the answers from the
+     * form it came from.
+     *
+     * @return int|WP_Error
+     */
+    public static function queue_ticket($ticket, $template_name = '') {
+        if (!$ticket) return new WP_Error('snn_t_missing', __('Ticket not found.', 'snn-tickets'));
+        if (!$ticket->email) return new WP_Error('snn_t_noemail', __('That ticket has no email address.', 'snn-tickets'));
+        if ($ticket->status !== 'active') return new WP_Error('snn_t_revoked', __('Cancelled tickets are not emailed.', 'snn-tickets'));
+
+        $fields = []; $form_name = '';
+        if ($ticket->submission_id) {
+            $sub  = SNN_T_Submissions::get((int)$ticket->submission_id);
+            $form = $sub ? SNN_T_Forms::get($sub->form_id) : null;
+            if ($sub)  $fields = $sub->data;
+            if ($form) $form_name = $form->name;
+        }
+
+        $r = self::send_event_email('ticket', (int)$ticket->list_id, [
+            'name'          => $ticket->name,
+            'email'         => $ticket->email,
+            'ticket_code'   => $ticket->ticket_code,
+            'ticket_id'     => (int)$ticket->id,
+            'submission_id' => $ticket->submission_id ? (int)$ticket->submission_id : null,
+            'form_name'     => $form_name,
+            'fields'        => $fields,
+        ], $template_name);
+
+        // A ticket email that is switched off still goes out when asked for
+        // by hand: the admin pressed Send.
+        if ($r === false) {
+            $tpl = self::event_template((int)$ticket->list_id, 'ticket');
+            $args = [
+                'name' => $ticket->name, 'email' => $ticket->email, 'ticket_code' => $ticket->ticket_code,
+                'ticket_id' => (int)$ticket->id, 'list_id' => (int)$ticket->list_id, 'fields' => $fields, 'form_name' => $form_name,
+                'submission_id' => $ticket->submission_id ? (int)$ticket->submission_id : null,
+            ];
+            return self::enqueue_from_template('ticket', '', $args, ['subject' => $tpl['subject'], 'body' => $tpl['body']]);
+        }
+        return $r;
     }
 
     public static function batch_size() {
@@ -575,9 +730,23 @@ class SNN_T_Mailer {
             'list_name'   => $t['event'],
             'list_id'     => $list_id,
             'form_name'   => __('Registration', 'snn-tickets'),
-            'fields'      => ['company' => 'Analytical Engines Ltd'],
+            'fields'      => self::sample_fields($list_id),
             'ticket_data' => $t,
+            'status'      => __('Waiting for your approval', 'snn-tickets'),
         ];
+    }
+
+    /** Believable answers for an event's own questions, for previews. */
+    private static function sample_fields($list_id) {
+        $out  = ['company' => 'Analytical Engines Ltd'];
+        $form = $list_id ? SNN_T_Forms::for_list($list_id) : null;
+        if ($form) {
+            foreach ($form->fields as $f) {
+                if (in_array($f['map_to'], ['name', 'email'], true)) continue;
+                $out[$f['key']] = !empty($f['options']) ? $f['options'][0] : ($f['default'] !== '' ? $f['default'] : $f['label']);
+            }
+        }
+        return $out;
     }
 
     private static function request_template() {

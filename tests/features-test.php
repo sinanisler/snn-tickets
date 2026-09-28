@@ -11,7 +11,7 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-require_once __DIR__ . '/../includes/class-snn-tickets-admin.php';
+require_once __DIR__ . '/../includes/class-snn-people.php';
 
 echo "SNN Tickets feature tests — PHP " . PHP_VERSION . "\n";
 
@@ -381,14 +381,14 @@ section('CSV import');
 
 $csvdir = tmpdir();
 file_put_contents("$csvdir/a.csv", "\xEF\xBB\xBFName,Email\nJane Doe,JANE@example.com\n,\nŞükrü Ağaoğlu,sukru@example.com\nNo Mail,not-an-email\n");
-$rows = SNN_T_Tickets_Admin::parse_csv("$csvdir/a.csv");
+$rows = SNN_T_People::parse_csv("$csvdir/a.csv");
 check(!is_wp_error($rows) && count($rows) === 3, 'a BOM-prefixed file parses and blank rows are skipped');
 check($rows[0]['email'] === 'jane@example.com' && $rows[1]['name'] === 'Şükrü Ağaoğlu' && $rows[2]['email'] === '', 'emails are normalised and bad ones cleared');
 file_put_contents("$csvdir/b.csv", "Ad Soyad;E-posta\nAyşe Yılmaz;ayse@example.com\n");
-$rows = SNN_T_Tickets_Admin::parse_csv("$csvdir/b.csv");
+$rows = SNN_T_People::parse_csv("$csvdir/b.csv");
 check(!is_wp_error($rows) && $rows[0]['name'] === 'Ayşe Yılmaz' && $rows[0]['email'] === 'ayse@example.com', 'semicolon CSVs with Turkish headers parse (Excel TR export)');
 file_put_contents("$csvdir/c.csv", "Foo,Bar\n1,2\n");
-check(is_wp_error(SNN_T_Tickets_Admin::parse_csv("$csvdir/c.csv")), 'a CSV without Name/Email columns is refused');
+check(is_wp_error(SNN_T_People::parse_csv("$csvdir/c.csv")), 'a CSV without Name/Email columns is refused');
 rrmdir($csvdir);
 rrmdir($dir);
 

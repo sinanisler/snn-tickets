@@ -42,7 +42,10 @@ class SNN_T_QR {
     public static function scan_url($code) {
         $base = trim((string)get_option(self::SCAN_URL_OPTION, ''));
         if ($base === '' || !filter_var($base, FILTER_VALIDATE_URL)) {
-            $base = home_url('/');
+            // The built-in door page, when the site has pretty permalinks.
+            $base = (class_exists('SNN_T_Router') && function_exists('add_rewrite_rule') && SNN_T_Router::pretty())
+                ? SNN_T_Router::door_url()
+                : home_url('/');
         }
         return add_query_arg([
             'snn_ticket' => rawurlencode($code),
@@ -174,54 +177,40 @@ class SNN_T_QR {
     }
 
     /**
-     * A camera app opening the QR lands here with our query args.
+     * A camera app opening a QR lands here with our query args, on whatever
+     * page the QR points at (older tickets point at the home page).
      *
-     * Staff are sent to the scanner (or shown the result right here when no
-     * scanner page is configured) and the ticket is checked in. Anyone else
-     * -- usually the attendee tapping the link in their email -- sees their
-     * ticket, and nothing is counted.
+     * Only the door scanner checks tickets in. Staff are sent there; anyone
+     * else -- usually the attendee tapping the link in their email -- sees
+     * their ticket, and nothing is counted.
      */
     public static function maybe_handle_scan() {
         if (empty($_GET['snn_ticket'])) return;
+        if (get_query_var('snn_route') === 'door') return; // the scanner handles it
 
         $code = sanitize_text_field(wp_unslash($_GET['snn_ticket']));
         $sig  = sanitize_text_field(wp_unslash($_GET['snn_sig'] ?? ''));
 
-        if (!SNN_T_Scanner::is_staff()) {
-            $ticket = self::verify($code, $sig) ? SNN_T_Tickets::get_by_code($code) : null;
-            nocache_headers();
-            if ($ticket) {
-                SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket));
-            } else {
-                self::render_standalone_result(['valid' => false, 'message' => __('This ticket link is not valid.', 'snn-tickets')]);
-            }
-            exit;
-        }
-
         $configured = trim((string)get_option(self::SCAN_URL_OPTION, ''));
-
         if ($configured !== '') {
             $target_path  = untrailingslashit((string)parse_url($configured, PHP_URL_PATH));
             $current_path = untrailingslashit((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
-
-            // Already on the scan page: the scanner checks it in. Never
-            // redirect to ourselves.
-            if ($target_path !== $current_path) {
-                wp_safe_redirect(add_query_arg([
-                    'snn_ticket' => rawurlencode($code),
-                    'snn_sig'    => $sig,
-                ], $configured));
-                exit;
-            }
-            return;
+            if ($target_path === $current_path) return; // the scanner shortcode on that page handles it
         }
 
-        // No scan page configured: check in and show a self-contained result.
-        $result = SNN_T_Tickets::validate($code, $sig, true);
+        if (SNN_T_Scanner::is_staff()) {
+            $door = $configured !== '' ? $configured : SNN_T_Router::door_url();
+            wp_safe_redirect(add_query_arg(['snn_ticket' => rawurlencode($code), 'snn_sig' => $sig], $door));
+            exit;
+        }
 
-        status_header(200);
+        $ticket = self::verify($code, $sig) ? SNN_T_Tickets::get_by_code($code) : null;
         nocache_headers();
-        self::render_standalone_result($result);
+        if ($ticket) {
+            SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket));
+        } else {
+            self::render_standalone_result(['valid' => false, 'message' => __('This ticket link is not valid.', 'snn-tickets')]);
+        }
         exit;
     }
 

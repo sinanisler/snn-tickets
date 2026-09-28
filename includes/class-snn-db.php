@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '3';
+    const DB_VERSION        = '4';
 
     public static function lists() {
         global $wpdb;
@@ -52,6 +52,7 @@ class SNN_T_DB {
         dbDelta("CREATE TABLE {$lists} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             name VARCHAR(255) NOT NULL,
+            slug VARCHAR(200) DEFAULT '' NOT NULL,
             event_start DATETIME NULL,
             event_end DATETIME NULL,
             venue VARCHAR(255) DEFAULT '' NOT NULL,
@@ -60,8 +61,10 @@ class SNN_T_DB {
             description TEXT NULL,
             design VARCHAR(40) DEFAULT '' NOT NULL,
             attachments VARCHAR(100) DEFAULT '' NOT NULL,
+            emails LONGTEXT NULL,
             created_at DATETIME NOT NULL,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            KEY slug (slug)
         ) {$charset_collate};");
 
         dbDelta("CREATE TABLE {$tickets} (
@@ -72,6 +75,8 @@ class SNN_T_DB {
             name VARCHAR(255) DEFAULT '' NOT NULL,
             email VARCHAR(255) DEFAULT '' NOT NULL,
             status VARCHAR(20) DEFAULT 'active' NOT NULL,
+            source VARCHAR(40) DEFAULT '' NOT NULL,
+            note TEXT NULL,
             validate_count INT UNSIGNED NOT NULL DEFAULT 0,
             last_validated DATETIME NULL,
             created_at DATETIME NOT NULL,
@@ -148,8 +153,39 @@ class SNN_T_DB {
      * updates do not fire the activation hook, so this runs on admin_init.
      */
     public static function maybe_upgrade() {
-        if (get_option(self::DB_VERSION_OPTION) !== self::DB_VERSION) {
+        $from = (string)get_option(self::DB_VERSION_OPTION);
+        if ($from !== self::DB_VERSION) {
             self::install();
+            if ($from !== '' && version_compare($from, '4', '<')) self::migrate_to_4();
         }
+    }
+
+    /**
+     * Version 4 turns each ticket list into a self-contained event: it gets a
+     * URL slug and its own emails (copied from the form that fed it), and
+     * every ticket records where it came from.
+     */
+    public static function migrate_to_4() {
+        global $wpdb;
+        $lists   = self::lists();
+        $tickets = self::tickets();
+
+        foreach ($wpdb->get_results("SELECT id, name, slug, emails FROM {$lists}") as $l) {
+            $row = [];
+            if ((string)$l->slug === '') $row['slug'] = SNN_T_Events::unique_slug($l->name, (int)$l->id);
+            if ((string)$l->emails === '') {
+                $form = SNN_T_Forms::for_list((int)$l->id);
+                $row['emails'] = wp_json_encode(SNN_T_Events::emails_from_form($form));
+            }
+            if ($row) $wpdb->update($lists, $row, ['id' => (int)$l->id]);
+        }
+
+        $wpdb->query("UPDATE {$tickets} SET source = 'form' WHERE source = '' AND submission_id IS NOT NULL AND submission_id > 0");
+        $wpdb->query("UPDATE {$tickets} SET source = 'blank' WHERE source = '' AND name = '' AND email = ''");
+        $wpdb->query("UPDATE {$tickets} SET source = 'import' WHERE source = ''");
+
+        // QR codes now point at the built-in door page.
+        if (class_exists('SNN_T_QR')) SNN_T_QR::flush_cache();
+        delete_option('snn_tickets_rewrite_ver');
     }
 }

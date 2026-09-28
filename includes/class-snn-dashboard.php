@@ -1,7 +1,7 @@
 <?php
 /**
- * The dashboard: what needs attention, how the events are doing, and a
- * setup checklist until everything is in place.
+ * Home: is there anything I need to do, how are the next events doing,
+ * and a getting-started list until the basics are in place.
  */
 
 if (!defined('ABSPATH')) exit;
@@ -10,182 +10,191 @@ class SNN_T_Dashboard {
 
     public static function checklist() {
         global $wpdb;
-        $scan  = trim((string)get_option(SNN_T_QR::SCAN_URL_OPTION, ''));
-        $forms = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::forms());
-        $dated = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::lists() . " WHERE event_start IS NOT NULL");
-        $from  = (string)get_option(SNN_T_Mailer::FROM_EMAIL_OPTION, '');
-        $cron  = (bool)wp_next_scheduled(SNN_T_Mailer::CRON_HOOK);
+        $events = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::lists());
+        $dated  = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::lists() . " WHERE event_start IS NOT NULL");
+        $from   = (string)get_option(SNN_T_Mailer::FROM_EMAIL_OPTION, '');
 
         return [
-            ['done' => $forms > 0, 'required' => true, 'label' => __('Create a registration form', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-forms&action=new')],
-            ['done' => $dated > 0, 'required' => true, 'label' => __('Give your event a date and venue', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-lists')],
-            ['done' => $scan !== '', 'required' => true, 'label' => __('Publish the scanner page and set its URL', 'snn-tickets'),
+            ['done' => $events > 0, 'optional' => false, 'label' => __('Create your first event', 'snn-tickets'),
+             'url' => admin_url('admin.php?page=snn-tickets-new')],
+            ['done' => $dated > 0, 'optional' => false, 'label' => __('Give an event a date and venue', 'snn-tickets'),
+             'url' => admin_url('admin.php?page=snn-tickets-events')],
+            ['done' => $from !== '', 'optional' => false, 'label' => __('Set the sender name and address for emails', 'snn-tickets'),
              'url' => admin_url('admin.php?page=snn-tickets-settings')],
-            ['done' => $from !== '', 'required' => false, 'label' => __('Set a From address for emails', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-settings')],
-            ['done' => (bool)get_option(SNN_T_Design::OPTION), 'required' => false, 'label' => __('Pick a ticket design', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-design')],
-            ['done' => SNN_T_Scanner::pin_set(), 'required' => false, 'label' => __('Set a door staff PIN for volunteers', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-settings')],
-            ['done' => SNN_T_Wallet::apple_ready() || SNN_T_Wallet::google_ready(), 'required' => false, 'label' => __('Connect Apple or Google Wallet', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-settings&tab=wallet')],
-            ['done' => $cron, 'required' => true, 'label' => __('Mail queue cron is scheduled', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-settings')],
+            ['done' => (bool)SNN_T_Design::settings()['logo_url'], 'optional' => true, 'label' => __('Add your logo to tickets and emails', 'snn-tickets'),
+             'url' => admin_url('admin.php?page=snn-tickets-settings&tab=look')],
+            ['done' => SNN_T_Scanner::pin_set(), 'optional' => true, 'label' => __('Set a door PIN for volunteers', 'snn-tickets'),
+             'url' => admin_url('admin.php?page=snn-tickets-settings&tab=door')],
         ];
+    }
+
+    /** Things that need a decision or a fix, most urgent first. */
+    public static function attention() {
+        global $wpdb;
+        $items = [];
+
+        $waiting = $wpdb->get_results("
+            SELECT f.list_id, COUNT(*) AS n, MIN(s.created_at) AS oldest
+            FROM " . SNN_T_DB::submissions() . " s JOIN " . SNN_T_DB::forms() . " f ON f.id = s.form_id
+            WHERE s.status = 'pending' AND (s.ticket_id IS NULL OR s.ticket_id = 0)
+            GROUP BY f.list_id ORDER BY oldest ASC");
+        foreach ((array)$waiting as $w) {
+            $e = SNN_T_Events::get((int)$w->list_id);
+            if (!$e) continue;
+            $items[] = ['warn', (int)$w->n,
+                sprintf(_n('%d person is waiting for your approval', '%d people are waiting for your approval', (int)$w->n, 'snn-tickets'), (int)$w->n),
+                sprintf(__('%1$s · oldest %2$s', 'snn-tickets'), $e->name, wp_strip_all_tags(SNN_T_Admin::when($w->oldest))),
+                __('Review', 'snn-tickets'), SNN_T_Admin::event_admin_url($e->id, ['filter' => 'waiting']), true];
+        }
+
+        $failed = (int)$wpdb->get_var("SELECT COUNT(*) FROM " . SNN_T_DB::queue() . " WHERE status = 'failed'");
+        if ($failed) {
+            $items[] = ['bad', $failed,
+                sprintf(_n('%d email could not be sent', '%d emails could not be sent', $failed, 'snn-tickets'), $failed),
+                __('Usually a mistyped address. Fix it and send again.', 'snn-tickets'),
+                __('See them', 'snn-tickets'), admin_url('admin.php?page=snn-tickets-settings&tab=log&status=failed'), false];
+        }
+
+        foreach (SNN_T_Events::all() as $e) {
+            if ($e->event_start && strtotime($e->event_start) < current_time('timestamp')) continue;
+            $form = SNN_T_Forms::for_list($e->id);
+            if (!$form || $form->status !== 'active') continue;
+            $max = (int)$form->settings['max_tickets'];
+            if ($max && SNN_T_Events::spots_taken($e->id) >= $max) {
+                $items[] = ['warn', '!', sprintf(__('%s is full', 'snn-tickets'), $e->name),
+                    sprintf(__('All %d spots are taken. New visitors see "fully booked".', 'snn-tickets'), $max),
+                    __('Add spots', 'snn-tickets'), SNN_T_Admin::event_admin_url($e->id, ['tab' => 'form']), false];
+            }
+        }
+
+        if (!wp_next_scheduled(SNN_T_Mailer::CRON_HOOK)) {
+            $items[] = ['bad', '!', __('Emails are not being sent automatically', 'snn-tickets'),
+                __('The background sender is not scheduled. Deactivate and reactivate the plugin to fix it.', 'snn-tickets'),
+                __('Details', 'snn-tickets'), admin_url('admin.php?page=snn-tickets-settings&tab=advanced'), false];
+        }
+        return $items;
     }
 
     public static function render() {
         SNN_T_Admin::cap();
         global $wpdb;
 
-        $tickets = SNN_T_DB::tickets();
-        $lists   = SNN_T_DB::lists();
-        $today   = date('Y-m-d 00:00:00', current_time('timestamp'));
-
-        $total    = (int)$wpdb->get_var("SELECT COUNT(*) FROM {$tickets} WHERE status = 'active'");
-        $inside   = (int)$wpdb->get_var("SELECT COUNT(*) FROM {$tickets} WHERE status = 'active' AND validate_count > 0");
+        $tickets  = SNN_T_DB::tickets();
+        $today    = date('Y-m-d 00:00:00', current_time('timestamp'));
+        $active   = (int)$wpdb->get_var("SELECT COUNT(*) FROM {$tickets} WHERE status = 'active'");
         $today_in = (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$tickets} WHERE last_validated >= %s", $today));
-        $subs     = SNN_T_Submissions::counts();
-        $queue    = SNN_T_Mailer::queue_counts();
+        $waiting  = SNN_T_Submissions::counts()['pending'];
+        $failed   = SNN_T_Mailer::queue_counts()['failed'];
 
-        $events = $wpdb->get_results("
-            SELECT l.*, COUNT(t.id) AS n,
-                   SUM(CASE WHEN t.validate_count > 0 AND t.status = 'active' THEN 1 ELSE 0 END) AS inside,
-                   SUM(CASE WHEN t.status = 'active' THEN 1 ELSE 0 END) AS active
-            FROM {$lists} l LEFT JOIN {$tickets} t ON t.list_id = l.id
-            GROUP BY l.id
-            ORDER BY (l.event_start IS NULL), l.event_start ASC, l.id DESC
-            LIMIT 8");
+        $now = current_time('mysql');
+        $upcoming = array_values(array_filter(SNN_T_Events::all(), function ($e) use ($now) {
+            return !$e->event_start || $e->event_start >= substr($now, 0, 10);
+        }));
+        usort($upcoming, function ($a, $b) {
+            if (!$a->event_start) return 1;
+            if (!$b->event_start) return -1;
+            return strcmp($a->event_start, $b->event_start);
+        });
+        $upcoming = array_slice($upcoming, 0, 5);
 
         $recent = $wpdb->get_results("
             SELECT t.name, t.ticket_code, t.list_id, t.last_validated, t.validate_count, l.name AS list_name
-            FROM {$tickets} t LEFT JOIN {$lists} l ON l.id = t.list_id
-            WHERE t.last_validated IS NOT NULL
-            ORDER BY t.last_validated DESC LIMIT 10");
+            FROM {$tickets} t LEFT JOIN " . SNN_T_DB::lists() . " l ON l.id = t.list_id
+            WHERE t.last_validated IS NOT NULL ORDER BY t.last_validated DESC LIMIT 8");
 
-        $forms = SNN_T_Forms::all();
         $check = self::checklist();
-        $todo  = array_filter($check, function ($c) { return !$c['done']; });
+        $todo  = array_filter($check, function ($c) { return !$c['done'] && !$c['optional']; });
+        $done  = count(array_filter($check, function ($c) { return $c['done']; }));
+        $attn  = self::attention();
         ?>
         <div class="wrap snn-wrap">
-            <h1><span class="dashicons dashicons-tickets-alt"></span> <?php esc_html_e('Tickets', 'snn-tickets'); ?></h1>
-
-            <div class="snn-stats" style="margin-top:16px">
-                <a class="snn-stat" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists')); ?>">
-                    <div class="v"><?php echo number_format_i18n($total); ?></div><div class="l"><?php esc_html_e('Active tickets', 'snn-tickets'); ?></div></a>
-                <div class="snn-stat ok">
-                    <div class="v"><?php echo number_format_i18n($inside); ?></div><div class="l"><?php esc_html_e('Checked in', 'snn-tickets'); ?></div>
-                    <div class="s"><?php printf(esc_html__('%s today', 'snn-tickets'), number_format_i18n($today_in)); ?></div></div>
-                <a class="snn-stat <?php echo $subs['pending'] ? 'warn' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-submissions&status=pending')); ?>">
-                    <div class="v"><?php echo number_format_i18n($subs['pending']); ?></div><div class="l"><?php esc_html_e('Awaiting review', 'snn-tickets'); ?></div></a>
-                <a class="snn-stat <?php echo $queue['failed'] ? 'bad' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-queue' . ($queue['failed'] ? '&status=failed' : ''))); ?>">
-                    <div class="v"><?php echo number_format_i18n($queue['pending'] + $queue['sending']); ?></div><div class="l"><?php esc_html_e('Emails waiting', 'snn-tickets'); ?></div>
-                    <div class="s"><?php printf(esc_html__('%1$s sent · %2$s failed', 'snn-tickets'), number_format_i18n($queue['sent']), number_format_i18n($queue['failed'])); ?></div></a>
-            </div>
-
-            <div class="snn-grid snn-grid-side">
-                <div>
-                    <div class="snn-card">
-                        <div class="snn-card-head">
-                            <h2><?php esc_html_e('Events', 'snn-tickets'); ?></h2>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists')); ?>"><?php esc_html_e('All events', 'snn-tickets'); ?> &rarr;</a>
-                        </div>
-                        <?php if (!$events): ?>
-                            <p class="snn-muted"><?php esc_html_e('No events yet. Build a registration form to create one.', 'snn-tickets'); ?></p>
-                            <p><a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-forms&action=new')); ?>"><?php esc_html_e('Build a registration form', 'snn-tickets'); ?></a></p>
-                        <?php else: ?>
-                        <table class="widefat striped snn-table">
-                            <thead><tr><th><?php esc_html_e('Event', 'snn-tickets'); ?></th><th style="width:180px"><?php esc_html_e('When', 'snn-tickets'); ?></th><th style="width:260px"><?php esc_html_e('Checked in', 'snn-tickets'); ?></th></tr></thead>
-                            <tbody>
-                            <?php foreach ($events as $e): $e = SNN_T_Events::normalise($e);
-                                $pct = (int)$e->active ? round(100 * (int)$e->inside / (int)$e->active) : 0; ?>
-                                <tr>
-                                    <td><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists&list=' . (int)$e->id)); ?>"><strong><?php echo esc_html($e->name); ?></strong></a>
-                                        <?php if ($e->venue): ?><br><span class="snn-muted" style="font-size:12px"><?php echo esc_html($e->venue); ?></span><?php endif; ?></td>
-                                    <td style="font-size:12px"><?php echo $e->event_start ? esc_html(SNN_T_Events::format_date($e)) . '<br><span class="snn-muted">' . esc_html(SNN_T_Events::format_time($e)) . '</span>' : '<span class="snn-muted">—</span>'; ?></td>
-                                    <td><div class="snn-meter"><div class="snn-progress"><i style="width:<?php echo (int)$pct; ?>%"></i></div>
-                                        <span><?php echo (int)$e->inside; ?> / <?php echo (int)$e->active; ?> <span class="snn-muted">· <?php echo (int)$pct; ?>%</span></span></div></td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="snn-card">
-                        <div class="snn-card-head">
-                            <h2><?php esc_html_e('Recent check-ins', 'snn-tickets'); ?></h2>
-                            <?php if ($today_in): ?><span class="snn-badge ok"><?php printf(esc_html__('%s today', 'snn-tickets'), number_format_i18n($today_in)); ?></span><?php endif; ?>
-                        </div>
-                        <?php if (!$recent): ?>
-                            <p class="snn-muted"><?php esc_html_e('Nobody has been checked in yet.', 'snn-tickets'); ?></p>
-                        <?php else: ?>
-                        <table class="widefat striped snn-table">
-                            <thead><tr><th><?php esc_html_e('Attendee', 'snn-tickets'); ?></th><th><?php esc_html_e('Event', 'snn-tickets'); ?></th><th style="width:90px"><?php esc_html_e('Scans', 'snn-tickets'); ?></th><th style="width:190px"><?php esc_html_e('Last scan', 'snn-tickets'); ?></th></tr></thead>
-                            <tbody>
-                            <?php foreach ($recent as $r): ?>
-                                <tr>
-                                    <td><span class="dashicons dashicons-yes" style="color:#0a7d32"></span> <strong><?php echo esc_html($r->name ?: $r->ticket_code); ?></strong></td>
-                                    <td><?php if ($r->list_id): ?><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-lists&list=' . (int)$r->list_id)); ?>"><?php echo esc_html($r->list_name); ?></a><?php endif; ?></td>
-                                    <td><?php if ((int)$r->validate_count > 1): ?><span class="snn-badge warn" title="<?php esc_attr_e('Scanned more than once', 'snn-tickets'); ?>"><?php echo (int)$r->validate_count; ?>×</span><?php else: ?><span class="snn-muted">1×</span><?php endif; ?></td>
-                                    <td class="snn-muted"><?php echo SNN_T_Admin::when($r->last_validated); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                        <?php endif; ?>
-                    </div>
-
-                    <?php if ($forms): ?>
-                    <div class="snn-card">
-                        <h2><?php esc_html_e('Registration forms', 'snn-tickets'); ?></h2>
-                        <table class="widefat striped snn-table">
-                            <thead><tr><th><?php esc_html_e('Form', 'snn-tickets'); ?></th><th style="width:200px"><?php esc_html_e('Capacity', 'snn-tickets'); ?></th><th style="width:120px"><?php esc_html_e('Pending', 'snn-tickets'); ?></th></tr></thead>
-                            <tbody>
-                            <?php foreach (array_slice($forms, 0, 8) as $f):
-                                $max = (int)$f->settings['max_tickets']; $taken = SNN_T_Forms::issued_count($f);
-                                $c = SNN_T_Submissions::counts((int)$f->id); ?>
-                                <tr>
-                                    <td><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-forms&action=edit&form=' . (int)$f->id)); ?>"><?php echo esc_html($f->name); ?></a>
-                                        <?php if ($f->status === 'closed'): ?> <span class="snn-badge"><?php esc_html_e('closed', 'snn-tickets'); ?></span><?php endif; ?></td>
-                                    <td><?php if ($max): ?><div class="snn-progress"><i style="width:<?php echo (int)min(100, round(100 * $taken / $max)); ?>%;background:<?php echo $taken >= $max ? '#b3261e' : '#2271b1'; ?>"></i></div><?php endif; ?>
-                                        <span class="snn-muted" style="font-size:12px"><?php echo esc_html($taken . ' / ' . ($max ?: '∞')); ?></span></td>
-                                    <td><?php if ($c['pending']): ?><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-submissions&status=pending&form_id=' . (int)$f->id)); ?>"><span class="snn-badge warn"><?php echo (int)$c['pending']; ?></span></a><?php else: ?><span class="snn-muted">0</span><?php endif; ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php endif; ?>
+            <h1><?php esc_html_e('Tickets', 'snn-tickets'); ?> <a class="page-title-action" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-new')); ?>"><?php esc_html_e('Add New Event', 'snn-tickets'); ?></a></h1>
+            <?php SNN_T_Admin::notice(); ?>
+            <div class="snn-page">
+                <div class="snn-kpis">
+                    <a class="snn-kpi <?php echo $waiting ? 'warn' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-events')); ?>"><span class="l"><?php esc_html_e('Waiting for your approval', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($waiting); ?></span></a>
+                    <a class="snn-kpi <?php echo $failed ? 'bad' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=log' . ($failed ? '&status=failed' : ''))); ?>"><span class="l"><?php esc_html_e('Emails that failed', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($failed); ?></span></a>
+                    <a class="snn-kpi" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-events')); ?>"><span class="l"><?php esc_html_e('Active tickets', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($active); ?></span></a>
+                    <div class="snn-kpi"><span class="l"><?php esc_html_e('Checked in today', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($today_in); ?></span></div>
                 </div>
 
-                <div>
-                    <?php if ($todo): ?>
-                    <div class="snn-card">
-                        <h2><?php esc_html_e('Setup checklist', 'snn-tickets'); ?></h2>
-                        <ul class="snn-check">
-                            <?php foreach ($check as $c): ?>
-                                <li><span class="dashicons <?php echo $c['done'] ? 'dashicons-yes-alt yes' : ($c['required'] ? 'dashicons-marker no' : 'dashicons-marker opt'); ?>"></span>
-                                    <div><?php if ($c['done']): ?><span class="snn-muted"><?php echo esc_html($c['label']); ?></span>
-                                    <?php else: ?><a href="<?php echo esc_url($c['url']); ?>"><?php echo esc_html($c['label']); ?></a><?php if (!$c['required']): ?> <span class="snn-muted" style="font-size:11px"><?php esc_html_e('optional', 'snn-tickets'); ?></span><?php endif; ?><?php endif; ?></div></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <?php endif; ?>
+                <div class="snn-side">
+                    <div class="snn-col" style="gap:18px">
+                        <div class="snn-card">
+                            <h2><?php esc_html_e('Needs your attention', 'snn-tickets'); ?></h2>
+                            <?php if (!$attn): ?>
+                                <p class="snn-muted" style="margin:0">✓ <?php esc_html_e('Nothing right now. New sign-ups that need you will show up here.', 'snn-tickets'); ?></p>
+                            <?php else: ?>
+                                <ul class="snn-attn">
+                                    <?php foreach ($attn as $a): ?>
+                                        <li><span class="snn-dot <?php echo esc_attr($a[0]); ?>"><?php echo esc_html($a[1]); ?></span>
+                                            <div style="flex:1;min-width:0"><b><?php echo esc_html($a[2]); ?></b><p class="snn-muted snn-small" style="margin:0"><?php echo esc_html($a[3]); ?></p></div>
+                                            <a class="button <?php echo $a[6] ? 'button-primary' : ''; ?>" href="<?php echo esc_url($a[5]); ?>"><?php echo esc_html($a[4]); ?></a></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
 
-                    <div class="snn-card">
-                        <h2><?php esc_html_e('Shortcodes', 'snn-tickets'); ?></h2>
-                        <p><?php esc_html_e('Door scanner:', 'snn-tickets'); ?><br><?php echo SNN_T_Admin::copy_code('[tickets_scan_page]'); ?></p>
-                        <?php foreach (array_slice($forms, 0, 3) as $f): ?>
-                            <p><?php echo esc_html($f->name); ?>:<br><?php echo SNN_T_Admin::copy_code('[snn_ticket_form id="' . (int)$f->id . '"]'); ?></p>
-                        <?php endforeach; ?>
+                        <div class="snn-card-h"><h2><?php esc_html_e('Upcoming events', 'snn-tickets'); ?></h2><a href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-events')); ?>"><?php esc_html_e('All events', 'snn-tickets'); ?></a></div>
+                        <div class="snn-evcards">
+                            <?php foreach ($upcoming as $e):
+                                $max = SNN_T_Events::spot_limit($e->id); $taken = SNN_T_Events::spots_taken($e->id);
+                                $form = SNN_T_Forms::for_list($e->id);
+                                list($label, $cls) = self::status($e, $form, $max, $taken); ?>
+                                <a class="snn-evc" href="<?php echo esc_url(SNN_T_Admin::event_admin_url($e->id)); ?>">
+                                    <span class="when"><?php echo $e->event_start ? esc_html(SNN_T_Events::format_when($e)) : esc_html__('No date yet', 'snn-tickets'); ?></span>
+                                    <h3><?php echo esc_html($e->name); ?></h3>
+                                    <?php if ($e->venue): ?><span class="snn-muted snn-small"><?php echo esc_html($e->venue); ?></span><?php endif; ?>
+                                    <?php if ($max): ?><div class="snn-bar <?php echo $taken >= $max ? 'full' : ''; ?>"><i style="width:<?php echo (int)min(100, round(100 * $taken / $max)); ?>%"></i></div><?php endif; ?>
+                                    <div class="line snn-num"><span><?php echo $max ? esc_html(sprintf(__('%1$d of %2$d spots', 'snn-tickets'), $taken, $max)) : esc_html(sprintf(_n('%d person', '%d people', $taken, 'snn-tickets'), $taken)); ?></span><?php echo SNN_T_Admin::chip($label, $cls); ?></div>
+                                </a>
+                            <?php endforeach; ?>
+                            <a class="snn-evc new" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-new')); ?>">+ <?php esc_html_e('Add New Event', 'snn-tickets'); ?></a>
+                        </div>
+                    </div>
+
+                    <div class="snn-col" style="gap:18px">
+                        <?php if ($todo): ?>
+                        <div class="snn-card">
+                            <div class="snn-card-h"><h2><?php esc_html_e('Getting started', 'snn-tickets'); ?></h2><span class="snn-muted snn-small"><?php echo esc_html(sprintf(__('%1$d of %2$d done', 'snn-tickets'), $done, count($check))); ?></span></div>
+                            <div class="snn-bar ok"><i style="width:<?php echo (int)round(100 * $done / count($check)); ?>%"></i></div>
+                            <ul class="snn-steps">
+                                <?php foreach ($check as $c): ?>
+                                    <li><span class="ck <?php echo $c['done'] ? 'y' : ''; ?>"><?php echo $c['done'] ? '✓' : ''; ?></span>
+                                        <?php if ($c['done']): ?><span class="snn-muted"><?php echo esc_html($c['label']); ?></span>
+                                        <?php else: ?><a href="<?php echo esc_url($c['url']); ?>"><?php echo esc_html($c['label']); ?></a><?php if ($c['optional']): ?> <?php echo SNN_T_Admin::chip(__('optional', 'snn-tickets')); ?><?php endif; ?><?php endif; ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <p class="snn-muted snn-small" style="margin:0"><?php esc_html_e('This box disappears once the basics are done.', 'snn-tickets'); ?></p>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="snn-card">
+                            <h2><?php esc_html_e('Last check-ins', 'snn-tickets'); ?></h2>
+                            <?php if (!$recent): ?>
+                                <p class="snn-muted" style="margin:0"><?php esc_html_e('Nobody has been checked in yet. At the door, open the scanner from the event\'s Door tab.', 'snn-tickets'); ?></p>
+                            <?php else: ?>
+                                <ul class="snn-attn">
+                                    <?php foreach ($recent as $r): ?>
+                                        <li><span class="snn-dot <?php echo (int)$r->validate_count > 1 ? 'warn' : 'ok'; ?>"><?php echo (int)$r->validate_count > 1 ? (int)$r->validate_count . '×' : '✓'; ?></span>
+                                            <div style="flex:1;min-width:0"><b><?php echo esc_html($r->name ?: $r->ticket_code); ?></b><p class="snn-muted snn-small" style="margin:0"><?php echo esc_html($r->list_name); ?> · <?php echo SNN_T_Admin::when($r->last_validated); ?></p></div></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <?php
-        SNN_T_Admin::email_tools_script_only();
+    }
+
+    /** [label, chip class] for an event's sign-up state. */
+    public static function status($event, $form, $max, $taken) {
+        if (!$form) return [__('No sign-up form', 'snn-tickets'), ''];
+        if ($event->event_start && strtotime($event->event_end ?: $event->event_start) < current_time('timestamp')) return [__('Past', 'snn-tickets'), ''];
+        if ($form->status !== 'active') return [__('Closed', 'snn-tickets'), ''];
+        if ($max && $taken >= $max) return [__('Full', 'snn-tickets'), 'warn'];
+        return [__('Open', 'snn-tickets'), 'ok'];
     }
 }

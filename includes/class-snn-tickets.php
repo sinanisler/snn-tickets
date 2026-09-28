@@ -43,7 +43,7 @@ class SNN_T_Tickets {
     /**
      * @return int new ticket id
      */
-    public static function insert($list_id, $name, $email, $code = null, $submission_id = null) {
+    public static function insert($list_id, $name, $email, $code = null, $submission_id = null, $source = '') {
         global $wpdb;
         if (!$code) $code = self::unique_code(8);
 
@@ -54,10 +54,11 @@ class SNN_T_Tickets {
             'name'           => $name ?: '',
             'email'          => $email ?: '',
             'status'         => 'active',
+            'source'         => sanitize_key($source !== '' ? $source : ($submission_id ? 'form' : 'manual')),
             'validate_count' => 0,
             'last_validated' => null,
             'created_at'     => current_time('mysql'),
-        ], ['%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s']);
+        ], ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s']);
 
         return (int)$wpdb->insert_id;
     }
@@ -84,6 +85,32 @@ class SNN_T_Tickets {
             "SELECT COUNT(*) FROM {$table} WHERE list_id = %d AND email = %s",
             (int)$list_id, $email
         ));
+    }
+
+    /** Tickets still valid at the door for an email address in a list. */
+    public static function count_active_for_email($list_id, $email) {
+        global $wpdb;
+        if ($email === '') return 0;
+        return (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND email = %s AND status = 'active'",
+            (int)$list_id, $email
+        ));
+    }
+
+    /** @return true|WP_Error */
+    public static function update_contact($id, $name, $email) {
+        global $wpdb;
+        $email = trim((string)$email);
+        if ($email !== '' && !is_email($email)) {
+            return new WP_Error('snn_t_email', __('That email address does not look right.', 'snn-tickets'));
+        }
+        $wpdb->update(SNN_T_DB::tickets(), ['name' => sanitize_text_field($name), 'email' => sanitize_email($email)], ['id' => (int)$id], ['%s', '%s'], ['%d']);
+        return true;
+    }
+
+    public static function set_note($id, $note) {
+        global $wpdb;
+        $wpdb->update(SNN_T_DB::tickets(), ['note' => sanitize_textarea_field($note)], ['id' => (int)$id], ['%s'], ['%d']);
     }
 
     public static function count_in_list($list_id) {

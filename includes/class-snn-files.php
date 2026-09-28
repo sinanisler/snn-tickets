@@ -24,6 +24,9 @@ class SNN_T_Files {
     }
 
     public static function url($format, $code) {
+        if ($format === 'view' && class_exists('SNN_T_Router') && function_exists('add_rewrite_rule')) {
+            return SNN_T_Router::ticket_url($code);
+        }
         return add_query_arg([
             'snn_file' => $format,
             'snn_code' => rawurlencode($code),

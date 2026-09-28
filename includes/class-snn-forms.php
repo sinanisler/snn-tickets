@@ -29,33 +29,40 @@ class SNN_T_Forms {
 
     public static function field_types() {
         return [
-            'text'     => 'Single line text',
-            'email'    => 'Email address',
-            'tel'      => 'Phone number',
-            'number'   => 'Number',
-            'date'     => 'Date',
-            'textarea' => 'Paragraph text',
-            'select'   => 'Dropdown',
-            'radio'    => 'Radio buttons',
-            'checkbox' => 'Checkboxes (multiple)',
-            'consent'  => 'Consent checkbox',
-            'hidden'   => 'Hidden value',
+            'text'     => __('Short answer', 'snn-tickets'),
+            'textarea' => __('Long answer', 'snn-tickets'),
+            'select'   => __('Dropdown', 'snn-tickets'),
+            'radio'    => __('Pick one', 'snn-tickets'),
+            'checkbox' => __('Pick several', 'snn-tickets'),
+            'consent'  => __('"I agree" box', 'snn-tickets'),
+            'email'    => __('Email address', 'snn-tickets'),
+            'tel'      => __('Phone number', 'snn-tickets'),
+            'number'   => __('Number', 'snn-tickets'),
+            'date'     => __('Date', 'snn-tickets'),
+            'hidden'   => __('Hidden value', 'snn-tickets'),
         ];
     }
 
+    /** Rule operators, worded to read as a sentence: "Company is Acme". */
     public static function operators() {
         return [
-            'equals'       => 'is exactly',
-            'not_equals'   => 'is not',
-            'contains'     => 'contains',
-            'starts_with'  => 'starts with',
-            'is_empty'     => 'is empty',
-            'not_empty'    => 'is not empty',
-            'checked'      => 'is checked',
-            'not_checked'  => 'is not checked',
-            'email_domain' => 'email domain is',
-            'in_list'      => 'is one of (comma separated)',
+            'equals'       => __('is', 'snn-tickets'),
+            'not_equals'   => __('is not', 'snn-tickets'),
+            'contains'     => __('contains', 'snn-tickets'),
+            'starts_with'  => __('starts with', 'snn-tickets'),
+            'ends_with'    => __('ends with', 'snn-tickets'),
+            'in_list'      => __('is one of', 'snn-tickets'),
+            'email_domain' => __('email domain is', 'snn-tickets'),
+            'not_empty'    => __('is filled in', 'snn-tickets'),
+            'is_empty'     => __('is empty', 'snn-tickets'),
+            'checked'      => __('is ticked', 'snn-tickets'),
+            'not_checked'  => __('is not ticked', 'snn-tickets'),
         ];
+    }
+
+    /** Operators that compare against nothing. */
+    public static function valueless_operators() {
+        return ['not_empty', 'is_empty', 'checked', 'not_checked'];
     }
 
     public static function default_settings() {
@@ -79,12 +86,12 @@ class SNN_T_Forms {
             'ticket_body'           => '',
             'notify_admin'          => 1,
             'notify_email'          => '',
-            'submit_label'          => 'Register',
-            'success_message'       => 'You are confirmed. Your ticket is on its way to your inbox.',
-            'pending_message'       => 'Thanks! Your registration is being reviewed and we will email you shortly.',
-            'full_message'          => 'Sorry, this event is fully booked.',
-            'duplicate_message'     => 'You have already registered with this email address.',
-            'error_message'         => 'Something went wrong. Please try again.',
+            'submit_label'          => __('Get my ticket', 'snn-tickets'),
+            'success_message'       => __("You're in! Your ticket is on its way to your inbox.", 'snn-tickets'),
+            'pending_message'       => __("Thanks! We'll review your request and email you soon.", 'snn-tickets'),
+            'full_message'          => __('Sorry, this event is fully booked.', 'snn-tickets'),
+            'duplicate_message'     => __("You've already signed up with this email address.", 'snn-tickets'),
+            'error_message'         => __('Something went wrong. Please try again.', 'snn-tickets'),
             'redirect_url'          => '',
             'accent_color'          => '',
             'show_remaining'        => 0,
@@ -96,7 +103,7 @@ class SNN_T_Forms {
             [
                 'key'         => 'name',
                 'type'        => 'text',
-                'label'       => 'Full name',
+                'label'       => __('Full name', 'snn-tickets'),
                 'placeholder' => '',
                 'required'    => 1,
                 'options'     => [],
@@ -105,7 +112,7 @@ class SNN_T_Forms {
             [
                 'key'         => 'email',
                 'type'        => 'email',
-                'label'       => 'Email address',
+                'label'       => __('Email address', 'snn-tickets'),
                 'placeholder' => '',
                 'required'    => 1,
                 'options'     => [],
@@ -126,6 +133,19 @@ class SNN_T_Forms {
         $table = SNN_T_DB::forms();
         $rows  = $wpdb->get_results("SELECT * FROM {$table} ORDER BY id DESC");
         return array_map([__CLASS__, 'hydrate'], $rows);
+    }
+
+    /** The sign-up form of an event: the first one, if several exist. */
+    public static function for_list($list_id) {
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM " . SNN_T_DB::forms() . " WHERE list_id = %d ORDER BY id ASC LIMIT 1", (int)$list_id));
+        return $row ? self::hydrate($row) : null;
+    }
+
+    public static function all_for_list($list_id) {
+        global $wpdb;
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM " . SNN_T_DB::forms() . " WHERE list_id = %d ORDER BY id ASC", (int)$list_id));
+        return array_map([__CLASS__, 'hydrate'], (array)$rows);
     }
 
     private static function hydrate($form) {
@@ -295,6 +315,9 @@ class SNN_T_Forms {
                 return $target !== '' && stripos($value, $target) !== false;
             case 'starts_with':
                 return $target !== '' && stripos($value, $target) === 0;
+            case 'ends_with':
+                $t = trim($target);
+                return $t !== '' && strcasecmp(substr(trim($value), -strlen($t)), $t) === 0;
             case 'is_empty':
                 return trim($value) === '';
             case 'not_empty':
@@ -374,15 +397,11 @@ class SNN_T_Forms {
     }
 
     /**
-     * Places taken: issued tickets plus submissions still awaiting a decision.
+     * Places taken in the form's event: active tickets plus people still
+     * waiting for a decision, however they arrived.
      */
     public static function issued_count($form) {
-        global $wpdb;
-        $subs = SNN_T_DB::submissions();
-        return (int)$wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$subs} WHERE form_id = %d AND status IN ('approved','pending')",
-            (int)$form->id
-        ));
+        return SNN_T_Events::spots_taken((int)$form->list_id);
     }
 
     public static function messages($form) {
@@ -758,7 +777,7 @@ class SNN_T_Forms {
                 "SELECT COUNT(*) FROM {$subs} WHERE form_id = %d AND email = %s AND status IN ('approved','pending')",
                 (int)$form->id, $email
             ));
-            if ($dupe > 0) {
+            if ($dupe > 0 || SNN_T_Tickets::count_active_for_email((int)$form->list_id, $email) > 0) {
                 self::bounce($redirect, $form_id, 'duplicate');
             }
         }
@@ -779,20 +798,18 @@ class SNN_T_Forms {
         }
 
         if ($decision === 'approved') {
-            SNN_T_Submissions::approve($submission_id, 0, 'Auto-approved by form logic');
+            SNN_T_Submissions::approve($submission_id, 0, $form->settings['approval_mode'] === 'conditional' ? __('Matched your rules', 'snn-tickets') : '');
         } elseif ($decision === 'rejected') {
-            SNN_T_Submissions::reject($submission_id, 0, 'Auto-rejected by form logic');
-        } elseif ($form->settings['send_confirmation'] && $email) {
+            SNN_T_Submissions::reject($submission_id, 0, __('Did not match your rules', 'snn-tickets'));
+        } elseif ($email) {
             // Awaiting review: acknowledge receipt now, the ticket comes later.
-            SNN_T_Mailer::enqueue_from_template('confirmation', $form->settings['template_confirmation'], [
+            SNN_T_Mailer::send_event_email('confirmation', (int)$form->list_id, [
                 'name'          => $name,
                 'email'         => $email,
-                'list_name'     => self::list_name($form->list_id),
-                'list_id'       => (int)$form->list_id,
                 'form_name'     => $form->name,
                 'fields'        => $data,
                 'submission_id' => $submission_id,
-            ], self::mail_override($form, 'confirmation'));
+            ]);
         }
 
         self::notify_admin($form, $submission_id, $name, $email, $decision);
@@ -905,27 +922,30 @@ class SNN_T_Forms {
         return (string)$wpdb->get_var($wpdb->prepare("SELECT name FROM {$lists} WHERE id = %d", (int)$list_id));
     }
 
+    /** The "notice to you" email, per the event's settings. */
     public static function notify_admin($form, $submission_id, $name, $email, $status) {
-        if (empty($form->settings['notify_admin'])) return;
+        $event = SNN_T_Events::get((int)$form->list_id);
+        if (!$event) return;
+        $cfg = SNN_T_Events::emails($event)['admin'];
+        if (empty($cfg['on'])) return;
+        if ($cfg['when'] === 'waiting' && $status !== 'pending') return;
 
-        $to = $form->settings['notify_email'] ?: get_option('admin_email');
+        $to = $cfg['to'] !== '' ? $cfg['to'] : get_option('admin_email');
         if (!$to || !is_email($to)) return;
 
-        $link = admin_url('admin.php?page=snn-tickets-submissions&submission=' . (int)$submission_id);
-
-        $subject = sprintf(__('[%1$s] New registration: %2$s', 'snn-tickets'), get_bloginfo('name'), $form->name);
-        $body    = '<p>' . sprintf(esc_html__('A new registration came in on %s.', 'snn-tickets'), '<strong>' . esc_html($form->name) . '</strong>') . '</p>'
-                 . '<p><strong>' . esc_html__('Name', 'snn-tickets') . ':</strong> ' . esc_html($name ?: '—') . '<br>'
-                 . '<strong>' . esc_html__('Email', 'snn-tickets') . ':</strong> ' . esc_html($email ?: '—') . '<br>'
-                 . '<strong>' . esc_html__('Status', 'snn-tickets') . ':</strong> ' . esc_html($status) . '</p>'
-                 . '<p><a href="' . esc_url($link) . '">' . esc_html__('Review it in the dashboard', 'snn-tickets') . '</a></p>';
-
-        SNN_T_Mailer::enqueue([
+        $labels = [
+            'approved' => __('Ticket sent', 'snn-tickets'),
+            'pending'  => __('Waiting for your approval', 'snn-tickets'),
+            'rejected' => __('Declined by your rules', 'snn-tickets'),
+        ];
+        SNN_T_Mailer::send_event_email('admin', (int)$form->list_id, [
+            'name'          => $name,
+            'email'         => $email,
             'to_email'      => $to,
-            'subject'       => $subject,
-            'body'          => $body,
-            'role'          => 'admin_notice',
+            'form_name'     => $form->name,
+            'status'        => $labels[$status] ?? $status,
             'submission_id' => $submission_id,
+            'person'        => 's' . (int)$submission_id,
         ]);
     }
 
