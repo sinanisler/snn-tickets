@@ -15,10 +15,11 @@ The **Tickets** menu has four entries:
 | **Add New Event** | A five-step guide: the event, questions, who gets a ticket, ticket & email, go live |
 | **Settings** | Sender, look, door & scanner, email log, email templates, Apple & Google Wallet, advanced |
 
-Each **event page** has five tabs:
+Each **event page** has these tabs (Sell tickets only when WooCommerce is active):
 
 - **People**: everyone in one list. Sign-ups waiting for approval, tickets, check-ins, cancelled and declined, with filters, search, bulk actions, and a side panel per person (answers, ticket, history, private note). Add one person, import a spreadsheet, make blank tickets, email everyone, download the list.
 - **Sign-up form**: questions, who gets a ticket (everyone / you approve / rules with a "Try it" tester), spot limit, messages, form colour.
+- **Sell tickets**: ticket types (WooCommerce products) with price, quantity and how many people each admits; add, reprice, stop and restart sales without leaving the event.
 - **Emails**: the event's own ticket, "we got your request", "sorry, no spot" and notice-to-you emails, already written, with a live preview, test send and a shared template library.
 - **Door**: live check-in count, recent check-ins with undo, and a QR that opens the scanner on a phone.
 - **Event settings**: date, venue, notes, web address, ticket look, attachments, duplicate, delete.
@@ -61,6 +62,17 @@ Every event is live as soon as it's created:
 - PDF (built-in writer, Turkish and Central European letters), Apple Wallet (.pkpass), Google Wallet, calendar invite (.ics)
 - Six looks (Minimal, Boarding pass, Midnight, Festival, Corporate, Classic stub) with colour tweaks and logo; events can pick their own
 - Cancelled tickets print as cancelled and their wallet passes are voided
+
+### Selling tickets with WooCommerce
+- Optional: without WooCommerce the plugin works as before
+- Any simple or variable product can be a ticket: tick **Ticket** next to Virtual / Downloadable, then pick the event on the **Tickets** tab. Variations make tiers (VIP, Student…)
+- **Tickets per purchase** for couple or family tickets
+- **Attendee details** (optional per product): the product page asks the event's sign-up questions once per ticket, and each ticket is emailed to its attendee. Without it, every ticket goes to the buyer
+- Tickets are issued when an order is paid (processing / completed) and cancelled when it is cancelled, refunded, failed or trashed. Partial refunds cancel that many tickets, newest and unused first. Reopened orders get their old codes back
+- The event's spot limit is shared by the shop and the sign-up form; unpaid orders hold their spots (pending for WooCommerce's hold-stock time, on-hold until paid)
+- Buyers see their tickets on the thank-you page, in My Account → Orders and in the order emails. The order screen lists each line's ticket codes; People shows the order number
+- The event page lists what is for sale with Buy buttons
+- Works with the block and classic cart and checkout, and with HPOS
 
 ### Door
 - Mobile scanner: full-screen green / amber / red, sound, vibration, counter, recent scans, typed codes

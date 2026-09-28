@@ -346,6 +346,21 @@ for ($i = 0; $i < 2000; $i++) {
 check(count($seen) > 1990, '2000 generated codes are essentially all distinct (' . count($seen) . ')');
 check(strlen(SNN_T_Tickets::generate_code(16)) === 16, 'code length is honoured');
 
+/* ================= 11. shop orders ================= */
+section('Shop order tickets');
+
+require_once __DIR__ . '/../includes/class-snn-woo.php';
+$t = function ($id, $status = 'active', $vc = 0) { return ['id' => $id, 'status' => $status, 'vc' => $vc]; };
+
+check(SNN_T_Woo::plan([], 3) === ['restore' => [], 'revoke' => [], 'create' => 3], 'paid order with no tickets makes them all');
+check(SNN_T_Woo::plan([$t(1), $t(2)], 2) === ['restore' => [], 'revoke' => [], 'create' => 0], 'running again changes nothing');
+check(SNN_T_Woo::plan([$t(1), $t(2), $t(3)], 1)['revoke'] === [3, 2], 'refund cancels the newest tickets first');
+check(SNN_T_Woo::plan([$t(1), $t(2, 'active', 1), $t(3, 'active', 2)], 1)['revoke'] === [1, 3], 'tickets used at the door are cancelled last');
+check(SNN_T_Woo::plan([$t(1), $t(2)], 0)['revoke'] === [2, 1], 'cancelled order cancels every ticket');
+check(SNN_T_Woo::plan([$t(1, 'revoked'), $t(2, 'revoked')], 3) === ['restore' => [1, 2], 'revoke' => [], 'create' => 1], 'reopened order restores old codes before making new ones');
+check(SNN_T_Woo::plan([$t(1), $t(2, 'revoked')], 1) === ['restore' => [], 'revoke' => [], 'create' => 0], 'partly refunded order keeps its one ticket');
+check(SNN_T_Woo::plan([$t(1)], -2)['revoke'] === [1], 'negative counts are treated as none');
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

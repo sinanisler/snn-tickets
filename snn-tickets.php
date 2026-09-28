@@ -15,11 +15,11 @@ if (!defined('ABSPATH')) exit;
 define('SNN_TICKETS_FILE', __FILE__);
 define('SNN_TICKETS_DIR', plugin_dir_path(__FILE__));
 define('SNN_TICKETS_URL', plugin_dir_url(__FILE__));
-define('SNN_TICKETS_VERSION', '0.25');
+define('SNN_TICKETS_VERSION', '0.26');
 
 foreach ([
     'db', 'qr', 'tickets', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms', 'submissions',
-    'people', 'router', 'scanner', 'admin', 'dashboard', 'events-admin', 'wizard', 'settings',
+    'people', 'router', 'scanner', 'admin', 'dashboard', 'events-admin', 'wizard', 'settings', 'woo', 'woo-admin',
 ] as $class) {
     require_once SNN_TICKETS_DIR . 'includes/class-snn-' . $class . '.php';
 }
@@ -53,6 +53,7 @@ class SNN_Tickets_Plugin {
         SNN_T_Events_Admin::init();
         SNN_T_Wizard::init();
         SNN_T_Settings::init();
+        SNN_T_Woo::boot();
     }
 
     public function load_textdomain(){

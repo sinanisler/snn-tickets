@@ -41,9 +41,11 @@ class SNN_T_Tickets {
     }
 
     /**
+     * @param array $order order_id, order_item_id and product_id for a
+     *                     ticket bought in the shop
      * @return int new ticket id
      */
-    public static function insert($list_id, $name, $email, $code = null, $submission_id = null, $source = '') {
+    public static function insert($list_id, $name, $email, $code = null, $submission_id = null, $source = '', $order = []) {
         global $wpdb;
         if (!$code) $code = self::unique_code(8);
 
@@ -59,8 +61,13 @@ class SNN_T_Tickets {
             'last_validated' => null,
             'created_at'     => current_time('mysql'),
         ], ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s']);
+        $id = (int)$wpdb->insert_id;
 
-        return (int)$wpdb->insert_id;
+        $order = array_intersect_key((array)$order, ['order_id' => 1, 'order_item_id' => 1, 'product_id' => 1]);
+        if ($id && $order) {
+            $wpdb->update(SNN_T_DB::tickets(), array_map('intval', $order), ['id' => $id]);
+        }
+        return $id;
     }
 
     public static function get($id) {

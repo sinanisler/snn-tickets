@@ -254,6 +254,7 @@ class SNN_T_Events {
         }
 
         $wpdb->delete(SNN_T_DB::lists(), ['id' => $list_id], ['%d']);
+        do_action('snn_tickets_event_deleted', $list_id);
         return $n;
     }
 
@@ -273,7 +274,8 @@ class SNN_T_Events {
         $waiting = (int)$wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM " . SNN_T_DB::submissions() . " s JOIN " . SNN_T_DB::forms() . " f ON f.id = s.form_id
              WHERE f.list_id = %d AND s.status = 'pending' AND (s.ticket_id IS NULL OR s.ticket_id = 0)", $list_id));
-        return $tickets + $waiting;
+        // Other sources of held places, such as shop orders waiting for payment.
+        return (int)apply_filters('snn_tickets_spots_taken', $tickets + $waiting, $list_id);
     }
 
     /** Spot limit from the event's form; 0 = no limit. */

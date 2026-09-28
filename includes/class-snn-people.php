@@ -39,11 +39,11 @@ class SNN_T_People {
                    t.ticket_code AS code, t.source AS source, t.submission_id AS sid, sd.data AS answers,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status = 'failed') AS failed,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')) AS mailed,
-                   '' AS reason
+                   '' AS reason, t.order_id AS oid
             FROM {$t} t LEFT JOIN {$s} sd ON sd.id = t.submission_id
             WHERE t.list_id = %d
             UNION ALL
-            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason
+            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0
             FROM {$s} s JOIN {$f} f ON f.id = s.form_id
             WHERE f.list_id = %d AND (s.ticket_id IS NULL OR s.ticket_id = 0) AND s.status IN ('pending','rejected')
         ", (int)$list_id, (int)$list_id);
@@ -97,6 +97,7 @@ class SNN_T_People {
     public static function shape($r) {
         $r->key = $r->kind . (int)$r->id;
         $r->vc  = (int)$r->vc;
+        $r->oid = (int)($r->oid ?? 0);
         $answers = json_decode((string)$r->answers, true);
         $r->answers = is_array($answers) ? $answers : [];
 

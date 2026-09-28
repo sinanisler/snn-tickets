@@ -16,13 +16,16 @@ class SNN_T_Events_Admin {
     }
 
     private static function tabs() {
-        return [
+        $tabs = [
             'people'   => __('People', 'snn-tickets'),
             'form'     => __('Sign-up form', 'snn-tickets'),
+            'sale'     => __('Sell tickets', 'snn-tickets'),
             'emails'   => __('Emails', 'snn-tickets'),
             'door'     => __('Door', 'snn-tickets'),
             'settings' => __('Event settings', 'snn-tickets'),
         ];
+        if (!SNN_T_Woo::active()) unset($tabs['sale']);
+        return $tabs;
     }
 
     public static function render_page() {
@@ -179,6 +182,7 @@ class SNN_T_Events_Admin {
                 <?php
                 switch ($tab) {
                     case 'form':     self::tab_form($event, $form); break;
+                    case 'sale':     SNN_T_Woo_Admin::tab($event, $form); break;
                     case 'emails':   self::tab_emails($event, $form); break;
                     case 'door':     self::tab_door($event); break;
                     case 'settings': self::tab_settings($event); break;
@@ -259,6 +263,7 @@ class SNN_T_Events_Admin {
                             <td class="cb"><input type="checkbox" name="ids[]" value="<?php echo esc_attr($p->key); ?>" aria-label="<?php esc_attr_e('Select', 'snn-tickets'); ?>"></td>
                             <td><div class="who"><a href="<?php echo esc_url($open); ?>"><?php echo esc_html($p->name !== '' ? $p->name : ($p->email !== '' ? $p->email : __('No name yet', 'snn-tickets'))); ?></a>
                                 <span><?php echo esc_html($p->email !== '' ? $p->email : ($p->code !== '' ? $p->code : '')); ?></span>
+                                <?php if ($p->oid && SNN_T_Woo::active()): ?><span><?php echo SNN_T_Woo_Admin::order_link($p->oid); // escaped inside ?></span><?php endif; ?>
                                 <?php if ($p->state === 'waiting' && $why): ?><span style="color:#8a5a00"><?php echo esc_html(sprintf(__('Why waiting: %s', 'snn-tickets'), $why)); ?></span><?php endif; ?></div></td>
                             <td><?php echo SNN_T_Admin::state_chip($p->state); ?></td>
                             <td><?php if ($p->vc > 0): ?>
@@ -492,9 +497,11 @@ class SNN_T_Events_Admin {
                         <ul class="snn-timeline">
                             <?php
                             $sources = ['form' => __('Signed up with the form', 'snn-tickets'), 'import' => __('Imported from a spreadsheet', 'snn-tickets'),
-                                        'manual' => __('Added by hand', 'snn-tickets'), 'blank' => __('Made as a blank ticket', 'snn-tickets')];
-                            $created = $sub ? $sub->created_at : $p->created; ?>
-                            <li><b><?php echo esc_html($sources[$p->source] ?? __('Added', 'snn-tickets')); ?></b><time><?php echo SNN_T_Admin::when($created); ?></time></li>
+                                        'manual' => __('Added by hand', 'snn-tickets'), 'blank' => __('Made as a blank ticket', 'snn-tickets'),
+                                        'order' => __('Bought in the shop', 'snn-tickets')];
+                            $created = $sub ? $sub->created_at : $p->created;
+                            $order_link = $p->oid && SNN_T_Woo::active() ? SNN_T_Woo_Admin::order_link($p->oid) : ''; ?>
+                            <li><b><?php echo esc_html($sources[$p->source] ?? __('Added', 'snn-tickets')); ?></b><?php if ($order_link !== ''): ?> · <?php echo $order_link; // escaped inside ?><?php endif; ?><time><?php echo SNN_T_Admin::when($created); ?></time></li>
                             <?php if ($sub && $sub->status === 'pending'): ?>
                                 <li class="warn"><b><?php esc_html_e('Waiting for your approval', 'snn-tickets'); ?></b><?php $w = self::why_waiting($form); if ($w): ?> · <?php echo esc_html($w); ?><?php endif; ?></li>
                             <?php elseif ($sub && $sub->decided_at): ?>

@@ -491,9 +491,13 @@ class SNN_T_Forms {
         self::render_script();
     }
 
-    private static function render_field($field, $old = null, $error = '') {
-        $id       = 'snn-f-' . esc_attr($field['key']);
-        $name     = 'snn_field[' . esc_attr($field['key']) . ']';
+    /**
+     * @param string $prefix input name to nest the answer under, e.g.
+     *                       "snn_att[2]" for the third attendee in the shop
+     */
+    public static function render_field($field, $old = null, $error = '', $prefix = 'snn_field') {
+        $id       = 'snn-f-' . ($prefix !== 'snn_field' ? trim(preg_replace('/[^A-Za-z0-9_]+/', '-', $prefix), '-') . '-' : '') . esc_attr($field['key']);
+        $name     = esc_attr($prefix) . '[' . esc_attr($field['key']) . ']';
         $required = !empty($field['required']);
         $value    = $old !== null ? $old : ($field['default'] ?? '');
         $err_id   = $id . '-err';
@@ -570,7 +574,7 @@ class SNN_T_Forms {
         echo '</div>';
     }
 
-    private static function render_styles() {
+    public static function render_styles() {
         static $done = false;
         if ($done) return;
         $done = true;

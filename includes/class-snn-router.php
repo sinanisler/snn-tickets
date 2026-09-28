@@ -169,9 +169,14 @@ class SNN_T_Router {
         if ($where !== '') $out .= '<p class="snn-event-where">' . esc_html($where) . '</p>';
         $out .= '</header>';
         if ($event->description !== '') $out .= '<div class="snn-event-desc">' . wpautop(esc_html($event->description)) . '</div>';
-        $out .= $form
-            ? SNN_T_Forms::shortcode(['id' => $form->id])
-            : '<p class="snn-form-notice snn-warn">' . esc_html__('Sign-ups are not open for this event.', 'snn-tickets') . '</p>';
+        // Tickets for sale, when the event sells them in the shop.
+        $shop = (string)apply_filters('snn_tickets_event_shop', '', $event);
+        $out .= $shop;
+        if ($shop === '' || ($form && $form->status !== 'closed')) {
+            $out .= $form
+                ? SNN_T_Forms::shortcode(['id' => $form->id])
+                : '<p class="snn-form-notice snn-warn">' . esc_html__('Sign-ups are not open for this event.', 'snn-tickets') . '</p>';
+        }
         $out .= '</div>';
         $out .= '<style>.snn-event-page{max-width:640px;margin:0 auto;padding:32px 16px 48px}.snn-event-when{margin:0 0 6px;font-size:.85em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.snn-event-title{margin:0 0 6px}.snn-event-where{margin:0 0 20px;opacity:.8}.snn-event-desc{margin:0 0 24px}</style>';
         return $out;
