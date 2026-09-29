@@ -891,8 +891,9 @@ class SNN_T_Events_Admin {
         if ($date === '') return ['event_start' => '', 'event_end' => ''];
         $start = trim((string)($in['start'] ?? '')) ?: '00:00';
         $end   = trim((string)($in['end'] ?? ''));
-        $end_d = trim((string)($in['end_date'] ?? '')) ?: $date;
-        return ['event_start' => $date . ' ' . $start, 'event_end' => $end !== '' ? $end_d . ' ' . $end : ''];
+        $end_d = trim((string)($in['end_date'] ?? ''));
+        if ($end === '' && $end_d === '') return ['event_start' => $date . ' ' . $start, 'event_end' => ''];
+        return ['event_start' => $date . ' ' . $start, 'event_end' => ($end_d ?: $date) . ' ' . ($end ?: '23:59')];
     }
 
     public static function handle_event_settings() {

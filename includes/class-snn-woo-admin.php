@@ -126,7 +126,6 @@ class SNN_T_Woo_Admin {
         <div id="snn_tickets_data" class="panel woocommerce_options_panel hidden">
             <style>#snn_tickets_data [hidden]{display:none!important}</style>
             <input type="hidden" name="snn_ev[for]" value="<?php echo esc_attr($pick); ?>" data-snn-for>
-            <input type="hidden" name="snn_ev[end_date]" value="<?php echo esc_attr($f['end_date']); ?>" data-snn-f="end_date">
             <div class="options_group">
                 <p class="form-field">
                     <label for="snn_ev_pick"><?php esc_html_e('Event', 'snn-tickets'); ?></label>
@@ -140,29 +139,30 @@ class SNN_T_Woo_Admin {
                             </optgroup>
                         <?php endforeach; ?>
                     </select>
-                    <a href="<?php echo esc_url($f['url']); ?>" class="button button-primary" style="margin-left:8px;float:none" data-snn-existing data-snn-link <?php echo $linked ? '' : 'hidden'; ?>><?php esc_html_e('Edit full event settings', 'snn-tickets'); ?> →</a>
                 </p>
                 <p class="form-field" data-snn-new <?php echo $linked ? 'hidden' : ''; ?>>
                     <label for="snn_ev_name"><?php esc_html_e('Event name', 'snn-tickets'); ?></label>
                     <input type="text" class="short" id="snn_ev_name" name="snn_ev[name]" value="<?php echo esc_attr($f['name']); ?>" placeholder="<?php esc_attr_e('Taken from the product name', 'snn-tickets'); ?>" data-snn-f="name">
                 </p>
                 <p class="form-field">
-                    <label for="snn_ev_date"><?php esc_html_e('Date', 'snn-tickets'); ?></label>
-                    <input type="date" class="short" id="snn_ev_date" name="snn_ev[date]" value="<?php echo esc_attr($f['date']); ?>" data-snn-f="date">
+                    <label for="snn_ev_date"><?php esc_html_e('Starts', 'snn-tickets'); ?></label>
+                    <input type="date" id="snn_ev_date" name="snn_ev[date]" value="<?php echo esc_attr($f['date']); ?>" style="width:auto;margin-right:8px" data-snn-f="date" aria-label="<?php esc_attr_e('Start date', 'snn-tickets'); ?>">
+                    <input type="time" id="snn_ev_start" name="snn_ev[start]" value="<?php echo esc_attr($f['start']); ?>" style="width:auto" data-snn-f="start" aria-label="<?php esc_attr_e('Start time', 'snn-tickets'); ?>">
                     <span class="description" data-snn-nodate style="color:#b32d2e" <?php echo $f['date'] !== '' ? 'hidden' : ''; ?>><?php esc_html_e('No date yet, so tickets and emails will not show one. Fine for an undated pass.', 'snn-tickets'); ?></span>
                 </p>
                 <p class="form-field">
-                    <label for="snn_ev_start"><?php esc_html_e('Time', 'snn-tickets'); ?></label>
-                    <input type="time" id="snn_ev_start" name="snn_ev[start]" value="<?php echo esc_attr($f['start']); ?>" style="width:auto" data-snn-f="start" aria-label="<?php esc_attr_e('Starts', 'snn-tickets'); ?>">
-                    <span style="float:left;margin:0 8px;line-height:30px">–</span>
-                    <input type="time" name="snn_ev[end]" value="<?php echo esc_attr($f['end']); ?>" style="width:auto" data-snn-f="end" aria-label="<?php esc_attr_e('Ends', 'snn-tickets'); ?>">
+                    <label for="snn_ev_end_date"><?php esc_html_e('Ends', 'snn-tickets'); ?></label>
+                    <input type="date" id="snn_ev_end_date" name="snn_ev[end_date]" value="<?php echo esc_attr($f['end_date']); ?>" style="width:auto;margin-right:8px" data-snn-f="end_date" aria-label="<?php esc_attr_e('End date', 'snn-tickets'); ?>">
+                    <input type="time" name="snn_ev[end]" value="<?php echo esc_attr($f['end']); ?>" style="width:auto" data-snn-f="end" aria-label="<?php esc_attr_e('End time', 'snn-tickets'); ?>">
+                    <span class="description"><?php esc_html_e('Optional. Leave the date empty if it ends the same day.', 'snn-tickets'); ?></span>
                 </p>
                 <p class="form-field" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>>
+                    <a href="<?php echo esc_url($f['url']); ?>" class="button button-primary" data-snn-link><?php esc_html_e('Edit full event settings', 'snn-tickets'); ?> →</a>
                     <span class="description"><?php esc_html_e('Changes here update the event, for every ticket type it has.', 'snn-tickets'); ?></span>
                 </p>
             </div>
             <div class="options_group">
-                <details style="padding:0 12px 4px" <?php echo ($per > 1 || $ask || $f['venue'] !== '' || $f['spots'] !== '') ? 'open' : ''; ?>>
+                <details style="padding:0 12px 4px">
                     <summary style="cursor:pointer;padding:10px 0;font-weight:600"><?php esc_html_e('More options', 'snn-tickets'); ?></summary>
                     <p class="form-field">
                         <label for="snn_ev_venue"><?php esc_html_e('Venue', 'snn-tickets'); ?></label>
