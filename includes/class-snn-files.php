@@ -64,7 +64,7 @@ class SNN_T_Files {
 
         $ok = in_array($format, self::formats(), true)
            && $code !== ''
-           && (hash_equals(self::key($code), $key) || current_user_can('manage_options'));
+           && (hash_equals(self::key($code), $key) || current_user_can(SNN_T_Tickets::cap()));
 
         $ticket = $ok ? SNN_T_Tickets::get_by_code($code) : null;
         if (!$ticket) {

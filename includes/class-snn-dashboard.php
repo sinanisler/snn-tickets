@@ -21,7 +21,7 @@ class SNN_T_Dashboard {
              'url' => admin_url('admin.php?page=snn-tickets-events')],
             // Optional: with no address, emails use the site's own sender.
             ['done' => $from !== '', 'optional' => true, 'label' => __('Set the sender name and address for emails', 'snn-tickets'),
-             'url' => admin_url('admin.php?page=snn-tickets-settings')],
+             'url' => admin_url('admin.php?page=snn-tickets-emails&tab=general')],
             ['done' => (bool)SNN_T_Design::settings()['logo_url'], 'optional' => true, 'label' => __('Add your logo to tickets and emails', 'snn-tickets'),
              'url' => admin_url('admin.php?page=snn-tickets-settings&tab=look')],
             ['done' => SNN_T_Scanner::pin_set(), 'optional' => true, 'label' => __('Set a door PIN for volunteers', 'snn-tickets'),
@@ -53,7 +53,7 @@ class SNN_T_Dashboard {
             $items[] = ['bad', $failed,
                 sprintf(_n('%d email could not be sent', '%d emails could not be sent', $failed, 'snn-tickets'), $failed),
                 __('Usually a mistyped address. Fix it and send again.', 'snn-tickets'),
-                __('See them', 'snn-tickets'), admin_url('admin.php?page=snn-tickets-settings&tab=log&status=failed'), false];
+                __('See them', 'snn-tickets'), admin_url('admin.php?page=snn-tickets-emails&tab=log&status=failed'), false];
         }
 
         foreach (SNN_T_Events::all() as $e) {
@@ -114,7 +114,7 @@ class SNN_T_Dashboard {
             <div class="snn-page">
                 <div class="snn-kpis">
                     <a class="snn-kpi <?php echo $waiting ? 'warn' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-events')); ?>"><span class="l"><?php esc_html_e('Waiting for your approval', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($waiting); ?></span></a>
-                    <a class="snn-kpi <?php echo $failed ? 'bad' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=log' . ($failed ? '&status=failed' : ''))); ?>"><span class="l"><?php esc_html_e('Emails that failed', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($failed); ?></span></a>
+                    <a class="snn-kpi <?php echo $failed ? 'bad' : ''; ?>" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-emails&tab=log' . ($failed ? '&status=failed' : ''))); ?>"><span class="l"><?php esc_html_e('Emails that failed', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($failed); ?></span></a>
                     <a class="snn-kpi" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-events')); ?>"><span class="l"><?php esc_html_e('Active tickets', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($active); ?></span></a>
                     <div class="snn-kpi"><span class="l"><?php esc_html_e('Checked in today', 'snn-tickets'); ?></span><span class="v"><?php echo number_format_i18n($today_in); ?></span></div>
                 </div>

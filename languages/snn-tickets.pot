@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-28T16:51:11+00:00\n"
+"POT-Creation-Date: 2026-09-28T17:30:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snn-tickets\n"
@@ -39,7 +39,7 @@ msgid "Insufficient permissions"
 msgstr ""
 
 #: includes/class-snn-admin.php:50
-#: includes/class-snn-woo.php:886
+#: includes/class-snn-texts.php:54
 msgid "Copied"
 msgstr ""
 
@@ -90,7 +90,7 @@ msgstr ""
 
 #: includes/class-snn-admin.php:57
 #: includes/class-snn-admin.php:317
-#: includes/class-snn-settings.php:326
+#: includes/class-snn-settings.php:366
 msgid "Subject"
 msgstr ""
 
@@ -131,11 +131,11 @@ msgid "Hint inside the box"
 msgstr ""
 
 #: includes/class-snn-admin.php:63
-#: includes/class-snn-events-admin.php:601
-#: includes/class-snn-events-admin.php:817
+#: includes/class-snn-events-admin.php:612
+#: includes/class-snn-events-admin.php:831
 #: includes/class-snn-wizard.php:45
 #: includes/class-snn-wizard.php:48
-#: includes/class-snn-woo-admin.php:400
+#: includes/class-snn-woo-admin.php:409
 msgid "(optional)"
 msgstr ""
 
@@ -285,8 +285,8 @@ msgid "Choose…"
 msgstr ""
 
 #: includes/class-snn-admin.php:81
-#: includes/class-snn-claims.php:204
 #: includes/class-snn-forms.php:89
+#: includes/class-snn-texts.php:31
 msgid "Get my ticket"
 msgstr ""
 
@@ -308,7 +308,7 @@ msgid "Give the event a name first."
 msgstr ""
 
 #: includes/class-snn-admin.php:168
-#: includes/class-snn-settings.php:271
+#: includes/class-snn-settings.php:307
 msgid "Waiting"
 msgstr ""
 
@@ -317,18 +317,18 @@ msgid "Sending"
 msgstr ""
 
 #: includes/class-snn-admin.php:169
-#: includes/class-snn-settings.php:271
-#: includes/class-snn-settings.php:329
+#: includes/class-snn-settings.php:307
+#: includes/class-snn-settings.php:369
 msgid "Sent"
 msgstr ""
 
 #: includes/class-snn-admin.php:169
-#: includes/class-snn-settings.php:271
+#: includes/class-snn-settings.php:307
 msgid "Failed"
 msgstr ""
 
 #: includes/class-snn-admin.php:182
-#: includes/class-snn-tickets.php:243
+#: includes/class-snn-tickets.php:252
 #, php-format
 msgid "%s ago"
 msgstr ""
@@ -388,7 +388,7 @@ msgstr ""
 
 #: includes/class-snn-admin.php:237
 #: includes/class-snn-admin.php:336
-#: includes/class-snn-events-admin.php:822
+#: includes/class-snn-events-admin.php:836
 msgid "Link"
 msgstr ""
 
@@ -400,7 +400,7 @@ msgstr ""
 #: includes/class-snn-dashboard.php:199
 #: includes/class-snn-events-admin.php:109
 #: includes/class-snn-events-admin.php:157
-#: includes/class-snn-settings.php:209
+#: includes/class-snn-settings.php:245
 msgid "Open"
 msgstr ""
 
@@ -410,7 +410,7 @@ msgid "Your site uses plain permalinks, so these links look technical. For short
 msgstr ""
 
 #: includes/class-snn-admin.php:250
-#: includes/class-snn-settings.php:220
+#: includes/class-snn-settings.php:256
 msgid "Settings → Permalinks"
 msgstr ""
 
@@ -445,7 +445,7 @@ msgid "Insert:"
 msgstr ""
 
 #: includes/class-snn-admin.php:325
-#: includes/class-snn-events-admin.php:494
+#: includes/class-snn-events-admin.php:505
 msgid "Answers"
 msgstr ""
 
@@ -458,6 +458,7 @@ msgid "Italic"
 msgstr ""
 
 #: includes/class-snn-admin.php:333
+#: includes/class-snn-texts.php:28
 msgid "Heading"
 msgstr ""
 
@@ -498,7 +499,7 @@ msgid "Loading preview…"
 msgstr ""
 
 #: includes/class-snn-admin.php:368
-#: includes/class-snn-settings.php:395
+#: includes/class-snn-settings.php:435
 msgid "A template needs a name."
 msgstr ""
 
@@ -512,70 +513,45 @@ msgstr ""
 msgid "Saved as template \"%s\". Use it in any event with \"Start from a template\"."
 msgstr ""
 
-#: includes/class-snn-claims.php:63
-#: includes/class-snn-claims.php:88
+#: includes/class-snn-claims.php:79
+#: includes/class-snn-claims.php:104
 msgid "This ticket already has a name on it."
 msgstr ""
 
-#: includes/class-snn-claims.php:66
+#: includes/class-snn-claims.php:82
 #: includes/class-snn-people.php:207
-#: includes/class-snn-settings.php:109
+#: includes/class-snn-settings.php:145
 #: includes/class-snn-submissions.php:122
-#: includes/class-snn-tickets.php:112
+#: includes/class-snn-tickets.php:121
 msgid "That email address does not look right."
 msgstr ""
 
-#: includes/class-snn-claims.php:79
-#: includes/class-snn-mailer.php:801
-msgid "Claim my ticket"
-msgstr ""
-
-#: includes/class-snn-claims.php:103
+#: includes/class-snn-claims.php:119
 msgid "This ticket has already been claimed."
 msgstr ""
 
-#: includes/class-snn-claims.php:128
+#: includes/class-snn-claims.php:144
+#: includes/class-snn-claims.php:167
 msgid "Claimed a ticket passed on to them"
 msgstr ""
 
-#: includes/class-snn-claims.php:154
-#: includes/class-snn-events-admin.php:1116
-#: includes/class-snn-mailer.php:822
-#: includes/class-snn-woo.php:885
+#: includes/class-snn-claims.php:193
+#: includes/class-snn-claims.php:202
+#: includes/class-snn-events-admin.php:1148
+#: includes/class-snn-mailer.php:885
+#: includes/class-snn-woo.php:904
 msgid "Ticket link"
 msgstr ""
 
-#: includes/class-snn-claims.php:155
-msgid "This link does not work any more"
-msgstr ""
-
-#: includes/class-snn-claims.php:156
-msgid "The ticket has already been claimed, or the person who sent it took it back. Ask them for a new link."
-msgstr ""
-
-#: includes/class-snn-claims.php:165
+#: includes/class-snn-claims.php:213
 #: includes/class-snn-forms.php:94
-#: includes/class-snn-forms.php:960
+#: includes/class-snn-forms.php:959
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/class-snn-claims.php:170
+#: includes/class-snn-claims.php:218
 #: includes/class-snn-forms.php:895
 msgid "A valid email address is required."
-msgstr ""
-
-#: includes/class-snn-claims.php:190
-#, php-format
-msgid "%1$s got you a ticket to %2$s"
-msgstr ""
-
-#: includes/class-snn-claims.php:191
-#, php-format
-msgid "A ticket to %s is waiting for you"
-msgstr ""
-
-#: includes/class-snn-claims.php:193
-msgid "Tell us who's coming. Your ticket arrives by email straight away and opens here too."
 msgstr ""
 
 #: includes/class-snn-dashboard.php:18
@@ -653,18 +629,18 @@ msgstr ""
 
 #: includes/class-snn-dashboard.php:74
 #: includes/class-snn-events-admin.php:283
-#: includes/class-snn-events-admin.php:804
+#: includes/class-snn-events-admin.php:818
 msgid "Details"
 msgstr ""
 
 #: includes/class-snn-dashboard.php:112
+#: includes/class-snn-texts.php:78
 #: includes/class-snn-woo-admin.php:57
-#: includes/class-snn-woo-admin.php:494
-#: includes/class-snn-woo-admin.php:496
-#: includes/class-snn-woo.php:971
-#: snn-tickets.php:95
-#: snn-tickets.php:98
+#: includes/class-snn-woo-admin.php:505
+#: includes/class-snn-woo-admin.php:507
 #: snn-tickets.php:105
+#: snn-tickets.php:108
+#: snn-tickets.php:117
 msgid "Tickets"
 msgstr ""
 
@@ -673,14 +649,14 @@ msgstr ""
 #: includes/class-snn-events-admin.php:65
 #: includes/class-snn-wizard.php:27
 #: includes/class-snn-wizard.php:28
-#: snn-tickets.php:100
+#: snn-tickets.php:110
 msgid "Add New Event"
 msgstr ""
 
 #: includes/class-snn-dashboard.php:116
-#: includes/class-snn-events-admin.php:512
-#: includes/class-snn-forms.php:942
-#: includes/class-snn-mailer.php:814
+#: includes/class-snn-events-admin.php:523
+#: includes/class-snn-forms.php:939
+#: includes/class-snn-mailer.php:877
 msgid "Waiting for your approval"
 msgstr ""
 
@@ -796,7 +772,7 @@ msgid "Accent / buttons"
 msgstr ""
 
 #: includes/class-snn-design.php:25
-#: includes/class-snn-events-admin.php:592
+#: includes/class-snn-events-admin.php:603
 msgid "Button text"
 msgstr ""
 
@@ -863,7 +839,7 @@ msgid "Attendee"
 msgstr ""
 
 #: includes/class-snn-design.php:332
-#: includes/class-snn-mailer.php:271
+#: includes/class-snn-mailer.php:283
 #: includes/class-snn-pdf.php:590
 #: includes/class-snn-qr.php:235
 #: includes/class-snn-wallet.php:107
@@ -872,9 +848,9 @@ msgid "Guest"
 msgstr ""
 
 #: includes/class-snn-design.php:333
-#: includes/class-snn-events-admin.php:807
+#: includes/class-snn-events-admin.php:821
 #: includes/class-snn-forms.php:41
-#: includes/class-snn-mailer.php:209
+#: includes/class-snn-mailer.php:221
 #: includes/class-snn-pdf.php:595
 #: includes/class-snn-wallet.php:109
 #: includes/class-snn-wizard.php:43
@@ -883,7 +859,7 @@ msgid "Date"
 msgstr ""
 
 #: includes/class-snn-design.php:334
-#: includes/class-snn-mailer.php:210
+#: includes/class-snn-mailer.php:222
 #: includes/class-snn-pdf.php:598
 #: includes/class-snn-wallet.php:113
 #: includes/class-snn-woo-admin.php:154
@@ -891,9 +867,9 @@ msgid "Time"
 msgstr ""
 
 #: includes/class-snn-design.php:335
-#: includes/class-snn-events-admin.php:814
-#: includes/class-snn-mailer.php:176
-#: includes/class-snn-mailer.php:211
+#: includes/class-snn-events-admin.php:828
+#: includes/class-snn-mailer.php:188
+#: includes/class-snn-mailer.php:223
 #: includes/class-snn-pdf.php:604
 #: includes/class-snn-wallet.php:114
 #: includes/class-snn-wizard.php:47
@@ -915,7 +891,7 @@ msgid "People"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:21
-#: includes/class-snn-events-admin.php:615
+#: includes/class-snn-events-admin.php:626
 #: includes/class-snn-wizard.php:105
 msgid "Sign-up form"
 msgstr ""
@@ -925,6 +901,8 @@ msgid "Sell tickets"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:23
+#: includes/class-snn-settings.php:85
+#: snn-tickets.php:112
 msgid "Emails"
 msgstr ""
 
@@ -942,14 +920,15 @@ msgid "Upcoming"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:61
-#: includes/class-snn-settings.php:271
+#: includes/class-snn-settings.php:307
 msgid "All"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:65
 #: includes/class-snn-events-admin.php:149
 #: includes/class-snn-wizard.php:27
-#: snn-tickets.php:99
+#: snn-tickets.php:95
+#: snn-tickets.php:109
 msgid "Events"
 msgstr ""
 
@@ -971,36 +950,36 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:85
 #: includes/class-snn-events-admin.php:231
-#: includes/class-snn-settings.php:278
+#: includes/class-snn-settings.php:314
 msgid "Search"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:90
-#: includes/class-snn-mailer.php:202
-#: includes/class-snn-mailer.php:208
+#: includes/class-snn-mailer.php:214
+#: includes/class-snn-mailer.php:220
 #: includes/class-snn-wallet.php:106
 #: includes/class-snn-woo-admin.php:132
 msgid "Event"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:90
-#: includes/class-snn-settings.php:286
-#: includes/class-snn-woo.php:260
+#: includes/class-snn-settings.php:323
+#: includes/class-snn-texts.php:73
 msgid "When"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:90
-#: includes/class-snn-events-admin.php:580
+#: includes/class-snn-events-admin.php:591
 #: includes/class-snn-wizard.php:51
 #: includes/class-snn-woo-admin.php:164
-#: includes/class-snn-woo-admin.php:422
+#: includes/class-snn-woo-admin.php:432
 msgid "Spots"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:90
 #: includes/class-snn-events-admin.php:173
-#: includes/class-snn-events-admin.php:527
-#: includes/class-snn-events-admin.php:1116
+#: includes/class-snn-events-admin.php:538
+#: includes/class-snn-events-admin.php:1148
 #: includes/class-snn-people.php:22
 #: includes/class-snn-people.php:134
 msgid "Checked in"
@@ -1008,11 +987,11 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:90
 #: includes/class-snn-events-admin.php:253
-#: includes/class-snn-events-admin.php:1115
-#: includes/class-snn-mailer.php:219
-#: includes/class-snn-settings.php:286
+#: includes/class-snn-events-admin.php:1147
+#: includes/class-snn-mailer.php:231
 #: includes/class-snn-settings.php:323
-#: includes/class-snn-woo-admin.php:356
+#: includes/class-snn-settings.php:363
+#: includes/class-snn-woo-admin.php:364
 msgid "Status"
 msgstr ""
 
@@ -1047,8 +1026,8 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:157
 #: includes/class-snn-events-admin.php:465
-#: includes/class-snn-events-admin.php:772
-#: includes/class-snn-woo.php:886
+#: includes/class-snn-events-admin.php:786
+#: includes/class-snn-texts.php:53
 msgid "Copy link"
 msgstr ""
 
@@ -1057,8 +1036,8 @@ msgid "Copy sign-up link"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:164
-#: includes/class-snn-events-admin.php:523
-#: includes/class-snn-settings.php:295
+#: includes/class-snn-events-admin.php:534
+#: includes/class-snn-settings.php:335
 msgid "View"
 msgstr ""
 
@@ -1190,7 +1169,7 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:253
 #: includes/class-snn-events-admin.php:429
-#: includes/class-snn-mailer.php:201
+#: includes/class-snn-mailer.php:213
 msgid "Person"
 msgstr ""
 
@@ -1199,7 +1178,7 @@ msgid "At the door"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:253
-#: includes/class-snn-events-admin.php:1116
+#: includes/class-snn-events-admin.php:1148
 msgid "Signed up"
 msgstr ""
 
@@ -1231,7 +1210,7 @@ msgid "In · scanned %d×"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:270
-#: includes/class-snn-events-admin.php:758
+#: includes/class-snn-events-admin.php:772
 #, php-format
 msgid "In · %s"
 msgstr ""
@@ -1261,21 +1240,21 @@ msgid "Blank tickets"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:312
-#: includes/class-snn-events-admin.php:485
-#: includes/class-snn-events-admin.php:1115
-#: includes/class-snn-mailer.php:206
-#: includes/class-snn-settings.php:76
-#: includes/class-snn-woo-admin.php:397
+#: includes/class-snn-events-admin.php:496
+#: includes/class-snn-events-admin.php:1147
+#: includes/class-snn-mailer.php:218
+#: includes/class-snn-settings.php:108
+#: includes/class-snn-woo-admin.php:406
 msgid "Name"
 msgstr ""
 
 #: includes/class-snn-events-admin.php:313
-#: includes/class-snn-events-admin.php:486
-#: includes/class-snn-events-admin.php:1115
-#: includes/class-snn-mailer.php:207
-#: includes/class-snn-settings.php:286
-#: includes/class-snn-settings.php:324
-#: includes/class-snn-settings.php:332
+#: includes/class-snn-events-admin.php:497
+#: includes/class-snn-events-admin.php:1147
+#: includes/class-snn-mailer.php:219
+#: includes/class-snn-settings.php:323
+#: includes/class-snn-settings.php:364
+#: includes/class-snn-settings.php:372
 msgid "Email"
 msgstr ""
 
@@ -1468,811 +1447,850 @@ msgstr ""
 msgid "This ticket has no name yet. The buyer can pass it on with this link:"
 msgstr ""
 
+#: includes/class-snn-events-admin.php:467
+msgid "Send the link again"
+msgstr ""
+
 #: includes/class-snn-events-admin.php:468
-#: includes/class-snn-mailer.php:203
+msgid "Take it back"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:468
+msgid "Take this ticket back? The link that was sent stops working."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:473
+#: includes/class-snn-texts.php:55
+msgid "Guest's email"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:474
+msgid "Email the link"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:479
+#: includes/class-snn-mailer.php:215
 #: includes/class-snn-woo-admin.php:48
 msgid "Ticket"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:473
+#: includes/class-snn-events-admin.php:484
 msgid "Ticket page"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:477
+#: includes/class-snn-events-admin.php:488
 msgid "No ticket yet. It's created when you approve."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:483
+#: includes/class-snn-events-admin.php:494
 msgid "Contact"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:488
+#: includes/class-snn-events-admin.php:499
 msgid "Private note"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:488
+#: includes/class-snn-events-admin.php:499
 msgid "(only admins see this)"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:489
-#: includes/class-snn-settings.php:223
-#: includes/class-snn-settings.php:553
-#: includes/class-snn-woo-admin.php:381
-#: includes/class-snn-woo-admin.php:417
+#: includes/class-snn-events-admin.php:500
+#: includes/class-snn-settings.php:259
+#: includes/class-snn-settings.php:592
+#: includes/class-snn-woo-admin.php:390
+#: includes/class-snn-woo-admin.php:427
 msgid "Save"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:490
+#: includes/class-snn-events-admin.php:501
 msgid "Save & email ticket"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:502
+#: includes/class-snn-events-admin.php:513
 msgid "History"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:505
+#: includes/class-snn-events-admin.php:516
 msgid "Signed up with the form"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:505
+#: includes/class-snn-events-admin.php:516
 msgid "Imported from a spreadsheet"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:506
+#: includes/class-snn-events-admin.php:517
 msgid "Added by hand"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:506
+#: includes/class-snn-events-admin.php:517
 msgid "Made as a blank ticket"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:507
+#: includes/class-snn-events-admin.php:518
 msgid "Bought in the shop"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:510
+#: includes/class-snn-events-admin.php:521
 msgid "Added"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:514
+#: includes/class-snn-events-admin.php:525
 msgid "Approved"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:514
+#: includes/class-snn-events-admin.php:525
 #: includes/class-snn-people.php:132
 msgid "Declined"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:515
+#: includes/class-snn-events-admin.php:526
 #, php-format
 msgid "by %s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:515
+#: includes/class-snn-events-admin.php:526
 msgid "automatically"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:527
+#: includes/class-snn-events-admin.php:538
 #, php-format
 msgid "Checked in · scanned %d times"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:527
+#: includes/class-snn-events-admin.php:538
 #, php-format
 msgid "Last scan %s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:529
+#: includes/class-snn-events-admin.php:540
 msgid "Ticket cancelled"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:531
+#: includes/class-snn-events-admin.php:542
 #, php-format
 msgid "Signed up from IP %s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:534
+#: includes/class-snn-events-admin.php:545
 msgid "Delete this person"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:535
+#: includes/class-snn-events-admin.php:546
 msgid "Removes their sign-up, ticket and emails, for example after a privacy request. Their QR code stops working."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:536
+#: includes/class-snn-events-admin.php:547
 msgid "Delete permanently"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:536
+#: includes/class-snn-events-admin.php:547
 msgid "Delete this person and their ticket? This cannot be undone."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:560
+#: includes/class-snn-events-admin.php:571
 msgid "This event has no sign-up form yet (its people were imported or added by hand). Save this tab to give it one."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:561
+#: includes/class-snn-events-admin.php:572
 #, php-format
 msgid "This event has %d forms from an older version. This tab edits the first one; the others keep working through their shortcodes."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:566
+#: includes/class-snn-events-admin.php:577
 #: includes/class-snn-wizard.php:24
 msgid "Questions"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:566
+#: includes/class-snn-events-admin.php:577
 msgid "Click one to change it. ▲▼ to reorder."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:572
+#: includes/class-snn-events-admin.php:583
 #: includes/class-snn-wizard.php:65
 msgid "Who gets a ticket?"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:578
+#: includes/class-snn-events-admin.php:589
 msgid "Limits"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:580
+#: includes/class-snn-events-admin.php:591
 #: includes/class-snn-woo-admin.php:165
 msgid "No limit"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:581
+#: includes/class-snn-events-admin.php:592
 msgid "People waiting for your approval hold a spot, so you never approve more people than fit. Leave empty for no limit."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:583
+#: includes/class-snn-events-admin.php:594
 #: includes/class-snn-wizard.php:68
 msgid "One ticket per email address"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:584
+#: includes/class-snn-events-admin.php:595
 msgid "Show \"spots left\" above the form"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:585
+#: includes/class-snn-events-admin.php:596
 msgid "Open for sign-ups"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:586
+#: includes/class-snn-events-admin.php:597
 msgid "Turn off to close the form without deleting anything. Visitors then see the \"full or closed\" message."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:590
+#: includes/class-snn-events-admin.php:601
 msgid "Messages people see"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:593
+#: includes/class-snn-events-admin.php:604
 msgid "After signing up (ticket sent)"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:594
+#: includes/class-snn-events-admin.php:605
 msgid "After signing up (waiting for approval)"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:595
+#: includes/class-snn-events-admin.php:606
 msgid "When the event is full or closed"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:596
+#: includes/class-snn-events-admin.php:607
 msgid "When the email is already signed up"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:597
+#: includes/class-snn-events-admin.php:608
 msgid "When something goes wrong"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:601
+#: includes/class-snn-events-admin.php:612
 msgid "Send people to another page after signing up"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:603
+#: includes/class-snn-events-admin.php:614
 msgid "Form colour"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:604
+#: includes/class-snn-events-admin.php:615
 msgid "For the button, focus rings and ticks. Everything else follows your theme."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:607
+#: includes/class-snn-events-admin.php:618
 msgid "Place the form on your own page"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:609
+#: includes/class-snn-events-admin.php:620
 msgid "Not needed: the sign-up link already works. Use this if you want the form inside a page you designed."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:613
-#: includes/class-snn-events-admin.php:721
-#: includes/class-snn-events-admin.php:841
-#: includes/class-snn-settings.php:43
-#: includes/class-snn-settings.php:374
+#: includes/class-snn-events-admin.php:624
+#: includes/class-snn-events-admin.php:735
+#: includes/class-snn-events-admin.php:855
+#: includes/class-snn-settings.php:73
+#: includes/class-snn-settings.php:414
 msgid "Unsaved changes"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:613
+#: includes/class-snn-events-admin.php:624
 msgid "Save form"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:615
+#: includes/class-snn-events-admin.php:626
 #: includes/class-snn-wizard.php:105
 msgid "Live preview"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:632
+#: includes/class-snn-events-admin.php:643
 msgid "New question"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:632
+#: includes/class-snn-events-admin.php:643
 msgid "Anything else we should know?"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:633
+#: includes/class-snn-events-admin.php:644
 msgid "Which session?"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:633
+#: includes/class-snn-events-admin.php:644
 msgid "Which day?"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:634
+#: includes/class-snn-events-admin.php:645
 msgid "Topics you like"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:634
+#: includes/class-snn-events-admin.php:645
 msgid "I agree to the event rules"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:635
+#: includes/class-snn-events-admin.php:646
 msgid "Work email"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:635
+#: includes/class-snn-events-admin.php:646
 #: includes/class-snn-forms.php:39
 msgid "Phone number"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:636
+#: includes/class-snn-events-admin.php:647
 msgid "How many guests?"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:636
+#: includes/class-snn-events-admin.php:647
 msgid "Date of birth"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:637
+#: includes/class-snn-events-admin.php:648
 msgid "Came from"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:645
+#: includes/class-snn-events-admin.php:656
 msgid "Everyone, right away"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:645
+#: includes/class-snn-events-admin.php:656
 msgid "They sign up and get the ticket email within a minute."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:646
+#: includes/class-snn-events-admin.php:657
 msgid "I approve each person"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:646
+#: includes/class-snn-events-admin.php:657
 msgid "They get a \"we got your request\" email. You press Approve and the ticket goes out."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:647
+#: includes/class-snn-events-admin.php:658
 msgid "Automatically, if they match my rules"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:647
+#: includes/class-snn-events-admin.php:658
 msgid "For example: company email addresses get a ticket, everyone else waits for you."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:653
+#: includes/class-snn-events-admin.php:664
 msgid "Most common"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:687
+#: includes/class-snn-events-admin.php:698
 msgid "On"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:687
+#: includes/class-snn-events-admin.php:698
 msgid "Off"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:690
+#: includes/class-snn-events-admin.php:701
 #, php-format
 msgid "Colours, logo and footer come from %s. Saved templates can be reused in any event."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:690
-#: includes/class-snn-events-admin.php:828
+#: includes/class-snn-events-admin.php:701
+#: includes/class-snn-events-admin.php:842
 msgid "Settings → Style"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:697
+#: includes/class-snn-events-admin.php:708
 msgid "Send this email"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:699
+#: includes/class-snn-events-admin.php:710
 msgid "Turned off, tickets are only sent when you press \"Email ticket\"."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:700
+#: includes/class-snn-events-admin.php:711
 msgid "This event gives everyone a ticket right away, so this email is never sent. It is used when you approve people yourself or by rules."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:703
+#: includes/class-snn-events-admin.php:714
 msgid "Send it when"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:704
+#: includes/class-snn-events-admin.php:715
 msgid "Someone is waiting for my approval"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:705
+#: includes/class-snn-events-admin.php:716
 msgid "Anyone signs up"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:706
+#: includes/class-snn-events-admin.php:717
 msgid "Send it to"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:713
+#: includes/class-snn-events-admin.php:717
+msgid "Several addresses: separate them with commas."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:720
+msgid "Also when a guest claims a ticket someone passed on to them"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:727
 msgid "nothing"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:714
+#: includes/class-snn-events-admin.php:728
 #, php-format
 msgid "Attached: %s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:714
+#: includes/class-snn-events-admin.php:728
 msgid "change"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:721
+#: includes/class-snn-events-admin.php:735
 msgid "Save email"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:743
+#: includes/class-snn-events-admin.php:757
 msgid "checked in"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:745
+#: includes/class-snn-events-admin.php:759
 #, php-format
 msgid "The event starts %s. Reload this page to see new check-ins."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:745
+#: includes/class-snn-events-admin.php:759
 msgid "Reload this page to see new check-ins."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:749
+#: includes/class-snn-events-admin.php:763
 msgid "Recent check-ins"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:751
+#: includes/class-snn-events-admin.php:765
 msgid "Nobody has been checked in yet."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:755
+#: includes/class-snn-events-admin.php:769
 msgid "No name"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:757
+#: includes/class-snn-events-admin.php:771
 #, php-format
 msgid "Scanned %d× · last %s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:761
+#: includes/class-snn-events-admin.php:775
 msgid "Undo"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:769
+#: includes/class-snn-events-admin.php:783
 msgid "Open the scanner on a phone"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:771
+#: includes/class-snn-events-admin.php:785
 msgid "Point a phone camera here. It opens the scanner for this event only: tickets for other events are refused."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:772
+#: includes/class-snn-events-admin.php:786
 msgid "Open scanner"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:775
+#: includes/class-snn-events-admin.php:789
 msgid "Who can scan"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:776
+#: includes/class-snn-events-admin.php:790
 msgid "Admins who are logged in"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:777
+#: includes/class-snn-events-admin.php:791
 msgid "Volunteers with the door PIN"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:777
+#: includes/class-snn-events-admin.php:791
 msgid "PIN set"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:778
+#: includes/class-snn-events-admin.php:792
 msgid "Volunteers: no door PIN set yet"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:779
+#: includes/class-snn-events-admin.php:793
 msgid "Change the PIN"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:779
+#: includes/class-snn-events-admin.php:793
 msgid "Set a door PIN"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:780
+#: includes/class-snn-events-admin.php:794
 msgid "If a camera does not work, staff can type the code printed under the QR."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:804
+#: includes/class-snn-events-admin.php:818
 msgid "Printed on the ticket, in emails, in wallet passes and in the calendar invite."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:805
-#: includes/class-snn-mailer.php:173
+#: includes/class-snn-events-admin.php:819
+#: includes/class-snn-mailer.php:185
 #: includes/class-snn-wizard.php:41
 #: includes/class-snn-woo-admin.php:146
 msgid "Event name"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:808
+#: includes/class-snn-events-admin.php:822
 #: includes/class-snn-wizard.php:44
 #: includes/class-snn-woo-admin.php:155
 msgid "Starts"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:809
+#: includes/class-snn-events-admin.php:823
 #: includes/class-snn-wizard.php:45
 #: includes/class-snn-woo-admin.php:157
 msgid "Ends"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:811
+#: includes/class-snn-events-admin.php:825
 msgid "Ends on a different day"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:812
+#: includes/class-snn-events-admin.php:826
 msgid "End date"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:813
+#: includes/class-snn-events-admin.php:827
 #, php-format
 msgid "Times use your site timezone (%s)."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:814
-#: includes/class-snn-events.php:464
+#: includes/class-snn-events-admin.php:828
+#: includes/class-snn-events.php:482
 msgid "Grand Hall"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:815
-#: includes/class-snn-mailer.php:177
-#: includes/class-snn-mailer.php:212
-#: includes/class-snn-settings.php:77
+#: includes/class-snn-events-admin.php:829
+#: includes/class-snn-mailer.php:189
+#: includes/class-snn-mailer.php:224
+#: includes/class-snn-settings.php:109
 #: includes/class-snn-wallet.php:117
 #: includes/class-snn-wizard.php:48
 msgid "Address"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:816
+#: includes/class-snn-events-admin.php:830
 #: includes/class-snn-wallet.php:119
 msgid "Organiser"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:817
+#: includes/class-snn-events-admin.php:831
 #: includes/class-snn-pdf.php:635
 #: includes/class-snn-wallet.php:118
 #: includes/class-snn-wizard.php:49
 msgid "Good to know"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:817
+#: includes/class-snn-events-admin.php:831
 #: includes/class-snn-wizard.php:49
 msgid "Doors open at 18:30. Bring a photo ID."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:817
+#: includes/class-snn-events-admin.php:831
 msgid "Shown on the sign-up page, the PDF, the wallet pass and the ticket page."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:820
+#: includes/class-snn-events-admin.php:834
 msgid "Web address"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:820
+#: includes/class-snn-events-admin.php:834
 msgid "The end of the sign-up link. If you change it, the old link keeps working."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:824
+#: includes/class-snn-events-admin.php:838
 msgid "Your site uses plain permalinks, so events use technical links. Choose another option under Settings → Permalinks for short links."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:828
+#: includes/class-snn-events-admin.php:842
 msgid "Ticket style"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:828
+#: includes/class-snn-events-admin.php:842
 #, php-format
 msgid "Colours and logo for every event are in %s."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:830
-#: includes/class-snn-settings.php:154
+#: includes/class-snn-events-admin.php:844
+#: includes/class-snn-settings.php:190
 msgid "Preview PDF ticket"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:833
+#: includes/class-snn-events-admin.php:847
 msgid "Attached to the ticket email"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:833
+#: includes/class-snn-events-admin.php:847
 msgid "Download buttons for these are in the email anyway; attaching also puts the file itself in the email."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:837
+#: includes/class-snn-events-admin.php:851
 msgid "set up Apple Wallet first"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:838
+#: includes/class-snn-events-admin.php:852
 msgid "(needs a date)"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:841
+#: includes/class-snn-events-admin.php:855
 msgid "Save event"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:845
+#: includes/class-snn-events-admin.php:859
 msgid "Copy this event"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:846
+#: includes/class-snn-events-admin.php:860
 msgid "Makes a new event with the same questions, rules, emails and style. People and tickets are not copied, and the copy starts closed for sign-ups."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:847
+#: includes/class-snn-events-admin.php:861
 msgid "Duplicate event"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:849
+#: includes/class-snn-events-admin.php:863
 msgid "Delete event"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:850
+#: includes/class-snn-events-admin.php:864
 #, php-format
 msgid "Deletes the event, its sign-up form, %d ticket and all emails. QR codes stop working at the door. This cannot be undone."
 msgid_plural "Deletes the event, its sign-up form, %d tickets and all emails. QR codes stop working at the door. This cannot be undone."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:851
+#: includes/class-snn-events-admin.php:865
 msgid "Download the list first"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:854
+#: includes/class-snn-events-admin.php:868
 #, php-format
 msgid "Type %s to confirm:"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:855
+#: includes/class-snn-events-admin.php:869
 msgid "Delete forever"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:870
-#: includes/class-snn-events-admin.php:1101
-#: includes/class-snn-woo-admin.php:441
+#: includes/class-snn-events-admin.php:884
+#: includes/class-snn-events-admin.php:1133
+#: includes/class-snn-woo-admin.php:451
 msgid "That event no longer exists."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:892
+#: includes/class-snn-events-admin.php:906
 msgid "Event saved."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:896
+#: includes/class-snn-events-admin.php:910
 #, php-format
 msgid "The sign-up link is now %s; the old one still works."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:897
+#: includes/class-snn-events-admin.php:911
 msgid "That web address was taken, so a number was added."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:908
+#: includes/class-snn-events-admin.php:922
 msgid "The form needs at least one question."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:917
+#: includes/class-snn-events-admin.php:931
 msgid "Sign-up form saved."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:941
+#: includes/class-snn-events-admin.php:956
 msgid "Email saved."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:957
+#: includes/class-snn-events-admin.php:972
 #, php-format
 msgid "%d approved; their ticket is on its way."
 msgid_plural "%d approved; their tickets are on their way."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:958
+#: includes/class-snn-events-admin.php:973
 #, php-format
 msgid "%d declined."
 msgid_plural "%d declined."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:959
+#: includes/class-snn-events-admin.php:974
 #, php-format
 msgid "%d ticket email queued."
 msgid_plural "%d ticket emails queued."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:960
+#: includes/class-snn-events-admin.php:975
 #, php-format
 msgid "%d ticket cancelled. It will be refused at the door."
 msgid_plural "%d tickets cancelled. They will be refused at the door."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:961
+#: includes/class-snn-events-admin.php:976
 #, php-format
 msgid "%d ticket restored."
 msgid_plural "%d tickets restored."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:962
+#: includes/class-snn-events-admin.php:977
 #, php-format
 msgid "Check-in undone for %d person."
 msgid_plural "Check-in undone for %d people."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:963
+#: includes/class-snn-events-admin.php:978
 #, php-format
 msgid "%d person deleted."
 msgid_plural "%d people deleted."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:965
+#: includes/class-snn-events-admin.php:980
 #, php-format
 msgid "%d updated."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:975
+#: includes/class-snn-events-admin.php:992
+#: includes/class-snn-events-admin.php:1007
 #: includes/class-snn-people.php:169
 msgid "That person is no longer on this event."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:985
-#: includes/class-snn-settings.php:233
-#: includes/class-snn-settings.php:567
-#: includes/class-snn-woo-admin.php:483
-#: includes/class-snn-woo-admin.php:578
+#: includes/class-snn-events-admin.php:995
+msgid "Taken back. The link that was sent no longer works."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:999
+#, php-format
+msgid "Link sent to %s."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:1017
+#: includes/class-snn-settings.php:269
+#: includes/class-snn-settings.php:605
+#: includes/class-snn-woo-admin.php:494
+#: includes/class-snn-woo-admin.php:593
 msgid "Saved."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:990
+#: includes/class-snn-events-admin.php:1022
 msgid "Saved, and the ticket email is on its way."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1025
+#: includes/class-snn-events-admin.php:1057
 msgid "Tick at least one person first."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1034
+#: includes/class-snn-events-admin.php:1066
 #, php-format
 msgid "%1$d skipped: %2$s"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1044
+#: includes/class-snn-events-admin.php:1076
 #, php-format
 msgid "Made %d blank ticket."
 msgid_plural "Made %d blank tickets."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:1050
+#: includes/class-snn-events-admin.php:1082
 msgid "Pick a .csv file first."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1054
+#: includes/class-snn-events-admin.php:1086
 msgid "The file has a header row but no people under it."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1064
+#: includes/class-snn-events-admin.php:1096
 msgid "Added. Their ticket is on its way."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1065
+#: includes/class-snn-events-admin.php:1097
 msgid "Added."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1072
+#: includes/class-snn-events-admin.php:1104
 msgid "That upload has expired. Please upload the file again."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1075
+#: includes/class-snn-events-admin.php:1107
 msgid "Pick the column with names or emails."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1080
+#: includes/class-snn-events-admin.php:1112
 #, php-format
 msgid "Imported %d person."
 msgid_plural "Imported %d people."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:1081
+#: includes/class-snn-events-admin.php:1113
 #, php-format
 msgid "%d already had a ticket and was skipped."
 msgid_plural "%d already had a ticket and were skipped."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:1082
+#: includes/class-snn-events-admin.php:1114
 msgid "Use \"Email everyone\" when you are ready to send their tickets."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1092
+#: includes/class-snn-events-admin.php:1124
 #, php-format
 msgid "%d ticket email is being sent in the background."
 msgid_plural "%d ticket emails are being sent in the background."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-events-admin.php:1093
+#: includes/class-snn-events-admin.php:1125
 msgid "Nobody to send to: everyone already has their ticket."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1115
-#: includes/class-snn-mailer.php:178
-#: includes/class-snn-mailer.php:217
+#: includes/class-snn-events-admin.php:1147
+#: includes/class-snn-mailer.php:190
+#: includes/class-snn-mailer.php:229
 #: includes/class-snn-pdf.php:616
 #: includes/class-snn-scanner.php:318
 #: includes/class-snn-wallet.php:116
 msgid "Ticket code"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1116
+#: includes/class-snn-events-admin.php:1148
 msgid "Scans"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1116
+#: includes/class-snn-events-admin.php:1148
 msgid "Last scan"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1120
+#: includes/class-snn-events-admin.php:1152
 msgid "yes"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1120
+#: includes/class-snn-events-admin.php:1152
 msgid "no"
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1133
+#: includes/class-snn-events-admin.php:1165
 msgid "Event copied. Change the name and date, then open it for sign-ups on the Sign-up form tab."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1139
+#: includes/class-snn-events-admin.php:1171
 msgid "Type DELETE to confirm."
 msgstr ""
 
-#: includes/class-snn-events-admin.php:1143
+#: includes/class-snn-events-admin.php:1175
 #, php-format
 msgid "Deleted \"%1$s\" and %2$d tickets."
 msgstr ""
@@ -2299,19 +2317,19 @@ msgstr ""
 msgid "%s (copy)"
 msgstr ""
 
-#: includes/class-snn-events.php:461
+#: includes/class-snn-events.php:479
 msgid "Design Summit 2026"
 msgstr ""
 
-#: includes/class-snn-events.php:465
+#: includes/class-snn-events.php:483
 msgid "12 Harbour Street, Istanbul"
 msgstr ""
 
-#: includes/class-snn-events.php:467
+#: includes/class-snn-events.php:485
 msgid "Doors open 30 minutes before the start. Bring this ticket on your phone or printed."
 msgstr ""
 
-#: includes/class-snn-events.php:474
+#: includes/class-snn-events.php:492
 msgid "Ada Lovelace"
 msgstr ""
 
@@ -2456,8 +2474,8 @@ msgid "Thanks! We'll review your request and email you soon."
 msgstr ""
 
 #: includes/class-snn-forms.php:92
-#: includes/class-snn-woo.php:263
-#: includes/class-snn-woo.php:973
+#: includes/class-snn-woo.php:271
+#: includes/class-snn-woo.php:992
 msgid "Sorry, this event is fully booked."
 msgstr ""
 
@@ -2470,7 +2488,7 @@ msgid "Full name"
 msgstr ""
 
 #: includes/class-snn-forms.php:457
-#: includes/class-snn-woo.php:265
+#: includes/class-snn-woo.php:273
 #, php-format
 msgid "%d spot left"
 msgid_plural "%d spots left"
@@ -2504,342 +2522,345 @@ msgstr ""
 msgid "%s is required."
 msgstr ""
 
-#: includes/class-snn-forms.php:941
+#: includes/class-snn-forms.php:938
 #: includes/class-snn-people.php:139
 msgid "Ticket sent"
 msgstr ""
 
-#: includes/class-snn-forms.php:943
+#: includes/class-snn-forms.php:940
 msgid "Declined by your rules"
 msgstr ""
 
-#: includes/class-snn-mailer.php:59
+#: includes/class-snn-mailer.php:71
 msgid "Ticket email"
 msgstr ""
 
-#: includes/class-snn-mailer.php:60
+#: includes/class-snn-mailer.php:72
 msgid "We got your request"
 msgstr ""
 
-#: includes/class-snn-mailer.php:61
+#: includes/class-snn-mailer.php:73
 msgid "Sorry, no spot"
 msgstr ""
 
-#: includes/class-snn-mailer.php:62
+#: includes/class-snn-mailer.php:74
 msgid "Notice to you"
 msgstr ""
 
-#: includes/class-snn-mailer.php:63
+#: includes/class-snn-mailer.php:75
 msgid "Your tickets (to the buyer)"
 msgstr ""
 
-#: includes/class-snn-mailer.php:64
+#: includes/class-snn-mailer.php:76
 msgid "A ticket for you"
 msgstr ""
 
-#: includes/class-snn-mailer.php:76
+#: includes/class-snn-mailer.php:88
 msgid "When someone gets a ticket."
 msgstr ""
 
-#: includes/class-snn-mailer.php:77
+#: includes/class-snn-mailer.php:89
 msgid "When someone has to wait for your approval."
 msgstr ""
 
-#: includes/class-snn-mailer.php:78
+#: includes/class-snn-mailer.php:90
 msgid "When you decline someone."
 msgstr ""
 
-#: includes/class-snn-mailer.php:79
+#: includes/class-snn-mailer.php:91
 msgid "To you, when someone signs up."
 msgstr ""
 
-#: includes/class-snn-mailer.php:80
+#: includes/class-snn-mailer.php:92
 msgid "To the buyer, once an order is paid: every ticket, and links to pass them on."
 msgstr ""
 
-#: includes/class-snn-mailer.php:81
+#: includes/class-snn-mailer.php:93
 msgid "When a buyer passes a ticket on to someone by email."
 msgstr ""
 
-#: includes/class-snn-mailer.php:107
+#: includes/class-snn-mailer.php:119
 msgid "We received your registration"
 msgstr ""
 
-#: includes/class-snn-mailer.php:108
-#: includes/class-snn-mailer.php:133
+#: includes/class-snn-mailer.php:120
+#: includes/class-snn-mailer.php:145
 msgid "Thanks, {name}!"
 msgstr ""
 
-#: includes/class-snn-mailer.php:109
+#: includes/class-snn-mailer.php:121
 msgid "We have your registration for <strong>{event}</strong> and will review it shortly."
 msgstr ""
 
-#: includes/class-snn-mailer.php:110
+#: includes/class-snn-mailer.php:122
 msgid "You will get another email with your ticket once you are confirmed."
 msgstr ""
 
-#: includes/class-snn-mailer.php:116
+#: includes/class-snn-mailer.php:128
 msgid "About your registration"
 msgstr ""
 
-#: includes/class-snn-mailer.php:117
+#: includes/class-snn-mailer.php:129
 msgid "Hi {name},"
 msgstr ""
 
-#: includes/class-snn-mailer.php:118
+#: includes/class-snn-mailer.php:130
 msgid "Thanks for your interest in <strong>{event}</strong>. Unfortunately we are not able to confirm a place for you this time."
 msgstr ""
 
-#: includes/class-snn-mailer.php:124
+#: includes/class-snn-mailer.php:136
 msgid "New sign-up: {name} for {event}"
 msgstr ""
 
-#: includes/class-snn-mailer.php:125
+#: includes/class-snn-mailer.php:137
 msgid "<strong>{name}</strong> ({email}) signed up for <strong>{event}</strong>."
 msgstr ""
 
-#: includes/class-snn-mailer.php:126
+#: includes/class-snn-mailer.php:138
 msgid "Status: {status}"
 msgstr ""
 
-#: includes/class-snn-mailer.php:132
+#: includes/class-snn-mailer.php:144
+#: includes/class-snn-texts.php:45
 msgid "Your tickets for {event}"
 msgstr ""
 
-#: includes/class-snn-mailer.php:134
+#: includes/class-snn-mailer.php:146
 msgid "Your order is confirmed. Here are your {count} tickets for <strong>{event}</strong>."
 msgstr ""
 
-#: includes/class-snn-mailer.php:137
+#: includes/class-snn-mailer.php:149
 msgid "Tickets without a name are waiting for their guests. Send each one on: the guest fills in their name and gets their own ticket."
 msgstr ""
 
-#: includes/class-snn-mailer.php:144
+#: includes/class-snn-mailer.php:156
+#: includes/class-snn-texts.php:28
 msgid "{buyer} got you a ticket to {event}"
 msgstr ""
 
-#: includes/class-snn-mailer.php:145
+#: includes/class-snn-mailer.php:157
 msgid "A ticket for you!"
 msgstr ""
 
-#: includes/class-snn-mailer.php:146
+#: includes/class-snn-mailer.php:158
 msgid "{buyer} got you a ticket to <strong>{event}</strong>."
 msgstr ""
 
-#: includes/class-snn-mailer.php:148
+#: includes/class-snn-mailer.php:160
 msgid "Tell us who's coming and your ticket arrives straight away."
 msgstr ""
 
-#: includes/class-snn-mailer.php:156
+#: includes/class-snn-mailer.php:168
 msgid "Your ticket for {event}"
 msgstr ""
 
-#: includes/class-snn-mailer.php:157
+#: includes/class-snn-mailer.php:169
 msgid "You're in, {name}!"
 msgstr ""
 
-#: includes/class-snn-mailer.php:158
+#: includes/class-snn-mailer.php:170
 msgid "Here is your ticket. Show the QR code at the entrance — on your phone or printed."
 msgstr ""
 
-#: includes/class-snn-mailer.php:161
+#: includes/class-snn-mailer.php:173
 msgid "See you there!"
 msgstr ""
 
-#: includes/class-snn-mailer.php:171
+#: includes/class-snn-mailer.php:183
 msgid "Ticket holder name"
 msgstr ""
 
-#: includes/class-snn-mailer.php:172
+#: includes/class-snn-mailer.php:184
 msgid "Their address"
 msgstr ""
 
-#: includes/class-snn-mailer.php:174
+#: includes/class-snn-mailer.php:186
 msgid "Event date"
 msgstr ""
 
-#: includes/class-snn-mailer.php:175
+#: includes/class-snn-mailer.php:187
 msgid "Start – end time"
 msgstr ""
 
-#: includes/class-snn-mailer.php:179
+#: includes/class-snn-mailer.php:191
 msgid "The designed ticket with QR"
 msgstr ""
 
-#: includes/class-snn-mailer.php:180
+#: includes/class-snn-mailer.php:192
 msgid "Just the QR image"
 msgstr ""
 
-#: includes/class-snn-mailer.php:181
+#: includes/class-snn-mailer.php:193
 msgid "Wallet / PDF / calendar buttons"
 msgstr ""
 
-#: includes/class-snn-mailer.php:182
+#: includes/class-snn-mailer.php:194
 msgid "Link to the ticket page"
 msgstr ""
 
-#: includes/class-snn-mailer.php:183
+#: includes/class-snn-mailer.php:195
 msgid "PDF download link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:184
+#: includes/class-snn-mailer.php:196
 msgid "Calendar file link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:185
+#: includes/class-snn-mailer.php:197
 msgid "Apple Wallet link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:186
+#: includes/class-snn-mailer.php:198
 msgid "Google Wallet link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:187
+#: includes/class-snn-mailer.php:199
 msgid "Form name"
 msgstr ""
 
-#: includes/class-snn-mailer.php:188
-#: includes/class-snn-mailer.php:228
+#: includes/class-snn-mailer.php:200
+#: includes/class-snn-mailer.php:240
 msgid "Site name"
 msgstr ""
 
-#: includes/class-snn-mailer.php:189
-#: includes/class-snn-mailer.php:229
+#: includes/class-snn-mailer.php:201
+#: includes/class-snn-mailer.php:241
 msgid "Today's date"
 msgstr ""
 
-#: includes/class-snn-mailer.php:190
+#: includes/class-snn-mailer.php:202
 msgid "Any form field"
 msgstr ""
 
-#: includes/class-snn-mailer.php:204
+#: includes/class-snn-mailer.php:216
 msgid "Site"
 msgstr ""
 
-#: includes/class-snn-mailer.php:213
+#: includes/class-snn-mailer.php:225
 msgid "Sign-up link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:214
+#: includes/class-snn-mailer.php:226
 msgid "Ticket with QR"
 msgstr ""
 
-#: includes/class-snn-mailer.php:215
+#: includes/class-snn-mailer.php:227
 msgid "QR code only"
 msgstr ""
 
-#: includes/class-snn-mailer.php:216
+#: includes/class-snn-mailer.php:228
 msgid "Wallet, PDF & calendar buttons"
 msgstr ""
 
-#: includes/class-snn-mailer.php:218
+#: includes/class-snn-mailer.php:230
 msgid "Ticket page link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:220
+#: includes/class-snn-mailer.php:232
 msgid "Review button"
 msgstr ""
 
-#: includes/class-snn-mailer.php:221
+#: includes/class-snn-mailer.php:233
 msgid "Number of tickets"
 msgstr ""
 
-#: includes/class-snn-mailer.php:222
+#: includes/class-snn-mailer.php:234
 msgid "List of the tickets"
 msgstr ""
 
-#: includes/class-snn-mailer.php:223
+#: includes/class-snn-mailer.php:235
 msgid "Manage tickets button"
 msgstr ""
 
-#: includes/class-snn-mailer.php:224
+#: includes/class-snn-mailer.php:236
 msgid "Manage tickets link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:225
+#: includes/class-snn-mailer.php:237
 msgid "Who sent it"
 msgstr ""
 
-#: includes/class-snn-mailer.php:226
+#: includes/class-snn-mailer.php:238
 msgid "Claim button"
 msgstr ""
 
-#: includes/class-snn-mailer.php:227
+#: includes/class-snn-mailer.php:239
 msgid "Claim link"
 msgstr ""
 
-#: includes/class-snn-mailer.php:294
+#: includes/class-snn-mailer.php:306
 msgid "Review in WordPress"
 msgstr ""
 
-#: includes/class-snn-mailer.php:310
+#: includes/class-snn-mailer.php:322
 msgid "Your ticket QR code"
 msgstr ""
 
-#: includes/class-snn-mailer.php:443
+#: includes/class-snn-mailer.php:455
 msgid "A valid recipient address is required."
 msgstr ""
 
-#: includes/class-snn-mailer.php:446
+#: includes/class-snn-mailer.php:458
 msgid "Subject and body are required."
 msgstr ""
 
-#: includes/class-snn-mailer.php:469
+#: includes/class-snn-mailer.php:481
 msgid "Could not write to the mail queue."
 msgstr ""
 
-#: includes/class-snn-mailer.php:556
+#: includes/class-snn-mailer.php:589
 msgid "Ticket not found."
 msgstr ""
 
-#: includes/class-snn-mailer.php:557
+#: includes/class-snn-mailer.php:590
 msgid "That ticket has no email address."
 msgstr ""
 
-#: includes/class-snn-mailer.php:558
+#: includes/class-snn-mailer.php:591
 msgid "Cancelled tickets are not emailed."
 msgstr ""
 
-#: includes/class-snn-mailer.php:794
-#: includes/class-snn-woo.php:749
-#: includes/class-snn-woo.php:952
-#: includes/class-snn-woo.php:957
+#: includes/class-snn-mailer.php:857
+#: includes/class-snn-texts.php:65
 msgid "Manage your tickets"
 msgstr ""
 
-#: includes/class-snn-mailer.php:811
+#: includes/class-snn-mailer.php:864
+#: includes/class-snn-texts.php:66
+msgid "Claim my ticket"
+msgstr ""
+
+#: includes/class-snn-mailer.php:874
 msgid "Registration"
 msgstr ""
 
-#: includes/class-snn-mailer.php:821
-#: includes/class-snn-woo.php:763
-#: includes/class-snn-woo.php:892
+#: includes/class-snn-mailer.php:884
+#: includes/class-snn-texts.php:47
 msgid "Your ticket"
 msgstr ""
 
-#: includes/class-snn-mailer.php:822
+#: includes/class-snn-mailer.php:885
 #: includes/class-snn-people.php:23
 #: includes/class-snn-people.php:137
-#: includes/class-snn-woo.php:759
-#: includes/class-snn-woo.php:884
+#: includes/class-snn-texts.php:50
 msgid "Not named yet"
 msgstr ""
 
-#: includes/class-snn-mailer.php:822
+#: includes/class-snn-mailer.php:885
 msgid "Send this link to your guest"
 msgstr ""
 
-#: includes/class-snn-mailer.php:901
+#: includes/class-snn-mailer.php:965
 msgid "Test"
 msgstr ""
 
-#: includes/class-snn-mailer.php:910
+#: includes/class-snn-mailer.php:974
 #, php-format
 msgid "Test email sent to %s."
 msgstr ""
 
-#: includes/class-snn-mailer.php:912
-#: includes/class-snn-settings.php:116
+#: includes/class-snn-mailer.php:976
+#: includes/class-snn-settings.php:152
 #, php-format
 msgid "Sending failed: %s"
 msgstr ""
@@ -2933,10 +2954,6 @@ msgstr ""
 
 #: includes/class-snn-qr.php:222
 msgid "Not valid"
-msgstr ""
-
-#: includes/class-snn-router.php:135
-msgid "It's yours! Your ticket is also on its way to your inbox."
 msgstr ""
 
 #: includes/class-snn-router.php:148
@@ -3063,8 +3080,8 @@ msgid "Enter the door PIN to start checking tickets in."
 msgstr ""
 
 #: includes/class-snn-scanner.php:299
-#: includes/class-snn-settings.php:202
-#: includes/class-snn-settings.php:203
+#: includes/class-snn-settings.php:238
+#: includes/class-snn-settings.php:239
 msgid "Door PIN"
 msgstr ""
 
@@ -3096,649 +3113,689 @@ msgstr ""
 msgid "Lock scanner"
 msgstr ""
 
-#: includes/class-snn-settings.php:22
-msgid "General"
+#: includes/class-snn-settings.php:32
+msgid "Sent & waiting"
 msgstr ""
 
-#: includes/class-snn-settings.php:23
+#: includes/class-snn-settings.php:33
+msgid "Templates"
+msgstr ""
+
+#: includes/class-snn-settings.php:34
+msgid "Sender & test"
+msgstr ""
+
+#: includes/class-snn-settings.php:37
 msgid "Style"
 msgstr ""
 
-#: includes/class-snn-settings.php:24
+#: includes/class-snn-settings.php:38
 msgid "Door & scanner"
 msgstr ""
 
-#: includes/class-snn-settings.php:25
-#: includes/class-snn-settings.php:314
-msgid "Email log"
-msgstr ""
-
-#: includes/class-snn-settings.php:26
-msgid "Email templates"
-msgstr ""
-
-#: includes/class-snn-settings.php:27
+#: includes/class-snn-settings.php:39
 msgid "Apple & Google Wallet"
 msgstr ""
 
-#: includes/class-snn-settings.php:28
+#: includes/class-snn-settings.php:40
+msgid "Wording"
+msgstr ""
+
+#: includes/class-snn-settings.php:41
 msgid "Advanced"
 msgstr ""
 
-#: includes/class-snn-settings.php:53
-#: snn-tickets.php:101
+#: includes/class-snn-settings.php:85
+#: snn-tickets.php:113
 msgid "Tickets Settings"
 msgstr ""
 
-#: includes/class-snn-settings.php:74
+#: includes/class-snn-settings.php:106
 msgid "Emails come from"
 msgstr ""
 
-#: includes/class-snn-settings.php:74
+#: includes/class-snn-settings.php:106
 msgid "What attendees see in their inbox."
 msgstr ""
 
-#: includes/class-snn-settings.php:77
+#: includes/class-snn-settings.php:109
 msgid "Leave empty to keep your site's usual sending address. The name above is used either way."
 msgstr ""
 
-#: includes/class-snn-settings.php:80
+#: includes/class-snn-settings.php:112
+msgid "Sending speed"
+msgstr ""
+
+#: includes/class-snn-settings.php:113
+msgid "Emails per minute"
+msgstr ""
+
+#: includes/class-snn-settings.php:113
+msgid "Lower it if your host or email provider limits sending."
+msgstr ""
+
+#: includes/class-snn-settings.php:115
 msgid "Email footer"
 msgstr ""
 
-#: includes/class-snn-settings.php:80
+#: includes/class-snn-settings.php:115
 msgid "Under every email."
 msgstr ""
 
-#: includes/class-snn-settings.php:81
+#: includes/class-snn-settings.php:116
 msgid "Questions? Just reply to this email."
 msgstr ""
 
-#: includes/class-snn-settings.php:83
+#: includes/class-snn-settings.php:118
 msgid "Check that email works"
 msgstr ""
 
-#: includes/class-snn-settings.php:84
+#: includes/class-snn-settings.php:119
 msgid "Sends a short message right now. If it does not arrive, your site needs an SMTP plugin."
 msgstr ""
 
-#: includes/class-snn-settings.php:85
+#: includes/class-snn-settings.php:120
 msgid "Send to"
 msgstr ""
 
-#: includes/class-snn-settings.php:86
+#: includes/class-snn-settings.php:121
 msgid "Send a test email"
 msgstr ""
 
-#: includes/class-snn-settings.php:89
+#: includes/class-snn-settings.php:124
 msgid "Save settings"
 msgstr ""
 
-#: includes/class-snn-settings.php:102
+#: includes/class-snn-settings.php:138
 msgid "Settings saved."
 msgstr ""
 
-#: includes/class-snn-settings.php:111
+#: includes/class-snn-settings.php:147
 #, php-format
 msgid "[%s] Test email"
 msgstr ""
 
-#: includes/class-snn-settings.php:112
+#: includes/class-snn-settings.php:148
 msgid "It works. Ticket emails from this site will arrive like this one."
 msgstr ""
 
-#: includes/class-snn-settings.php:115
+#: includes/class-snn-settings.php:151
 #, php-format
 msgid "Sent to %s. Check the inbox (and spam folder)."
 msgstr ""
 
-#: includes/class-snn-settings.php:132
+#: includes/class-snn-settings.php:168
 msgid "Logo"
 msgstr ""
 
-#: includes/class-snn-settings.php:132
+#: includes/class-snn-settings.php:168
 msgid "Email header and PDF. A wide PNG around 400×120 works best."
 msgstr ""
 
-#: includes/class-snn-settings.php:136
+#: includes/class-snn-settings.php:172
 msgid "Choose a logo"
 msgstr ""
 
-#: includes/class-snn-settings.php:136
+#: includes/class-snn-settings.php:172
 msgid "Choose from Media Library"
 msgstr ""
 
-#: includes/class-snn-settings.php:137
+#: includes/class-snn-settings.php:173
 msgid "Remove logo"
 msgstr ""
 
-#: includes/class-snn-settings.php:140
+#: includes/class-snn-settings.php:176
 msgid "Default style"
 msgstr ""
 
-#: includes/class-snn-settings.php:140
+#: includes/class-snn-settings.php:176
 msgid "Every event uses this unless it picks its own in Event settings."
 msgstr ""
 
-#: includes/class-snn-settings.php:143
+#: includes/class-snn-settings.php:179
 msgid "Colours"
 msgstr ""
 
-#: includes/class-snn-settings.php:143
+#: includes/class-snn-settings.php:179
 msgid "Fine-tune the default style. Events that pick a different style keep that style's own colours."
 msgstr ""
 
-#: includes/class-snn-settings.php:149
+#: includes/class-snn-settings.php:185
 msgid "Reset to the style's colours"
 msgstr ""
 
-#: includes/class-snn-settings.php:152
+#: includes/class-snn-settings.php:188
 msgid "Buttons in emails"
 msgstr ""
 
-#: includes/class-snn-settings.php:153
+#: includes/class-snn-settings.php:189
 msgid "Show Wallet, PDF and calendar buttons under the ticket"
 msgstr ""
 
-#: includes/class-snn-settings.php:155
+#: includes/class-snn-settings.php:191
 msgid "Save first to see your changes. The ticket email preview is on each event's Emails tab."
 msgstr ""
 
-#: includes/class-snn-settings.php:158
+#: includes/class-snn-settings.php:194
 msgid "Save style"
 msgstr ""
 
-#: includes/class-snn-settings.php:178
+#: includes/class-snn-settings.php:214
 msgid "Style saved."
 msgstr ""
 
-#: includes/class-snn-settings.php:202
+#: includes/class-snn-settings.php:238
 msgid "Lets volunteers scan tickets without a WordPress account."
 msgstr ""
 
-#: includes/class-snn-settings.php:203
+#: includes/class-snn-settings.php:239
 msgid "Type a new PIN to change it"
 msgstr ""
 
-#: includes/class-snn-settings.php:203
+#: includes/class-snn-settings.php:239
 msgid "For example 4821"
 msgstr ""
 
-#: includes/class-snn-settings.php:204
+#: includes/class-snn-settings.php:240
 msgid "PIN is set"
 msgstr ""
 
-#: includes/class-snn-settings.php:204
+#: includes/class-snn-settings.php:240
 msgid "No PIN yet"
 msgstr ""
 
-#: includes/class-snn-settings.php:205
+#: includes/class-snn-settings.php:241
 msgid "Remove PIN"
 msgstr ""
 
-#: includes/class-snn-settings.php:206
+#: includes/class-snn-settings.php:242
 msgid "Volunteers stay unlocked for 24 hours. Changing the PIN locks every phone. Without a PIN, only logged-in admins can scan."
 msgstr ""
 
-#: includes/class-snn-settings.php:208
+#: includes/class-snn-settings.php:244
 msgid "Scanner"
 msgstr ""
 
-#: includes/class-snn-settings.php:208
+#: includes/class-snn-settings.php:244
 msgid "Staff open this on a phone. Each event also has its own scanner link on its Door tab."
 msgstr ""
 
-#: includes/class-snn-settings.php:210
+#: includes/class-snn-settings.php:246
 msgid "Use my own scanner page instead"
 msgstr ""
 
-#: includes/class-snn-settings.php:211
+#: includes/class-snn-settings.php:247
 msgid "Page address"
 msgstr ""
 
-#: includes/class-snn-settings.php:211
+#: includes/class-snn-settings.php:247
 #, php-format
 msgid "A page of yours with the %s shortcode. Leave empty to use the built-in scanner."
 msgstr ""
 
-#: includes/class-snn-settings.php:214
+#: includes/class-snn-settings.php:250
 msgid "Web address for events"
 msgstr ""
 
-#: includes/class-snn-settings.php:214
+#: includes/class-snn-settings.php:250
 msgid "The word before each event's name in its link."
 msgstr ""
 
-#: includes/class-snn-settings.php:217
+#: includes/class-snn-settings.php:253
 #, php-format
 msgid "You also have a page called \"%s\" at this address. Event links win over it; pick another word if you still need that page."
 msgstr ""
 
-#: includes/class-snn-settings.php:218
+#: includes/class-snn-settings.php:254
 msgid "Changing this changes every event link. Links already shared will stop working."
 msgstr ""
 
-#: includes/class-snn-settings.php:220
+#: includes/class-snn-settings.php:256
 #, php-format
 msgid "Your site uses plain permalinks, so event links look technical. For short links, pick any other option under %s."
 msgstr ""
 
-#: includes/class-snn-settings.php:245
+#: includes/class-snn-settings.php:281
 #, php-format
 msgid "QR codes now point at the new address (%d cached images refreshed). Tickets already sent keep working."
 msgstr ""
 
-#: includes/class-snn-settings.php:278
+#: includes/class-snn-settings.php:314
 msgid "Email, subject or code"
 msgstr ""
 
-#: includes/class-snn-settings.php:282
+#: includes/class-snn-settings.php:318
 #, php-format
 msgid "Emails are sent automatically in the background, %d per minute, so you can close this page."
 msgstr ""
 
-#: includes/class-snn-settings.php:283
+#: includes/class-snn-settings.php:319
+#, php-format
+msgid "An email that fails is tried again after 5 minutes, 30 minutes and 2 hours before it counts as failed. Sent emails leave this log after %d days."
+msgstr ""
+
+#: includes/class-snn-settings.php:320
 #, php-format
 msgid "Next batch in %s."
 msgstr ""
 
-#: includes/class-snn-settings.php:284
+#: includes/class-snn-settings.php:321
 msgid "Send the next batch now"
 msgstr ""
 
-#: includes/class-snn-settings.php:286
-#: includes/class-snn-settings.php:325
+#: includes/class-snn-settings.php:323
+#: includes/class-snn-settings.php:365
 msgid "To"
 msgstr ""
 
-#: includes/class-snn-settings.php:288
+#: includes/class-snn-settings.php:325
 msgid "Nothing here."
 msgstr ""
 
-#: includes/class-snn-settings.php:290
+#: includes/class-snn-settings.php:327
 #, php-format
 msgid "%d tries"
 msgstr ""
 
-#: includes/class-snn-settings.php:291
+#: includes/class-snn-settings.php:329
+#, php-format
+msgid "Trying again in %s"
+msgstr ""
+
+#: includes/class-snn-settings.php:330
+msgid "Trying again now"
+msgstr ""
+
+#: includes/class-snn-settings.php:331
 msgid "to you"
 msgstr ""
 
-#: includes/class-snn-settings.php:296
+#: includes/class-snn-settings.php:336
 msgid "Fix address"
 msgstr ""
 
-#: includes/class-snn-settings.php:297
+#: includes/class-snn-settings.php:337
 msgid "Retry"
 msgstr ""
 
-#: includes/class-snn-settings.php:298
+#: includes/class-snn-settings.php:338
 msgid "Remove this email from the log?"
 msgstr ""
 
-#: includes/class-snn-settings.php:303
+#: includes/class-snn-settings.php:343
 msgid "Retry all failed"
 msgstr ""
 
-#: includes/class-snn-settings.php:304
+#: includes/class-snn-settings.php:344
 msgid "Remove every sent email from the log? This does not unsend them."
 msgstr ""
 
-#: includes/class-snn-settings.php:304
+#: includes/class-snn-settings.php:344
 msgid "Clear sent emails from the log"
 msgstr ""
 
-#: includes/class-snn-settings.php:315
+#: includes/class-snn-settings.php:354
+msgid "Email log"
+msgstr ""
+
+#: includes/class-snn-settings.php:355
 msgid "That email is no longer in the log."
 msgstr ""
 
-#: includes/class-snn-settings.php:327
+#: includes/class-snn-settings.php:367
 msgid "Attachments"
 msgstr ""
 
-#: includes/class-snn-settings.php:328
+#: includes/class-snn-settings.php:368
 msgid "Queued"
 msgstr ""
 
-#: includes/class-snn-settings.php:339
+#: includes/class-snn-settings.php:379
 msgid "Email queued again."
 msgstr ""
 
-#: includes/class-snn-settings.php:340
+#: includes/class-snn-settings.php:380
 msgid "Removed from the log."
 msgstr ""
 
-#: includes/class-snn-settings.php:343
+#: includes/class-snn-settings.php:383
 msgid "Another batch is being sent right now. Try again in a moment."
 msgstr ""
 
-#: includes/class-snn-settings.php:344
+#: includes/class-snn-settings.php:384
 #, php-format
 msgid "Sent %1$d, failed %2$d."
 msgstr ""
 
-#: includes/class-snn-settings.php:346
+#: includes/class-snn-settings.php:386
 #, php-format
 msgid "%d emails queued again."
 msgstr ""
 
-#: includes/class-snn-settings.php:347
+#: includes/class-snn-settings.php:387
 #, php-format
 msgid "%d sent emails removed from the log."
 msgstr ""
 
-#: includes/class-snn-settings.php:348
+#: includes/class-snn-settings.php:388
 msgid "Nothing to do."
 msgstr ""
 
-#: includes/class-snn-settings.php:363
+#: includes/class-snn-settings.php:403
 msgid "Saved emails you can reuse in any event: on an event's Emails tab, pick \"Start from a template\". Each event keeps its own copy, so changing a template here does not change events that already used it."
 msgstr ""
 
-#: includes/class-snn-settings.php:369
+#: includes/class-snn-settings.php:409
 msgid "All templates"
 msgstr ""
 
-#: includes/class-snn-settings.php:370
+#: includes/class-snn-settings.php:410
 msgid "Template name"
 msgstr ""
 
-#: includes/class-snn-settings.php:370
+#: includes/class-snn-settings.php:410
 msgid "Conference ticket"
 msgstr ""
 
-#: includes/class-snn-settings.php:371
+#: includes/class-snn-settings.php:411
 msgid "Kind"
 msgstr ""
 
-#: includes/class-snn-settings.php:373
+#: includes/class-snn-settings.php:413
 msgid "Delete this template? Events that already used it keep their copy."
 msgstr ""
 
-#: includes/class-snn-settings.php:373
+#: includes/class-snn-settings.php:413
 msgid "Delete template"
 msgstr ""
 
-#: includes/class-snn-settings.php:374
+#: includes/class-snn-settings.php:414
 msgid "Save template"
 msgstr ""
 
-#: includes/class-snn-settings.php:380
+#: includes/class-snn-settings.php:420
 msgid "New"
 msgstr ""
 
-#: includes/class-snn-settings.php:381
+#: includes/class-snn-settings.php:421
 msgid "None saved yet."
 msgstr ""
 
-#: includes/class-snn-settings.php:405
+#: includes/class-snn-settings.php:445
 msgid "Template saved."
 msgstr ""
 
-#: includes/class-snn-settings.php:414
+#: includes/class-snn-settings.php:454
 msgid "Template deleted."
 msgstr ""
 
-#: includes/class-snn-settings.php:428
+#: includes/class-snn-settings.php:468
 msgid "Optional. Adds \"Add to Apple Wallet\" and \"Add to Google Wallet\" buttons to ticket emails and ticket pages. Tickets work fine without it."
 msgstr ""
 
-#: includes/class-snn-settings.php:433
+#: includes/class-snn-settings.php:473
 msgid "Apple Wallet"
 msgstr ""
 
-#: includes/class-snn-settings.php:433
-#: includes/class-snn-settings.php:452
+#: includes/class-snn-settings.php:473
+#: includes/class-snn-settings.php:492
 msgid "Ready"
 msgstr ""
 
-#: includes/class-snn-settings.php:433
-#: includes/class-snn-settings.php:452
+#: includes/class-snn-settings.php:473
+#: includes/class-snn-settings.php:492
 msgid "Not set up"
 msgstr ""
 
-#: includes/class-snn-settings.php:434
+#: includes/class-snn-settings.php:474
 msgid "Needs a paid Apple Developer account."
 msgstr ""
 
-#: includes/class-snn-settings.php:434
+#: includes/class-snn-settings.php:474
 msgid "Apple's guide"
 msgstr ""
 
-#: includes/class-snn-settings.php:435
+#: includes/class-snn-settings.php:475
 msgid "Create a Pass Type ID in your Apple Developer account."
 msgstr ""
 
-#: includes/class-snn-settings.php:435
+#: includes/class-snn-settings.php:475
 msgid "Make its certificate and export it with its private key as a .p12 file."
 msgstr ""
 
-#: includes/class-snn-settings.php:435
+#: includes/class-snn-settings.php:475
 msgid "Upload it below with its password, plus Apple's WWDR certificate."
 msgstr ""
 
-#: includes/class-snn-settings.php:436
+#: includes/class-snn-settings.php:476
 msgid "Pass Type ID"
 msgstr ""
 
-#: includes/class-snn-settings.php:437
+#: includes/class-snn-settings.php:477
 msgid "Team ID"
 msgstr ""
 
-#: includes/class-snn-settings.php:438
+#: includes/class-snn-settings.php:478
 msgid "Organisation name"
 msgstr ""
 
-#: includes/class-snn-settings.php:439
+#: includes/class-snn-settings.php:479
 msgid "Certificate (.p12)"
 msgstr ""
 
-#: includes/class-snn-settings.php:439
-#: includes/class-snn-settings.php:446
+#: includes/class-snn-settings.php:479
+#: includes/class-snn-settings.php:486
 msgid "Uploaded"
 msgstr ""
 
-#: includes/class-snn-settings.php:440
+#: includes/class-snn-settings.php:480
 msgid "Certificate password"
 msgstr ""
 
-#: includes/class-snn-settings.php:440
+#: includes/class-snn-settings.php:480
 msgid "Saved – type to change"
 msgstr ""
 
-#: includes/class-snn-settings.php:441
+#: includes/class-snn-settings.php:481
 msgid "My server refuses the .p12"
 msgstr ""
 
-#: includes/class-snn-settings.php:442
+#: includes/class-snn-settings.php:482
 msgid "Certificate (.pem)"
 msgstr ""
 
-#: includes/class-snn-settings.php:443
+#: includes/class-snn-settings.php:483
 msgid "Private key (.pem)"
 msgstr ""
 
-#: includes/class-snn-settings.php:444
+#: includes/class-snn-settings.php:484
 msgid "PEM files uploaded"
 msgstr ""
 
-#: includes/class-snn-settings.php:446
+#: includes/class-snn-settings.php:486
 msgid "Apple WWDR certificate"
 msgstr ""
 
-#: includes/class-snn-settings.php:447
+#: includes/class-snn-settings.php:487
 #, php-format
 msgid "Download %s from Apple."
 msgstr ""
 
-#: includes/class-snn-settings.php:448
+#: includes/class-snn-settings.php:488
 msgid "Download a sample pass"
 msgstr ""
 
-#: includes/class-snn-settings.php:449
+#: includes/class-snn-settings.php:489
 msgid "Disconnect Apple Wallet"
 msgstr ""
 
-#: includes/class-snn-settings.php:452
+#: includes/class-snn-settings.php:492
 msgid "Google Wallet"
 msgstr ""
 
-#: includes/class-snn-settings.php:453
+#: includes/class-snn-settings.php:493
 msgid "Free."
 msgstr ""
 
-#: includes/class-snn-settings.php:453
+#: includes/class-snn-settings.php:493
 msgid "Google's guide"
 msgstr ""
 
-#: includes/class-snn-settings.php:454
+#: includes/class-snn-settings.php:494
 msgid "Create an issuer in the Google Pay & Wallet Console."
 msgstr ""
 
-#: includes/class-snn-settings.php:454
+#: includes/class-snn-settings.php:494
 msgid "Create a Google Cloud service account with the Wallet API and add it to the issuer."
 msgstr ""
 
-#: includes/class-snn-settings.php:454
+#: includes/class-snn-settings.php:494
 msgid "Upload its JSON key below."
 msgstr ""
 
-#: includes/class-snn-settings.php:455
+#: includes/class-snn-settings.php:495
 msgid "Issuer ID"
 msgstr ""
 
-#: includes/class-snn-settings.php:456
+#: includes/class-snn-settings.php:496
 msgid "Service account key (.json)"
 msgstr ""
 
-#: includes/class-snn-settings.php:457
+#: includes/class-snn-settings.php:497
 msgid "Until Google approves your issuer, only test users can save passes."
 msgstr ""
 
-#: includes/class-snn-settings.php:458
+#: includes/class-snn-settings.php:498
 msgid "Try a sample pass"
 msgstr ""
 
-#: includes/class-snn-settings.php:459
+#: includes/class-snn-settings.php:499
 msgid "Disconnect Google Wallet"
 msgstr ""
 
-#: includes/class-snn-settings.php:462
+#: includes/class-snn-settings.php:502
 msgid "Save wallet settings"
 msgstr ""
 
-#: includes/class-snn-settings.php:503
+#: includes/class-snn-settings.php:543
 msgid "Saved, with problems: "
 msgstr ""
 
-#: includes/class-snn-settings.php:504
+#: includes/class-snn-settings.php:544
 msgid "Wallet settings saved."
 msgstr ""
 
-#: includes/class-snn-settings.php:534
+#: includes/class-snn-settings.php:574
 msgid "QR codes"
 msgstr ""
 
-#: includes/class-snn-settings.php:534
+#: includes/class-snn-settings.php:574
 msgid "Working (GD)."
 msgstr ""
 
-#: includes/class-snn-settings.php:534
+#: includes/class-snn-settings.php:574
 msgid "Working (built-in encoder)."
 msgstr ""
 
-#: includes/class-snn-settings.php:534
+#: includes/class-snn-settings.php:574
 msgid "Neither GD nor zlib is available, so QR images cannot be made."
 msgstr ""
 
-#: includes/class-snn-settings.php:535
+#: includes/class-snn-settings.php:575
 msgid "Background sending"
 msgstr ""
 
-#: includes/class-snn-settings.php:536
+#: includes/class-snn-settings.php:576
 #, php-format
 msgid "Next run in %s."
 msgstr ""
 
-#: includes/class-snn-settings.php:536
+#: includes/class-snn-settings.php:576
 msgid "DISABLE_WP_CRON is on: make sure a real cron job calls wp-cron.php."
 msgstr ""
 
-#: includes/class-snn-settings.php:537
+#: includes/class-snn-settings.php:577
 msgid "Not scheduled. Deactivate and reactivate the plugin to fix it."
 msgstr ""
 
-#: includes/class-snn-settings.php:538
+#: includes/class-snn-settings.php:578
 msgid "Short event links"
 msgstr ""
 
-#: includes/class-snn-settings.php:538
+#: includes/class-snn-settings.php:578
 msgid "On."
 msgstr ""
 
-#: includes/class-snn-settings.php:538
+#: includes/class-snn-settings.php:578
 msgid "Your site uses plain permalinks, so event links look technical."
 msgstr ""
 
-#: includes/class-snn-settings.php:539
+#: includes/class-snn-settings.php:579
 msgid "Apple Wallet support"
 msgstr ""
 
-#: includes/class-snn-settings.php:539
+#: includes/class-snn-settings.php:579
 msgid "The zip extension is available."
 msgstr ""
 
-#: includes/class-snn-settings.php:539
+#: includes/class-snn-settings.php:579
 msgid "The PHP zip extension is missing, so Apple Wallet passes cannot be made."
 msgstr ""
 
-#: includes/class-snn-settings.php:540
+#: includes/class-snn-settings.php:580
 msgid "Wallet signing"
 msgstr ""
 
-#: includes/class-snn-settings.php:540
+#: includes/class-snn-settings.php:580
 msgid "OpenSSL is available."
 msgstr ""
 
-#: includes/class-snn-settings.php:540
+#: includes/class-snn-settings.php:580
 msgid "OpenSSL is missing, so wallet passes cannot be signed."
 msgstr ""
 
-#: includes/class-snn-settings.php:543
-msgid "Sending speed"
-msgstr ""
-
-#: includes/class-snn-settings.php:544
-msgid "Emails per minute"
-msgstr ""
-
-#: includes/class-snn-settings.php:544
-msgid "Lower it if your host or email provider limits sending."
-msgstr ""
-
-#: includes/class-snn-settings.php:546
+#: includes/class-snn-settings.php:583
 msgid "System check"
 msgstr ""
 
-#: includes/class-snn-settings.php:549
+#: includes/class-snn-settings.php:587
 msgid "Reset QR signature"
 msgstr ""
 
-#: includes/class-snn-settings.php:550
+#: includes/class-snn-settings.php:588
 msgid "Every QR code carries a secret signature so it cannot be faked. Only reset it if you think the secret leaked: every ticket and download link already sent will stop working."
 msgstr ""
 
-#: includes/class-snn-settings.php:551
+#: includes/class-snn-settings.php:589
 msgid "Reset the QR signature? Every ticket already sent will stop working at the door."
 msgstr ""
 
-#: includes/class-snn-settings.php:551
+#: includes/class-snn-settings.php:589
 msgid "Reset signature…"
 msgstr ""
 
-#: includes/class-snn-settings.php:564
+#: includes/class-snn-settings.php:603
 #, php-format
 msgid "Signature reset; %d cached QR images cleared."
+msgstr ""
+
+#: includes/class-snn-settings.php:616
+msgid "What guests and buyers read on the claim page, the ticket list and the shop pages. Leave a box empty to use the standard wording, which is translated into your site's language automatically. Emails are edited on each event's Emails tab."
+msgstr ""
+
+#: includes/class-snn-settings.php:625
+msgid "Save wording"
+msgstr ""
+
+#: includes/class-snn-settings.php:634
+#, php-format
+msgid "Saved. %d text uses your own words."
+msgid_plural "Saved. %d texts use your own words."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-settings.php:635
+msgid "Saved. Everything uses the standard wording."
 msgstr ""
 
 #: includes/class-snn-submissions.php:52
@@ -3754,33 +3811,338 @@ msgstr ""
 msgid "Could not create a ticket."
 msgstr ""
 
-#: includes/class-snn-tickets.php:152
+#: includes/class-snn-texts.php:25
+msgid "Claim page"
+msgstr ""
+
+#: includes/class-snn-texts.php:26
+msgid "Where a guest fills in their name for a ticket someone passed on to them."
+msgstr ""
+
+#: includes/class-snn-texts.php:29
+msgid "Heading, when the sender is unknown"
+msgstr ""
+
+#: includes/class-snn-texts.php:29
+msgid "A ticket to {event} is waiting for you"
+msgstr ""
+
+#: includes/class-snn-texts.php:30
+msgid "Text under the heading"
+msgstr ""
+
+#: includes/class-snn-texts.php:30
+msgid "Tell us who's coming. Your ticket arrives by email straight away and opens here too."
+msgstr ""
+
+#: includes/class-snn-texts.php:31
+msgid "Button"
+msgstr ""
+
+#: includes/class-snn-texts.php:32
+msgid "Message on the ticket afterwards"
+msgstr ""
+
+#: includes/class-snn-texts.php:32
+msgid "It's yours! Your ticket is also on its way to your inbox."
+msgstr ""
+
+#: includes/class-snn-texts.php:33
+msgid "Link already used: heading"
+msgstr ""
+
+#: includes/class-snn-texts.php:33
+msgid "This ticket has been claimed"
+msgstr ""
+
+#: includes/class-snn-texts.php:34
+msgid "Link already used: text"
+msgstr ""
+
+#: includes/class-snn-texts.php:34
+msgid "The ticket to {event} was emailed to {email}. Look in that inbox (and the spam folder) for the email with the QR code."
+msgstr ""
+
+#: includes/class-snn-texts.php:35
+msgid "Link already used: help"
+msgstr ""
+
+#: includes/class-snn-texts.php:35
+msgid "Can't find it? Contact the organiser and they can send it again."
+msgstr ""
+
+#: includes/class-snn-texts.php:36
+msgid "Link taken back: heading"
+msgstr ""
+
+#: includes/class-snn-texts.php:36
+msgid "This link does not work any more"
+msgstr ""
+
+#: includes/class-snn-texts.php:37
+msgid "Link taken back: text"
+msgstr ""
+
+#: includes/class-snn-texts.php:37
+msgid "The ticket has already been claimed, or the person who sent it took it back. Ask them for a new link."
+msgstr ""
+
+#: includes/class-snn-texts.php:41
+msgid "Buyer's ticket list"
+msgstr ""
+
+#: includes/class-snn-texts.php:42
+msgid "On the thank-you page, in My Account, at the private \"manage your tickets\" link and in the order emails."
+msgstr ""
+
+#: includes/class-snn-texts.php:44
+msgid "Page heading"
+msgstr ""
+
+#: includes/class-snn-texts.php:44
+msgid "Your tickets · Order #{order}"
+msgstr ""
+
+#: includes/class-snn-texts.php:45
+msgid "Heading per event"
+msgstr ""
+
+#: includes/class-snn-texts.php:46
+msgid "Heading in order emails"
+msgstr ""
+
+#: includes/class-snn-texts.php:46
+msgid "Your tickets"
+msgstr ""
+
+#: includes/class-snn-texts.php:47
+msgid "The buyer's own ticket"
+msgstr ""
+
+#: includes/class-snn-texts.php:48
+msgid "Marker next to the buyer"
+msgstr ""
+
+#: includes/class-snn-texts.php:48
+msgid "(you)"
+msgstr ""
+
+#: includes/class-snn-texts.php:49
+msgid "Open ticket button"
+msgstr ""
+
+#: includes/class-snn-texts.php:49
+msgid "Open ticket"
+msgstr ""
+
+#: includes/class-snn-texts.php:50
+msgid "A ticket without a name"
+msgstr ""
+
+#: includes/class-snn-texts.php:51
+#: includes/class-snn-texts.php:58
+msgid "Hint under it"
+msgstr ""
+
+#: includes/class-snn-texts.php:51
+msgid "Send it on: your guest fills in their name and gets their own ticket."
+msgstr ""
+
+#: includes/class-snn-texts.php:52
+msgid "Hint in emails, above the link"
+msgstr ""
+
+#: includes/class-snn-texts.php:52
+msgid "Send this link to your guest:"
+msgstr ""
+
+#: includes/class-snn-texts.php:53
+msgid "Copy button"
+msgstr ""
+
+#: includes/class-snn-texts.php:54
+msgid "After copying"
+msgstr ""
+
+#: includes/class-snn-texts.php:55
+msgid "Email box"
+msgstr ""
+
+#: includes/class-snn-texts.php:56
+msgid "Email button"
+msgstr ""
+
+#: includes/class-snn-texts.php:56
+msgid "Email it"
+msgstr ""
+
+#: includes/class-snn-texts.php:57
+msgid "A sent ticket"
+msgstr ""
+
+#: includes/class-snn-texts.php:57
+msgid "Sent to {email}"
+msgstr ""
+
+#: includes/class-snn-texts.php:58
+msgid "Waiting for them to fill in their name."
+msgstr ""
+
+#: includes/class-snn-texts.php:59
+msgid "Send again button"
+msgstr ""
+
+#: includes/class-snn-texts.php:59
+msgid "Send again"
+msgstr ""
+
+#: includes/class-snn-texts.php:60
+msgid "Take back button"
+msgstr ""
+
+#: includes/class-snn-texts.php:60
+msgid "Take back"
+msgstr ""
+
+#: includes/class-snn-texts.php:61
+msgid "A claimed ticket"
+msgstr ""
+
+#: includes/class-snn-texts.php:61
+msgid "Has their ticket ({email})"
+msgstr ""
+
+#: includes/class-snn-texts.php:62
+msgid "A claimed ticket, in emails"
+msgstr ""
+
+#: includes/class-snn-texts.php:62
+msgid "Ticket emailed to {email}"
+msgstr ""
+
+#: includes/class-snn-texts.php:63
+msgid "After sending"
+msgstr ""
+
+#: includes/class-snn-texts.php:63
+msgid "Sent to {email}. They fill in their name and get the ticket."
+msgstr ""
+
+#: includes/class-snn-texts.php:64
+msgid "After taking back"
+msgstr ""
+
+#: includes/class-snn-texts.php:64
+msgid "Taken back. The link you sent no longer works."
+msgstr ""
+
+#: includes/class-snn-texts.php:65
+msgid "Manage button in emails"
+msgstr ""
+
+#: includes/class-snn-texts.php:66
+msgid "Claim button in the gift email"
+msgstr ""
+
+#: includes/class-snn-texts.php:70
+msgid "Shop pages"
+msgstr ""
+
+#: includes/class-snn-texts.php:71
+msgid "The product page of a ticket, and the ticket list on the event page."
+msgstr ""
+
+#: includes/class-snn-texts.php:73
+msgid "\"When\" label"
+msgstr ""
+
+#: includes/class-snn-texts.php:74
+msgid "\"Where\" label"
+msgstr ""
+
+#: includes/class-snn-texts.php:74
+msgid "Where"
+msgstr ""
+
+#: includes/class-snn-texts.php:75
+msgid "Above the guest details"
+msgstr ""
+
+#: includes/class-snn-texts.php:75
+msgid "Who is coming? Each ticket is emailed to the person named on it."
+msgstr ""
+
+#: includes/class-snn-texts.php:76
+msgid "Each guest block"
+msgstr ""
+
+#: includes/class-snn-texts.php:76
+msgid "Ticket {n}"
+msgstr ""
+
+#: includes/class-snn-texts.php:77
+msgid "Shop button for tickets with guest details"
+msgstr ""
+
+#: includes/class-snn-texts.php:77
+msgid "Choose tickets"
+msgstr ""
+
+#: includes/class-snn-texts.php:78
+msgid "Event page: heading"
+msgstr ""
+
+#: includes/class-snn-texts.php:79
+msgid "Event page: Buy button"
+msgstr ""
+
+#: includes/class-snn-texts.php:79
+msgid "Buy"
+msgstr ""
+
+#: includes/class-snn-texts.php:80
+msgid "Event page: Choose button"
+msgstr ""
+
+#: includes/class-snn-texts.php:80
+msgid "Choose"
+msgstr ""
+
+#: includes/class-snn-texts.php:81
+msgid "Event page: sold out"
+msgstr ""
+
+#: includes/class-snn-texts.php:81
+msgid "Sold out"
+msgstr ""
+
+#: includes/class-snn-tickets.php:161
 msgid "No ticket code supplied."
 msgstr ""
 
-#: includes/class-snn-tickets.php:163
+#: includes/class-snn-tickets.php:172
 msgid "This ticket does not exist."
 msgstr ""
 
-#: includes/class-snn-tickets.php:174
+#: includes/class-snn-tickets.php:183
 msgid "This ticket has been cancelled."
 msgstr ""
 
-#: includes/class-snn-tickets.php:187
+#: includes/class-snn-tickets.php:196
 msgid "This ticket has no name yet. The buyer has to pass it on to its guest first."
 msgstr ""
 
-#: includes/class-snn-tickets.php:199
+#: includes/class-snn-tickets.php:208
 #, php-format
 msgid "This ticket is for %s."
 msgstr ""
 
-#: includes/class-snn-tickets.php:233
+#: includes/class-snn-tickets.php:242
 #, php-format
 msgid "Valid, but already scanned %d time(s)."
 msgstr ""
 
-#: includes/class-snn-tickets.php:234
+#: includes/class-snn-tickets.php:243
 msgid "Welcome. This ticket is valid."
 msgstr ""
 
@@ -3997,410 +4359,326 @@ msgid "2 for a couples ticket, 4 for a family pass. Each person gets their own t
 msgstr ""
 
 #: includes/class-snn-woo-admin.php:186
-msgid "Guest details"
+msgid "Passing on"
 msgstr ""
 
 #: includes/class-snn-woo-admin.php:188
+msgid "Buyers can pass their extra tickets on with a link. Untick for tickets that must stay with the buyer, such as named VIP tickets: every ticket is then made out to the buyer."
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:192
+msgid "Guest details"
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:194
 msgid "Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:300
+#: includes/class-snn-woo-admin.php:308
 msgid "Tickets are issued when the order is paid."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:314
+#: includes/class-snn-woo-admin.php:322
 #, php-format
 msgid "Order #%s"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:344
+#: includes/class-snn-woo-admin.php:352
 msgid "No way to pay is switched on yet."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:345
+#: includes/class-snn-woo-admin.php:353
 msgid "People can add tickets to their cart but cannot check out."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:346
+#: includes/class-snn-woo-admin.php:354
 msgid "Set up payments"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:350
+#: includes/class-snn-woo-admin.php:358
 msgid "Ticket types"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:351
+#: includes/class-snn-woo-admin.php:359
 msgid "Each ticket type is a WooCommerce product. They are listed on the event page with a Buy button; once paid, the tickets appear under People and are emailed like any other ticket."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:353
+#: includes/class-snn-woo-admin.php:361
 msgid "Nothing for sale yet. Add a ticket type below."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:356
+#: includes/class-snn-woo-admin.php:364
 msgid "Ticket type"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:356
-#: includes/class-snn-woo-admin.php:370
+#: includes/class-snn-woo-admin.php:364
+#: includes/class-snn-woo-admin.php:379
 msgid "Price"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:356
+#: includes/class-snn-woo-admin.php:364
 msgid "Quantity"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:356
+#: includes/class-snn-woo-admin.php:364
 msgid "Sold"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:365
+#: includes/class-snn-woo-admin.php:373
 msgid "Has options"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:366
+#: includes/class-snn-woo-admin.php:374
 #, php-format
 msgid "Admits %d"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:367
+#: includes/class-snn-woo-admin.php:375
 msgid "Asks attendee details"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:371
+#: includes/class-snn-woo-admin.php:376
+msgid "Stays with the buyer"
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:380
 msgid "Quantity left"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:376
+#: includes/class-snn-woo-admin.php:385
 msgid "On sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:376
+#: includes/class-snn-woo-admin.php:385
 msgid "Not on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:382
+#: includes/class-snn-woo-admin.php:391
 msgid "Stop selling"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:382
+#: includes/class-snn-woo-admin.php:391
 msgid "Put on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:384
+#: includes/class-snn-woo-admin.php:393
 msgid "Edit"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:396
+#: includes/class-snn-woo-admin.php:405
 msgid "Add a ticket type"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:396
+#: includes/class-snn-woo-admin.php:405
 msgid "For example General admission, VIP or Student. For options such as sizes or dates, make a variable product in WooCommerce and tick \"Ticket\"."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:397
+#: includes/class-snn-woo-admin.php:406
 msgid "General admission"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:399
+#: includes/class-snn-woo-admin.php:408
 #, php-format
 msgid "Price (%s)"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:400
+#: includes/class-snn-woo-admin.php:409
 msgid "How many"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:401
+#: includes/class-snn-woo-admin.php:410
 msgid "Admits"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:403
+#: includes/class-snn-woo-admin.php:412
+msgid "Buyers can pass their extra tickets on with a link"
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:412
+msgid "(untick for tickets that must stay with the buyer)"
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:413
 msgid "Ask for each guest's name and answers when buying"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:403
+#: includes/class-snn-woo-admin.php:413
 msgid "(otherwise the buyer gets the first ticket and passes the others on with a link)"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:404
+#: includes/class-snn-woo-admin.php:414
 msgid "Add and put on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:411
+#: includes/class-snn-woo-admin.php:421
 msgid "Guests"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:411
+#: includes/class-snn-woo-admin.php:421
 msgid "Someone buying several tickets gets the first one, and a link for each of the others to send to their guests. Each guest fills in their own name and gets their own ticket."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:413
+#: includes/class-snn-woo-admin.php:423
 msgid "Tickets need a name to get in"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:413
+#: includes/class-snn-woo-admin.php:423
 msgid "Off: a ticket nobody has claimed still works at the door, for the buyer. On: the scanner refuses it until its guest fills in their name."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:415
+#: includes/class-snn-woo-admin.php:425
 #, php-format
 msgid "%d ticket has no name yet"
 msgid_plural "%d tickets have no name yet"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:425
+#: includes/class-snn-woo-admin.php:435
 #, php-format
 msgid "The whole event has %1$d spots, shared by the shop and the sign-up form. %2$d are taken."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:426
+#: includes/class-snn-woo-admin.php:436
 msgid "The event has no overall spot limit. Each ticket type can still have its own quantity."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:427
+#: includes/class-snn-woo-admin.php:437
 msgid "Change on the Sign-up form tab"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:428
+#: includes/class-snn-woo-admin.php:438
 #, php-format
 msgid "%d spot is held by an order waiting for payment."
 msgid_plural "%d spots are held by orders waiting for payment."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:430
+#: includes/class-snn-woo-admin.php:440
 msgid "Free sign-ups are open too, so people can also get a ticket without paying."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:430
+#: includes/class-snn-woo-admin.php:440
 msgid "Close sign-ups"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:461
+#: includes/class-snn-woo-admin.php:471
 msgid "Give the ticket type a name and a price."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:477
+#: includes/class-snn-woo-admin.php:488
 #, php-format
 msgid "\"%s\" is on sale."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:509
+#: includes/class-snn-woo-admin.php:522
 #, php-format
 msgid "%d without a name"
 msgid_plural "%d without a name"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:514
+#: includes/class-snn-woo-admin.php:523
+#, php-format
+msgid "waiting %s"
+msgstr ""
+
+#: includes/class-snn-woo-admin.php:529
 msgid "All tickets"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:515
+#: includes/class-snn-woo-admin.php:530
 msgid "Tickets without a name"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:536
+#: includes/class-snn-woo-admin.php:551
 msgid "Email the buyer their tickets again"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:552
+#: includes/class-snn-woo-admin.php:567
 msgid "Tickets email sent to the buyer again."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:552
+#: includes/class-snn-woo-admin.php:567
 msgid "No tickets email to send: the buyer has no tickets of their own left in this order."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:559
+#: includes/class-snn-woo-admin.php:574
 msgid "That ticket type no longer exists."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:564
+#: includes/class-snn-woo-admin.php:579
 msgid "Stopped selling. Tickets already sold still work."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:568
+#: includes/class-snn-woo-admin.php:583
 msgid "Back on sale."
 msgstr ""
 
-#: includes/class-snn-woo.php:261
-msgid "Where"
-msgstr ""
-
-#: includes/class-snn-woo.php:286
-msgid "Who is coming? Each ticket is emailed to the person named on it."
-msgstr ""
-
-#: includes/class-snn-woo.php:323
-#, php-format
-msgid "Ticket %s"
-msgstr ""
-
-#: includes/class-snn-woo.php:342
-msgid "Choose tickets"
-msgstr ""
-
-#: includes/class-snn-woo.php:359
+#: includes/class-snn-woo.php:367
 #, php-format
 msgid "Ticket %1$d: %2$s"
 msgstr ""
 
-#: includes/class-snn-woo.php:373
+#: includes/class-snn-woo.php:381
 msgid "This event is no longer available."
 msgstr ""
 
-#: includes/class-snn-woo.php:386
+#: includes/class-snn-woo.php:394
 #, php-format
 msgid "Please add the attendee details for %s on its page."
 msgstr ""
 
-#: includes/class-snn-woo.php:402
+#: includes/class-snn-woo.php:410
 #, php-format
 msgid "Only %1$d spot is left for %2$s."
 msgid_plural "Only %1$d spots are left for %2$s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo.php:403
+#: includes/class-snn-woo.php:411
 #, php-format
 msgid "%s is fully booked."
 msgstr ""
 
-#: includes/class-snn-woo.php:422
-#: includes/class-snn-woo.php:479
+#: includes/class-snn-woo.php:430
+#: includes/class-snn-woo.php:488
 msgid "Attendees"
 msgstr ""
 
-#: includes/class-snn-woo.php:450
+#: includes/class-snn-woo.php:458
 #, php-format
 msgid "%s needs a name for each ticket. Remove it and add it again from its page."
 msgstr ""
 
-#: includes/class-snn-woo.php:457
+#: includes/class-snn-woo.php:465
 msgid "An event in your cart is no longer available."
 msgstr ""
 
-#: includes/class-snn-woo.php:674
+#: includes/class-snn-woo.php:693
 #, php-format
 msgid "Paid, order #%s"
 msgstr ""
 
-#: includes/class-snn-woo.php:681
+#: includes/class-snn-woo.php:700
 #, php-format
 msgid "%1$d ticket issued for %2$s."
 msgid_plural "%1$d tickets issued for %2$s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo.php:759
-msgid "Send this link to your guest:"
-msgstr ""
-
-#: includes/class-snn-woo.php:761
-#: includes/class-snn-woo.php:889
-#, php-format
-msgid "Sent to %s"
-msgstr ""
-
-#: includes/class-snn-woo.php:761
-msgid "Waiting for them to fill in their name"
-msgstr ""
-
-#: includes/class-snn-woo.php:765
-#, php-format
-msgid "Ticket emailed to %s"
-msgstr ""
-
-#: includes/class-snn-woo.php:824
+#: includes/class-snn-woo.php:843
 msgid "That did not work. Please try again."
 msgstr ""
 
-#: includes/class-snn-woo.php:828
+#: includes/class-snn-woo.php:847
 msgid "That ticket is not in this order."
 msgstr ""
 
-#: includes/class-snn-woo.php:832
-#, php-format
-msgid "Sent to %s. They fill in their name and get the ticket."
-msgstr ""
-
-#: includes/class-snn-woo.php:835
-msgid "Taken back. The link you sent no longer works."
-msgstr ""
-
-#: includes/class-snn-woo.php:846
-#, php-format
-msgid "Your tickets · Order #%s"
-msgstr ""
-
-#: includes/class-snn-woo.php:852
-#: includes/class-snn-woo.php:950
-#: includes/class-snn-woo.php:955
-msgid "Your tickets"
-msgstr ""
-
-#: includes/class-snn-woo.php:877
-#, php-format
-msgid "Your tickets for %s"
-msgstr ""
-
-#: includes/class-snn-woo.php:884
-msgid "Send it on: your guest fills in their name and gets their own ticket."
-msgstr ""
-
-#: includes/class-snn-woo.php:887
-msgid "Email it"
-msgstr ""
-
-#: includes/class-snn-woo.php:887
-msgid "Guest's email"
-msgstr ""
-
-#: includes/class-snn-woo.php:889
-msgid "Waiting for them to fill in their name."
-msgstr ""
-
-#: includes/class-snn-woo.php:890
-msgid "Send again"
-msgstr ""
-
-#: includes/class-snn-woo.php:890
-msgid "Take back"
-msgstr ""
-
-#: includes/class-snn-woo.php:892
-msgid "(you)"
-msgstr ""
-
-#: includes/class-snn-woo.php:893
-msgid "Open ticket"
-msgstr ""
-
-#: includes/class-snn-woo.php:895
-#, php-format
-msgid "Has their ticket (%s)"
-msgstr ""
-
-#: includes/class-snn-woo.php:979
-msgid "Sold out"
-msgstr ""
-
-#: includes/class-snn-woo.php:981
-msgid "Buy"
-msgstr ""
-
-#: includes/class-snn-woo.php:983
-msgid "Choose"
-msgstr ""
-
-#: snn-tickets.php:98
-msgid "Home"
-msgstr ""
-
-#: snn-tickets.php:101
+#: snn-tickets.php:96
+#: snn-tickets.php:113
 msgid "Settings"
+msgstr ""
+
+#: snn-tickets.php:108
+msgid "Home"
 msgstr ""

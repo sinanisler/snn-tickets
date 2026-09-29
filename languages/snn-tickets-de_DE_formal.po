@@ -1,0 +1,3249 @@
+# German translation of SNN Tickets.
+# Formal address (Sie) throughout - the usual register for German event and shop sites.
+msgid ""
+msgstr ""
+"Project-Id-Version: SNN Tickets\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-09-28 17:35+0000\n"
+"PO-Revision-Date: 2026-09-28 17:35+0000\n"
+"Last-Translator: sinanisler\n"
+"Language-Team: Deutsch\n"
+"Language: de_DE_formal\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: snn-tickets\n"
+
+msgid "SNN Tickets"
+msgstr "SNN Tickets"
+
+msgid "Event tickets with server-side QR codes: a guided event setup, sign-up forms with automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner."
+msgstr "Veranstaltungstickets mit serverseitigen QR-Codes: geführte Einrichtung von Veranstaltungen, Anmeldeformulare mit automatischer oder regelbasierter Freigabe, gestaltete E-Mails mit PDF-, Apple-Wallet- und Google-Wallet-Tickets sowie ein mobiler Einlass-Scanner."
+
+msgid "sinanisler"
+msgstr "sinanisler"
+
+msgid "https://sinanisler.com/"
+msgstr "https://sinanisler.com/"
+
+msgid "Insufficient permissions"
+msgstr "Keine ausreichende Berechtigung"
+
+msgid "Copied"
+msgstr "Kopiert"
+
+msgid "Copy this:"
+msgstr "Bitte kopieren:"
+
+msgid "%d selected"
+msgstr "%d ausgewählt"
+
+msgid "Something went wrong."
+msgstr "Etwas ist schiefgelaufen."
+
+msgid "Visual"
+msgstr "Visuell"
+
+msgid "Link address"
+msgstr "Linkadresse"
+
+msgid "Replace the text with the default wording?"
+msgstr "Den Text durch den Standardtext ersetzen?"
+
+msgid "Name this template (for example \"Conference ticket\")"
+msgstr "Name für diese Vorlage (zum Beispiel „Konferenzticket“)"
+
+msgid "Replace the current text with this template?"
+msgstr "Den aktuellen Text durch diese Vorlage ersetzen?"
+
+msgid "Sending…"
+msgstr "Wird gesendet …"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "Phone"
+msgstr "Smartphone"
+
+msgid "Subject"
+msgstr "Betreff"
+
+msgid "Move up"
+msgstr "Nach oben"
+
+msgid "Move down"
+msgstr "Nach unten"
+
+msgid "Untitled question"
+msgstr "Frage ohne Titel"
+
+msgid "Name on the ticket"
+msgstr "Name auf dem Ticket"
+
+msgid "Ticket goes here"
+msgstr "Hier erscheint das Ticket"
+
+msgid "Question"
+msgstr "Frage"
+
+msgid "Printed on the ticket and shown at the door. You can change the wording, but not remove it."
+msgstr "Wird auf das Ticket gedruckt und am Einlass angezeigt. Sie können den Text ändern, aber die Frage nicht entfernen."
+
+msgid "The ticket is sent to this address, so it is always required. You can change the wording, but not remove it."
+msgstr "Das Ticket wird an diese Adresse gesendet, daher ist sie immer Pflicht. Sie können den Text ändern, aber die Frage nicht entfernen."
+
+msgid "Hint inside the box"
+msgstr "Hinweis im Feld"
+
+msgid "(optional)"
+msgstr "(optional)"
+
+msgid "Answer type"
+msgstr "Antworttyp"
+
+msgid "Value"
+msgstr "Wert"
+
+msgid "Not shown to people. Saved with every sign-up, for example to know which campaign they came from."
+msgstr "Wird niemandem angezeigt. Wird mit jeder Anmeldung gespeichert, zum Beispiel um zu wissen, über welche Kampagne jemand kam."
+
+msgid "Choices"
+msgstr "Auswahlmöglichkeiten"
+
+msgid "(one per line)"
+msgstr "(eine pro Zeile)"
+
+msgid "More options"
+msgstr "Weitere Optionen"
+
+msgid "Pre-filled answer"
+msgstr "Vorausgefüllte Antwort"
+
+msgid "In emails, this answer is the chip"
+msgstr "In E-Mails ist diese Antwort der Baustein"
+
+msgid "Required"
+msgstr "Pflichtfeld"
+
+msgid "Duplicate"
+msgstr "Duplizieren"
+
+msgid "Remove"
+msgstr "Entfernen"
+
+msgid "Remove this question? Answers people already gave are kept."
+msgstr "Diese Frage entfernen? Bereits gegebene Antworten bleiben erhalten."
+
+msgid "(copy)"
+msgstr "(Kopie)"
+
+msgid "Option 1"
+msgstr "Option 1"
+
+msgid "Option 2"
+msgstr "Option 2"
+
+msgid "Add"
+msgstr "Hinzufügen"
+
+msgid "Give a ticket right away when"
+msgstr "Sofort ein Ticket vergeben, wenn"
+
+msgid "all"
+msgstr "alle"
+
+msgid "any"
+msgstr "eine"
+
+msgid "of these are true:"
+msgstr "dieser Bedingungen zutreffen:"
+
+msgid "no value needed"
+msgstr "kein Wert nötig"
+
+msgid "a, b, c"
+msgstr "a, b, c"
+
+msgid "value"
+msgstr "Wert"
+
+msgid "No conditions yet. Add one below."
+msgstr "Noch keine Bedingungen. Fügen Sie unten eine hinzu."
+
+msgid "Add condition"
+msgstr "Bedingung hinzufügen"
+
+msgid "Everyone else:"
+msgstr "Alle anderen:"
+
+msgid "waits for my approval"
+msgstr "warten auf meine Freigabe"
+
+msgid "is declined automatically"
+msgstr "werden automatisch abgelehnt"
+
+msgid "Try it:"
+msgstr "Ausprobieren:"
+
+msgid "type sample answers to see what would happen"
+msgstr "Beispielantworten eingeben, um zu sehen, was passieren würde"
+
+msgid "gets a ticket right away"
+msgstr "erhält sofort ein Ticket"
+
+msgid "is declined"
+msgstr "wird abgelehnt"
+
+msgid "waits for you"
+msgstr "wartet auf Sie"
+
+msgid "%d spots left"
+msgstr "Noch %d Plätze frei"
+
+msgid "Choose…"
+msgstr "Bitte wählen …"
+
+msgid "Get my ticket"
+msgstr "Mein Ticket holen"
+
+msgid "No question collects the email address, so tickets cannot be emailed. Save anyway?"
+msgstr "Keine Frage erfasst die E-Mail-Adresse, daher können keine Tickets per E-Mail verschickt werden. Trotzdem speichern?"
+
+msgid "Your event"
+msgstr "Ihre Veranstaltung"
+
+msgid "Step %1$d of %2$d"
+msgstr "Schritt %1$d von %2$d"
+
+msgid "Give the event a name first."
+msgstr "Geben Sie der Veranstaltung zuerst einen Namen."
+
+msgid "Waiting"
+msgstr "Wartet"
+
+msgid "Sending"
+msgstr "Wird gesendet"
+
+msgid "Sent"
+msgstr "Gesendet"
+
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+msgid "%s ago"
+msgstr "vor %s"
+
+msgid "%1$s–%2$s of %3$s"
+msgstr "%1$s–%2$s von %3$s"
+
+msgid "Copy"
+msgstr "Kopieren"
+
+msgid "Sign-up page"
+msgstr "Anmeldeseite"
+
+msgid "Share this link. People sign up here."
+msgstr "Teilen Sie diesen Link. Hier melden sich die Leute an."
+
+msgid "Door scanner for this event"
+msgstr "Einlass-Scanner für diese Veranstaltung"
+
+msgid "Open on a phone at the entrance. Refuses tickets for other events."
+msgstr "Am Eingang auf einem Smartphone öffnen. Lehnt Tickets anderer Veranstaltungen ab."
+
+msgid "Door scanner for all events"
+msgstr "Einlass-Scanner für alle Veranstaltungen"
+
+msgid "One scanner for everything."
+msgstr "Ein Scanner für alles."
+
+msgid "Share & place"
+msgstr "Teilen & einbinden"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "The links work right away, with no page to create. Use a shortcode instead if you want to place something on a page of your own."
+msgstr "Die Links funktionieren sofort, ohne dass Sie eine Seite anlegen müssen. Verwenden Sie stattdessen einen Shortcode, wenn Sie etwas auf einer eigenen Seite platzieren möchten."
+
+msgid "What"
+msgstr "Was"
+
+msgid "Link"
+msgstr "Link"
+
+msgid "Shortcode"
+msgstr "Shortcode"
+
+msgid "Open"
+msgstr "Öffnen"
+
+msgid "Your site uses plain permalinks, so these links look technical. For short links like yoursite.com/events/my-event, pick any other option under %s."
+msgstr "Ihre Website verwendet einfache Permalinks, daher sehen diese Links technisch aus. Für kurze Links wie ihreseite.de/events/meine-veranstaltung wählen Sie unter %s eine beliebige andere Option."
+
+msgid "Settings → Permalinks"
+msgstr "Einstellungen → Permalinks"
+
+msgid "Site style"
+msgstr "Stil der Website"
+
+msgid "%s with your colours"
+msgstr "%s mit Ihren Farben"
+
+msgid "Start from a template"
+msgstr "Mit einer Vorlage beginnen"
+
+msgid "Start from a template…"
+msgstr "Mit einer Vorlage beginnen …"
+
+msgid "Save as template"
+msgstr "Als Vorlage speichern"
+
+msgid "Message"
+msgstr "Nachricht"
+
+msgid "Insert:"
+msgstr "Einfügen:"
+
+msgid "Answers"
+msgstr "Antworten"
+
+msgid "Bold"
+msgstr "Fett"
+
+msgid "Italic"
+msgstr "Kursiv"
+
+msgid "Heading"
+msgstr "Überschrift"
+
+msgid "Paragraph"
+msgstr "Absatz"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "Edit the HTML"
+msgstr "HTML bearbeiten"
+
+msgid "Message HTML"
+msgstr "HTML der Nachricht"
+
+msgid "Send a test to"
+msgstr "Test senden an"
+
+msgid "Send me a test"
+msgstr "Test an mich senden"
+
+msgid "Reset to default text"
+msgstr "Auf Standardtext zurücksetzen"
+
+msgid "Preview"
+msgstr "Vorschau"
+
+msgid "Loading preview…"
+msgstr "Vorschau wird geladen …"
+
+msgid "A template needs a name."
+msgstr "Eine Vorlage braucht einen Namen."
+
+msgid "Template \"%s\" updated."
+msgstr "Vorlage „%s“ aktualisiert."
+
+msgid "Saved as template \"%s\". Use it in any event with \"Start from a template\"."
+msgstr "Als Vorlage „%s“ gespeichert. In jeder Veranstaltung über „Mit einer Vorlage beginnen“ verwendbar."
+
+msgid "This ticket already has a name on it."
+msgstr "Auf diesem Ticket steht bereits ein Name."
+
+msgid "That email address does not look right."
+msgstr "Diese E-Mail-Adresse scheint nicht zu stimmen."
+
+msgid "This ticket has already been claimed."
+msgstr "Dieses Ticket wurde bereits abgeholt."
+
+msgid "Claimed a ticket passed on to them"
+msgstr "Hat ein weitergegebenes Ticket abgeholt"
+
+msgid "Ticket link"
+msgstr "Ticket-Link"
+
+msgid "Something went wrong. Please try again."
+msgstr "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+
+msgid "A valid email address is required."
+msgstr "Eine gültige E-Mail-Adresse ist erforderlich."
+
+msgid "Create your first event"
+msgstr "Erste Veranstaltung anlegen"
+
+msgid "Give an event a date and venue"
+msgstr "Einer Veranstaltung Datum und Ort geben"
+
+msgid "Set the sender name and address for emails"
+msgstr "Absendername und -adresse für E-Mails festlegen"
+
+msgid "Add your logo to tickets and emails"
+msgstr "Ihr Logo zu Tickets und E-Mails hinzufügen"
+
+msgid "Set a door PIN for volunteers"
+msgstr "Eine Einlass-PIN für Helfer festlegen"
+
+msgid "%d person is waiting for your approval"
+msgid_plural "%d people are waiting for your approval"
+msgstr[0] "%d Person wartet auf Ihre Freigabe"
+msgstr[1] "%d Personen warten auf Ihre Freigabe"
+
+msgid "%1$s · oldest %2$s"
+msgstr "%1$s · älteste %2$s"
+
+msgid "Review"
+msgstr "Prüfen"
+
+msgid "%d email could not be sent"
+msgid_plural "%d emails could not be sent"
+msgstr[0] "%d E-Mail konnte nicht gesendet werden"
+msgstr[1] "%d E-Mails konnten nicht gesendet werden"
+
+msgid "Usually a mistyped address. Fix it and send again."
+msgstr "Meist ein Tippfehler in der Adresse. Korrigieren und erneut senden."
+
+msgid "See them"
+msgstr "Anzeigen"
+
+msgid "%s is full"
+msgstr "%s ist ausgebucht"
+
+msgid "All %d spots are taken. New visitors see \"fully booked\"."
+msgstr "Alle %d Plätze sind vergeben. Neue Besucher sehen „ausgebucht“."
+
+msgid "Add spots"
+msgstr "Plätze hinzufügen"
+
+msgid "Emails are not being sent automatically"
+msgstr "E-Mails werden nicht automatisch gesendet"
+
+msgid "The background sender is not scheduled. Deactivate and reactivate the plugin to fix it."
+msgstr "Der Hintergrundversand ist nicht geplant. Deaktivieren und aktivieren Sie das Plugin erneut, um das zu beheben."
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Tickets"
+msgstr "Tickets"
+
+msgid "Add New Event"
+msgstr "Neue Veranstaltung"
+
+msgid "Waiting for your approval"
+msgstr "Wartet auf Ihre Freigabe"
+
+msgid "Emails that failed"
+msgstr "Fehlgeschlagene E-Mails"
+
+msgid "Active tickets"
+msgstr "Aktive Tickets"
+
+msgid "Checked in today"
+msgstr "Heute eingecheckt"
+
+msgid "Needs your attention"
+msgstr "Braucht Ihre Aufmerksamkeit"
+
+msgid "Nothing right now. New sign-ups that need you will show up here."
+msgstr "Gerade nichts. Neue Anmeldungen, die Sie bearbeiten müssen, erscheinen hier."
+
+msgid "Upcoming events"
+msgstr "Kommende Veranstaltungen"
+
+msgid "All events"
+msgstr "Alle Veranstaltungen"
+
+msgid "No date yet"
+msgstr "Noch kein Datum"
+
+msgid "%1$d of %2$d spots"
+msgstr "%1$d von %2$d Plätzen"
+
+msgid "%d person"
+msgid_plural "%d people"
+msgstr[0] "%d Person"
+msgstr[1] "%d Personen"
+
+msgid "Getting started"
+msgstr "Erste Schritte"
+
+msgid "%1$d of %2$d done"
+msgstr "%1$d von %2$d erledigt"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "This box disappears once the basics are done."
+msgstr "Dieser Kasten verschwindet, sobald die Grundlagen erledigt sind."
+
+msgid "Last check-ins"
+msgstr "Letzte Check-ins"
+
+msgid "Nobody has been checked in yet. At the door, open the scanner from the event's Door tab."
+msgstr "Noch niemand wurde eingecheckt. Öffnen Sie am Einlass den Scanner über den Reiter „Einlass“ der Veranstaltung."
+
+msgid "No sign-up form"
+msgstr "Kein Anmeldeformular"
+
+msgid "Past"
+msgstr "Vergangen"
+
+msgid "Closed"
+msgstr "Geschlossen"
+
+msgid "Full"
+msgstr "Ausgebucht"
+
+msgid "Page background"
+msgstr "Seitenhintergrund"
+
+msgid "Card background"
+msgstr "Kartenhintergrund"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Muted text"
+msgstr "Gedämpfter Text"
+
+msgid "Accent / buttons"
+msgstr "Akzent / Schaltflächen"
+
+msgid "Button text"
+msgstr "Schaltflächentext"
+
+msgid "Header background"
+msgstr "Kopfzeilenhintergrund"
+
+msgid "Header text"
+msgstr "Kopfzeilentext"
+
+msgid "Minimal"
+msgstr "Minimal"
+
+msgid "White card, black type, thin rules."
+msgstr "Weiße Karte, schwarze Schrift, feine Linien."
+
+msgid "Boarding pass"
+msgstr "Bordkarte"
+
+msgid "Horizontal ticket with a perforated QR stub."
+msgstr "Querformat-Ticket mit perforiertem QR-Abschnitt."
+
+msgid "Midnight"
+msgstr "Mitternacht"
+
+msgid "Dark card with a neon accent. Concerts and nightlife."
+msgstr "Dunkle Karte mit Neon-Akzent. Konzerte und Nachtleben."
+
+msgid "Festival"
+msgstr "Festival"
+
+msgid "Gradient header and bold display type."
+msgstr "Kopfzeile mit Farbverlauf und kräftige Schrift."
+
+msgid "Corporate"
+msgstr "Business"
+
+msgid "Logo bar, grey panel, blue accent. Conferences."
+msgstr "Logoleiste, graues Feld, blauer Akzent. Konferenzen."
+
+msgid "Classic stub"
+msgstr "Klassischer Abriss"
+
+msgid "Cream paper and serif type. Theatre and galas."
+msgstr "Cremefarbenes Papier und Serifenschrift. Theater und Galas."
+
+msgid "Attendee"
+msgstr "Teilnehmer"
+
+msgid "Guest"
+msgstr "Gast"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Time"
+msgstr "Uhrzeit"
+
+msgid "Venue"
+msgstr "Ort"
+
+msgid "Admit one"
+msgstr "Einlass für eine Person"
+
+msgid "Ticket QR code"
+msgstr "QR-Code des Tickets"
+
+msgid "People"
+msgstr "Personen"
+
+msgid "Sign-up form"
+msgstr "Anmeldeformular"
+
+msgid "Sell tickets"
+msgstr "Tickets verkaufen"
+
+msgid "Emails"
+msgstr "E-Mails"
+
+msgid "Door"
+msgstr "Einlass"
+
+msgid "Event settings"
+msgstr "Veranstaltungseinstellungen"
+
+msgid "Upcoming"
+msgstr "Kommende"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "Events"
+msgstr "Veranstaltungen"
+
+msgid "No events yet"
+msgstr "Noch keine Veranstaltungen"
+
+msgid "An event comes with its own sign-up page, emails and door scanner. It takes about a minute."
+msgstr "Jede Veranstaltung hat ihre eigene Anmeldeseite, eigene E-Mails und einen eigenen Einlass-Scanner. Das Anlegen dauert etwa eine Minute."
+
+msgid "Add your first event"
+msgstr "Erste Veranstaltung anlegen"
+
+msgid "Search events"
+msgstr "Veranstaltungen suchen"
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Event"
+msgstr "Veranstaltung"
+
+msgid "When"
+msgstr "Wann"
+
+msgid "Spots"
+msgstr "Plätze"
+
+msgid "Checked in"
+msgstr "Eingecheckt"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "No events here."
+msgstr "Hier gibt es keine Veranstaltungen."
+
+msgid "Add a date"
+msgstr "Datum hinzufügen"
+
+msgid "%d waiting"
+msgstr "%d wartend"
+
+msgid "Event not found"
+msgstr "Veranstaltung nicht gefunden"
+
+msgid "Back to all events"
+msgstr "Zurück zu allen Veranstaltungen"
+
+msgid "Your event is live."
+msgstr "Ihre Veranstaltung ist online."
+
+msgid "Share this link and people can sign up:"
+msgstr "Teilen Sie diesen Link, dann können sich Leute anmelden:"
+
+msgid "Copy link"
+msgstr "Link kopieren"
+
+msgid "Copy sign-up link"
+msgstr "Anmeldelink kopieren"
+
+msgid "View"
+msgstr "Ansehen"
+
+msgid "More ways to share & place"
+msgstr "Weitere Möglichkeiten zum Teilen & Einbinden"
+
+msgid "Spots taken"
+msgstr "Belegte Plätze"
+
+msgid "no limit"
+msgstr "unbegrenzt"
+
+msgid "Waiting for you"
+msgstr "Wartet auf Sie"
+
+msgid "Review →"
+msgstr "Prüfen →"
+
+msgid "Tickets emailed"
+msgstr "Tickets per E-Mail verschickt"
+
+msgid "%d failed"
+msgid_plural "%d failed"
+msgstr[0] "%d fehlgeschlagen"
+msgstr[1] "%d fehlgeschlagen"
+
+msgid "Didn't match your rules"
+msgstr "Passte nicht zu Ihren Regeln"
+
+msgid "You approve everyone for this event"
+msgstr "Bei dieser Veranstaltung geben Sie alle selbst frei"
+
+msgid "Name, email, code or answer"
+msgstr "Name, E-Mail, Code oder Antwort"
+
+msgid "+ Add people & Import"
+msgstr "+ Personen hinzufügen & importieren"
+
+msgid "Email everyone"
+msgstr "E-Mail an alle"
+
+msgid "Download list"
+msgstr "Liste herunterladen"
+
+msgid "Approve %d and email their tickets?"
+msgstr "%d freigeben und ihre Tickets per E-Mail senden?"
+
+msgid "Approve"
+msgstr "Freigeben"
+
+msgid "Email the ticket to %d people?"
+msgstr "Das Ticket per E-Mail an %d Personen senden?"
+
+msgid "Email ticket"
+msgstr "Ticket per E-Mail senden"
+
+msgid "Undo the check-in for %d people?"
+msgstr "Den Check-in für %d Personen rückgängig machen?"
+
+msgid "Undo check-in"
+msgstr "Check-in rückgängig machen"
+
+msgid "Cancel %d tickets? They will be refused at the door."
+msgstr "%d Tickets stornieren? Sie werden am Einlass abgewiesen."
+
+msgid "Cancel tickets"
+msgstr "Tickets stornieren"
+
+msgid "Decline %d people?"
+msgstr "%d Personen ablehnen?"
+
+msgid "Decline"
+msgstr "Ablehnen"
+
+msgid "Permanently delete %d people and their tickets? This cannot be undone."
+msgstr "%d Personen und ihre Tickets endgültig löschen? Das kann nicht rückgängig gemacht werden."
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Clear selection"
+msgstr "Auswahl aufheben"
+
+msgid "Select all"
+msgstr "Alle auswählen"
+
+msgid "Person"
+msgstr "Person"
+
+msgid "At the door"
+msgstr "Am Einlass"
+
+msgid "Signed up"
+msgstr "Angemeldet"
+
+msgid "Nobody matches."
+msgstr "Keine Treffer."
+
+msgid "Nobody yet. Share the sign-up link, or add people yourself."
+msgstr "Noch niemand. Teilen Sie den Anmeldelink oder fügen Sie Personen selbst hinzu."
+
+msgid "Select"
+msgstr "Auswählen"
+
+msgid "No name yet"
+msgstr "Noch kein Name"
+
+msgid "Why waiting: %s"
+msgstr "Grund des Wartens: %s"
+
+msgid "In · scanned %d×"
+msgstr "Drin · %d× gescannt"
+
+msgid "In · %s"
+msgstr "Drin · %s"
+
+msgid "Not yet"
+msgstr "Noch nicht"
+
+msgid "Fix email"
+msgstr "E-Mail korrigieren"
+
+msgid "Add people & Import"
+msgstr "Personen hinzufügen & importieren"
+
+msgid "One person"
+msgstr "Eine Person"
+
+msgid "From a spreadsheet"
+msgstr "Aus einer Tabelle"
+
+msgid "Blank tickets"
+msgstr "Blanko-Tickets"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Email their ticket now"
+msgstr "Ticket jetzt per E-Mail senden"
+
+msgid "For guests, speakers and people who paid at the door. This skips the sign-up form and the spot limit."
+msgstr "Für Gäste, Redner und Personen, die an der Abendkasse bezahlt haben. Umgeht das Anmeldeformular und die Platzbegrenzung."
+
+msgid "Spreadsheet file (.csv)"
+msgstr "Tabellendatei (.csv)"
+
+msgid "In Excel or Google Sheets, use \"Save as / Download as CSV\". It needs a header row; next you will check which column holds the names and emails. Turkish headers and semicolons work too."
+msgstr "Verwenden Sie in Excel oder Google Tabellen „Speichern unter / Herunterladen als CSV“. Die Datei braucht eine Kopfzeile; anschließend prüfen Sie, in welcher Spalte Namen und E-Mails stehen. Türkische Spaltennamen und Semikolons funktionieren ebenfalls."
+
+msgid "Tickets with no name, for walk-ins, door sales or printed ticket books. You can fill in names later."
+msgstr "Tickets ohne Namen, für spontane Gäste, Abendkasse oder gedruckte Ticketblöcke. Namen können Sie später eintragen."
+
+msgid "How many?"
+msgstr "Wie viele?"
+
+msgid "Code length"
+msgstr "Code-Länge"
+
+msgid "Letters and numbers. 8 is plenty."
+msgstr "Buchstaben und Zahlen. 8 reichen völlig."
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Add & send ticket"
+msgstr "Hinzufügen & Ticket senden"
+
+msgid "Upload & check columns"
+msgstr "Hochladen & Spalten prüfen"
+
+msgid "Make blank tickets"
+msgstr "Blanko-Tickets erstellen"
+
+msgid "Who"
+msgstr "Wer"
+
+msgid "People who haven't got their ticket yet · %d"
+msgstr "Personen, die ihr Ticket noch nicht haben · %d"
+
+msgid "Imported or added without email, or the email failed."
+msgstr "Importiert oder ohne E-Mail hinzugefügt, oder die E-Mail ist fehlgeschlagen."
+
+msgid "Everyone with a ticket · %d"
+msgstr "Alle mit Ticket · %d"
+
+msgid "%d of them already have it and will get it again."
+msgstr "%d davon haben es bereits und bekommen es erneut."
+
+msgid "Which email"
+msgstr "Welche E-Mail"
+
+msgid "This event's ticket email"
+msgstr "Die Ticket-E-Mail dieser Veranstaltung"
+
+msgid "Template: %s"
+msgstr "Vorlage: %s"
+
+msgid "Emails go out in the background, %d per minute. You can close this page."
+msgstr "E-Mails werden im Hintergrund versendet, %d pro Minute. Sie können diese Seite schließen."
+
+msgid "Preview the ticket email"
+msgstr "Vorschau der Ticket-E-Mail"
+
+msgid "Send"
+msgstr "Senden"
+
+msgid "— none —"
+msgstr "— keine —"
+
+msgid "Column %d"
+msgstr "Spalte %d"
+
+msgid "Import %1$s · %2$d rows"
+msgstr "Import %1$s · %2$d Zeilen"
+
+msgid "Check the columns."
+msgstr "Prüfen Sie die Spalten."
+
+msgid "We guessed; change them if they are wrong."
+msgstr "Wir haben geraten; ändern Sie sie, falls sie falsch sind."
+
+msgid "Name is in"
+msgstr "Name steht in"
+
+msgid "Email is in"
+msgstr "E-Mail steht in"
+
+msgid "Skip people who already have a ticket"
+msgstr "Personen überspringen, die bereits ein Ticket haben"
+
+msgid "(%d found)"
+msgid_plural "(%d found)"
+msgstr[0] "(%d gefunden)"
+msgstr[1] "(%d gefunden)"
+
+msgid "Email their tickets right away"
+msgstr "Tickets sofort per E-Mail senden"
+
+msgid "Import"
+msgstr "Importieren"
+
+msgid "Approve & send ticket"
+msgstr "Freigeben & Ticket senden"
+
+msgid "Approve after all"
+msgstr "Doch freigeben"
+
+msgid "Restore ticket"
+msgstr "Ticket wiederherstellen"
+
+msgid "Email ticket again"
+msgstr "Ticket erneut per E-Mail senden"
+
+msgid "Cancel ticket"
+msgstr "Ticket stornieren"
+
+msgid "Cancel this ticket? It will be refused at the door."
+msgstr "Dieses Ticket stornieren? Es wird am Einlass abgewiesen."
+
+msgid "The ticket email could not be delivered."
+msgstr "Die Ticket-E-Mail konnte nicht zugestellt werden."
+
+msgid "Correct the address below and press \"Save & email ticket\"."
+msgstr "Korrigieren Sie unten die Adresse und klicken Sie auf „Speichern & Ticket senden“."
+
+msgid "Link sent to %s; they have not filled in their name yet."
+msgstr "Link an %s gesendet; der Name wurde noch nicht eingetragen."
+
+msgid "This ticket has no name yet. The buyer can pass it on with this link:"
+msgstr "Dieses Ticket hat noch keinen Namen. Der Käufer kann es mit diesem Link weitergeben:"
+
+msgid "Send the link again"
+msgstr "Link erneut senden"
+
+msgid "Take it back"
+msgstr "Zurücknehmen"
+
+msgid "Take this ticket back? The link that was sent stops working."
+msgstr "Dieses Ticket zurücknehmen? Der gesendete Link funktioniert dann nicht mehr."
+
+msgid "Guest's email"
+msgstr "E-Mail des Gastes"
+
+msgid "Email the link"
+msgstr "Link per E-Mail senden"
+
+msgid "Ticket"
+msgstr "Ticket"
+
+msgid "Ticket page"
+msgstr "Ticketseite"
+
+msgid "No ticket yet. It's created when you approve."
+msgstr "Noch kein Ticket. Es wird bei der Freigabe erstellt."
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Private note"
+msgstr "Private Notiz"
+
+msgid "(only admins see this)"
+msgstr "(nur für Administratoren sichtbar)"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Save & email ticket"
+msgstr "Speichern & Ticket senden"
+
+msgid "History"
+msgstr "Verlauf"
+
+msgid "Signed up with the form"
+msgstr "Über das Formular angemeldet"
+
+msgid "Imported from a spreadsheet"
+msgstr "Aus einer Tabelle importiert"
+
+msgid "Added by hand"
+msgstr "Von Hand hinzugefügt"
+
+msgid "Made as a blank ticket"
+msgstr "Als Blanko-Ticket erstellt"
+
+msgid "Bought in the shop"
+msgstr "Im Shop gekauft"
+
+msgid "Added"
+msgstr "Hinzugefügt"
+
+msgid "Approved"
+msgstr "Freigegeben"
+
+msgid "Declined"
+msgstr "Abgelehnt"
+
+msgid "by %s"
+msgstr "von %s"
+
+msgid "automatically"
+msgstr "automatisch"
+
+msgid "Checked in · scanned %d times"
+msgstr "Eingecheckt · %d-mal gescannt"
+
+msgid "Last scan %s"
+msgstr "Letzter Scan %s"
+
+msgid "Ticket cancelled"
+msgstr "Ticket storniert"
+
+msgid "Signed up from IP %s"
+msgstr "Angemeldet von IP %s"
+
+msgid "Delete this person"
+msgstr "Diese Person löschen"
+
+msgid "Removes their sign-up, ticket and emails, for example after a privacy request. Their QR code stops working."
+msgstr "Entfernt Anmeldung, Ticket und E-Mails, zum Beispiel nach einer Datenschutzanfrage. Der QR-Code funktioniert dann nicht mehr."
+
+msgid "Delete permanently"
+msgstr "Endgültig löschen"
+
+msgid "Delete this person and their ticket? This cannot be undone."
+msgstr "Diese Person und ihr Ticket löschen? Das kann nicht rückgängig gemacht werden."
+
+msgid "This event has no sign-up form yet (its people were imported or added by hand). Save this tab to give it one."
+msgstr "Diese Veranstaltung hat noch kein Anmeldeformular (ihre Personen wurden importiert oder von Hand hinzugefügt). Speichern Sie diesen Reiter, um eines anzulegen."
+
+msgid "This event has %d forms from an older version. This tab edits the first one; the others keep working through their shortcodes."
+msgstr "Diese Veranstaltung hat %d Formulare aus einer älteren Version. Dieser Reiter bearbeitet das erste; die anderen funktionieren über ihre Shortcodes weiter."
+
+msgid "Questions"
+msgstr "Fragen"
+
+msgid "Click one to change it. ▲▼ to reorder."
+msgstr "Zum Ändern anklicken. Mit ▲▼ umsortieren."
+
+msgid "Who gets a ticket?"
+msgstr "Wer bekommt ein Ticket?"
+
+msgid "Limits"
+msgstr "Begrenzungen"
+
+msgid "No limit"
+msgstr "Unbegrenzt"
+
+msgid "People waiting for your approval hold a spot, so you never approve more people than fit. Leave empty for no limit."
+msgstr "Personen, die auf Ihre Freigabe warten, belegen einen Platz, sodass Sie nie mehr Personen freigeben, als Platz haben. Leer lassen für keine Begrenzung."
+
+msgid "One ticket per email address"
+msgstr "Ein Ticket pro E-Mail-Adresse"
+
+msgid "Show \"spots left\" above the form"
+msgstr "„Noch x Plätze frei“ über dem Formular anzeigen"
+
+msgid "Open for sign-ups"
+msgstr "Anmeldung geöffnet"
+
+msgid "Turn off to close the form without deleting anything. Visitors then see the \"full or closed\" message."
+msgstr "Ausschalten, um das Formular zu schließen, ohne etwas zu löschen. Besucher sehen dann die Meldung „ausgebucht oder geschlossen“."
+
+msgid "Messages people see"
+msgstr "Meldungen für Besucher"
+
+msgid "After signing up (ticket sent)"
+msgstr "Nach der Anmeldung (Ticket gesendet)"
+
+msgid "After signing up (waiting for approval)"
+msgstr "Nach der Anmeldung (wartet auf Freigabe)"
+
+msgid "When the event is full or closed"
+msgstr "Wenn die Veranstaltung ausgebucht oder geschlossen ist"
+
+msgid "When the email is already signed up"
+msgstr "Wenn die E-Mail bereits angemeldet ist"
+
+msgid "When something goes wrong"
+msgstr "Wenn etwas schiefgeht"
+
+msgid "Send people to another page after signing up"
+msgstr "Nach der Anmeldung auf eine andere Seite weiterleiten"
+
+msgid "Form colour"
+msgstr "Formularfarbe"
+
+msgid "For the button, focus rings and ticks. Everything else follows your theme."
+msgstr "Für die Schaltfläche, Fokusrahmen und Häkchen. Alles andere folgt Ihrem Theme."
+
+msgid "Place the form on your own page"
+msgstr "Das Formular auf einer eigenen Seite einbinden"
+
+msgid "Not needed: the sign-up link already works. Use this if you want the form inside a page you designed."
+msgstr "Nicht nötig: Der Anmeldelink funktioniert bereits. Verwenden Sie dies, wenn Sie das Formular in einer selbst gestalteten Seite haben möchten."
+
+msgid "Unsaved changes"
+msgstr "Nicht gespeicherte Änderungen"
+
+msgid "Save form"
+msgstr "Formular speichern"
+
+msgid "Live preview"
+msgstr "Live-Vorschau"
+
+msgid "New question"
+msgstr "Neue Frage"
+
+msgid "Anything else we should know?"
+msgstr "Gibt es noch etwas, das wir wissen sollten?"
+
+msgid "Which session?"
+msgstr "Welche Session?"
+
+msgid "Which day?"
+msgstr "Welcher Tag?"
+
+msgid "Topics you like"
+msgstr "Themen, die Sie interessieren"
+
+msgid "I agree to the event rules"
+msgstr "Ich stimme den Veranstaltungsregeln zu"
+
+msgid "Work email"
+msgstr "Geschäftliche E-Mail"
+
+msgid "Phone number"
+msgstr "Telefonnummer"
+
+msgid "How many guests?"
+msgstr "Wie viele Gäste?"
+
+msgid "Date of birth"
+msgstr "Geburtsdatum"
+
+msgid "Came from"
+msgstr "Herkunft"
+
+msgid "Everyone, right away"
+msgstr "Alle, sofort"
+
+msgid "They sign up and get the ticket email within a minute."
+msgstr "Sie melden sich an und erhalten die Ticket-E-Mail innerhalb einer Minute."
+
+msgid "I approve each person"
+msgstr "Ich gebe jede Person frei"
+
+msgid "They get a \"we got your request\" email. You press Approve and the ticket goes out."
+msgstr "Sie erhalten eine E-Mail „Wir haben Ihre Anfrage erhalten“. Sie klicken auf „Freigeben“ und das Ticket wird verschickt."
+
+msgid "Automatically, if they match my rules"
+msgstr "Automatisch, wenn sie meinen Regeln entsprechen"
+
+msgid "For example: company email addresses get a ticket, everyone else waits for you."
+msgstr "Zum Beispiel: Firmen-E-Mail-Adressen erhalten ein Ticket, alle anderen warten auf Sie."
+
+msgid "Most common"
+msgstr "Am häufigsten"
+
+msgid "On"
+msgstr "An"
+
+msgid "Off"
+msgstr "Aus"
+
+msgid "Colours, logo and footer come from %s. Saved templates can be reused in any event."
+msgstr "Farben, Logo und Fußzeile kommen aus %s. Gespeicherte Vorlagen können in jeder Veranstaltung verwendet werden."
+
+msgid "Settings → Style"
+msgstr "Einstellungen → Stil"
+
+msgid "Send this email"
+msgstr "Diese E-Mail senden"
+
+msgid "Turned off, tickets are only sent when you press \"Email ticket\"."
+msgstr "Ausgeschaltet werden Tickets nur gesendet, wenn Sie auf „Ticket per E-Mail senden“ klicken."
+
+msgid "This event gives everyone a ticket right away, so this email is never sent. It is used when you approve people yourself or by rules."
+msgstr "Diese Veranstaltung gibt allen sofort ein Ticket, daher wird diese E-Mail nie gesendet. Sie wird verwendet, wenn Sie Personen selbst oder per Regeln freigeben."
+
+msgid "Send it when"
+msgstr "Senden, wenn"
+
+msgid "Someone is waiting for my approval"
+msgstr "Jemand auf meine Freigabe wartet"
+
+msgid "Anyone signs up"
+msgstr "Sich jemand anmeldet"
+
+msgid "Send it to"
+msgstr "Senden an"
+
+msgid "Several addresses: separate them with commas."
+msgstr "Mehrere Adressen: mit Kommas trennen."
+
+msgid "Also when a guest claims a ticket someone passed on to them"
+msgstr "Auch wenn ein Gast ein an ihn weitergegebenes Ticket abholt"
+
+msgid "nothing"
+msgstr "nichts"
+
+msgid "Attached: %s"
+msgstr "Angehängt: %s"
+
+msgid "change"
+msgstr "ändern"
+
+msgid "Save email"
+msgstr "E-Mail speichern"
+
+msgid "checked in"
+msgstr "eingecheckt"
+
+msgid "The event starts %s. Reload this page to see new check-ins."
+msgstr "Die Veranstaltung beginnt %s. Laden Sie diese Seite neu, um neue Check-ins zu sehen."
+
+msgid "Reload this page to see new check-ins."
+msgstr "Laden Sie diese Seite neu, um neue Check-ins zu sehen."
+
+msgid "Recent check-ins"
+msgstr "Letzte Check-ins"
+
+msgid "Nobody has been checked in yet."
+msgstr "Noch niemand wurde eingecheckt."
+
+msgid "No name"
+msgstr "Kein Name"
+
+msgid "Scanned %d× · last %s"
+msgstr "%d× gescannt · zuletzt %s"
+
+msgid "Undo"
+msgstr "Rückgängig"
+
+msgid "Open the scanner on a phone"
+msgstr "Den Scanner auf einem Smartphone öffnen"
+
+msgid "Point a phone camera here. It opens the scanner for this event only: tickets for other events are refused."
+msgstr "Richten Sie eine Smartphone-Kamera hierauf. Das öffnet den Scanner nur für diese Veranstaltung: Tickets anderer Veranstaltungen werden abgewiesen."
+
+msgid "Open scanner"
+msgstr "Scanner öffnen"
+
+msgid "Who can scan"
+msgstr "Wer scannen darf"
+
+msgid "Admins who are logged in"
+msgstr "Angemeldete Administratoren"
+
+msgid "Volunteers with the door PIN"
+msgstr "Helfer mit der Einlass-PIN"
+
+msgid "PIN set"
+msgstr "PIN festgelegt"
+
+msgid "Volunteers: no door PIN set yet"
+msgstr "Helfer: noch keine Einlass-PIN festgelegt"
+
+msgid "Change the PIN"
+msgstr "PIN ändern"
+
+msgid "Set a door PIN"
+msgstr "Einlass-PIN festlegen"
+
+msgid "If a camera does not work, staff can type the code printed under the QR."
+msgstr "Wenn eine Kamera nicht funktioniert, kann das Personal den Code unter dem QR-Code eintippen."
+
+msgid "Printed on the ticket, in emails, in wallet passes and in the calendar invite."
+msgstr "Wird auf das Ticket gedruckt, in E-Mails, in Wallet-Pässen und in der Kalendereinladung angezeigt."
+
+msgid "Event name"
+msgstr "Name der Veranstaltung"
+
+msgid "Starts"
+msgstr "Beginn"
+
+msgid "Ends"
+msgstr "Ende"
+
+msgid "Ends on a different day"
+msgstr "Endet an einem anderen Tag"
+
+msgid "End date"
+msgstr "Enddatum"
+
+msgid "Times use your site timezone (%s)."
+msgstr "Zeiten verwenden die Zeitzone Ihrer Website (%s)."
+
+msgid "Grand Hall"
+msgstr "Großer Saal"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Organiser"
+msgstr "Veranstalter"
+
+msgid "Good to know"
+msgstr "Gut zu wissen"
+
+msgid "Doors open at 18:30. Bring a photo ID."
+msgstr "Einlass ab 18:30 Uhr. Bitte einen Lichtbildausweis mitbringen."
+
+msgid "Shown on the sign-up page, the PDF, the wallet pass and the ticket page."
+msgstr "Wird auf der Anmeldeseite, im PDF, im Wallet-Pass und auf der Ticketseite angezeigt."
+
+msgid "Web address"
+msgstr "Webadresse"
+
+msgid "The end of the sign-up link. If you change it, the old link keeps working."
+msgstr "Das Ende des Anmeldelinks. Wenn Sie ihn ändern, funktioniert der alte Link weiterhin."
+
+msgid "Your site uses plain permalinks, so events use technical links. Choose another option under Settings → Permalinks for short links."
+msgstr "Ihre Website verwendet einfache Permalinks, daher haben Veranstaltungen technische Links. Wählen Sie unter Einstellungen → Permalinks eine andere Option für kurze Links."
+
+msgid "Ticket style"
+msgstr "Ticketstil"
+
+msgid "Colours and logo for every event are in %s."
+msgstr "Farben und Logo für alle Veranstaltungen finden Sie unter %s."
+
+msgid "Preview PDF ticket"
+msgstr "PDF-Ticket in der Vorschau ansehen"
+
+msgid "Attached to the ticket email"
+msgstr "An die Ticket-E-Mail angehängt"
+
+msgid "Download buttons for these are in the email anyway; attaching also puts the file itself in the email."
+msgstr "Download-Schaltflächen dafür stehen ohnehin in der E-Mail; beim Anhängen steckt die Datei selbst in der E-Mail."
+
+msgid "set up Apple Wallet first"
+msgstr "zuerst Apple Wallet einrichten"
+
+msgid "(needs a date)"
+msgstr "(braucht ein Datum)"
+
+msgid "Save event"
+msgstr "Veranstaltung speichern"
+
+msgid "Copy this event"
+msgstr "Diese Veranstaltung kopieren"
+
+msgid "Makes a new event with the same questions, rules, emails and style. People and tickets are not copied, and the copy starts closed for sign-ups."
+msgstr "Erstellt eine neue Veranstaltung mit denselben Fragen, Regeln, E-Mails und demselben Stil. Personen und Tickets werden nicht kopiert, und die Kopie startet mit geschlossener Anmeldung."
+
+msgid "Duplicate event"
+msgstr "Veranstaltung duplizieren"
+
+msgid "Delete event"
+msgstr "Veranstaltung löschen"
+
+msgid "Deletes the event, its sign-up form, %d ticket and all emails. QR codes stop working at the door. This cannot be undone."
+msgid_plural "Deletes the event, its sign-up form, %d tickets and all emails. QR codes stop working at the door. This cannot be undone."
+msgstr[0] "Löscht die Veranstaltung, ihr Anmeldeformular, %d Ticket und alle E-Mails. QR-Codes funktionieren am Einlass nicht mehr. Das kann nicht rückgängig gemacht werden."
+msgstr[1] "Löscht die Veranstaltung, ihr Anmeldeformular, %d Tickets und alle E-Mails. QR-Codes funktionieren am Einlass nicht mehr. Das kann nicht rückgängig gemacht werden."
+
+msgid "Download the list first"
+msgstr "Zuerst die Liste herunterladen"
+
+msgid "Type %s to confirm:"
+msgstr "Geben Sie zur Bestätigung %s ein:"
+
+msgid "Delete forever"
+msgstr "Endgültig löschen"
+
+msgid "That event no longer exists."
+msgstr "Diese Veranstaltung existiert nicht mehr."
+
+msgid "Event saved."
+msgstr "Veranstaltung gespeichert."
+
+msgid "The sign-up link is now %s; the old one still works."
+msgstr "Der Anmeldelink lautet jetzt %s; der alte funktioniert weiterhin."
+
+msgid "That web address was taken, so a number was added."
+msgstr "Diese Webadresse war vergeben, daher wurde eine Zahl angehängt."
+
+msgid "The form needs at least one question."
+msgstr "Das Formular braucht mindestens eine Frage."
+
+msgid "Sign-up form saved."
+msgstr "Anmeldeformular gespeichert."
+
+msgid "Email saved."
+msgstr "E-Mail gespeichert."
+
+msgid "%d approved; their ticket is on its way."
+msgid_plural "%d approved; their tickets are on their way."
+msgstr[0] "%d freigegeben; das Ticket ist unterwegs."
+msgstr[1] "%d freigegeben; die Tickets sind unterwegs."
+
+msgid "%d declined."
+msgid_plural "%d declined."
+msgstr[0] "%d abgelehnt."
+msgstr[1] "%d abgelehnt."
+
+msgid "%d ticket email queued."
+msgid_plural "%d ticket emails queued."
+msgstr[0] "%d Ticket-E-Mail in der Warteschlange."
+msgstr[1] "%d Ticket-E-Mails in der Warteschlange."
+
+msgid "%d ticket cancelled. It will be refused at the door."
+msgid_plural "%d tickets cancelled. They will be refused at the door."
+msgstr[0] "%d Ticket storniert. Es wird am Einlass abgewiesen."
+msgstr[1] "%d Tickets storniert. Sie werden am Einlass abgewiesen."
+
+msgid "%d ticket restored."
+msgid_plural "%d tickets restored."
+msgstr[0] "%d Ticket wiederhergestellt."
+msgstr[1] "%d Tickets wiederhergestellt."
+
+msgid "Check-in undone for %d person."
+msgid_plural "Check-in undone for %d people."
+msgstr[0] "Check-in für %d Person rückgängig gemacht."
+msgstr[1] "Check-in für %d Personen rückgängig gemacht."
+
+msgid "%d person deleted."
+msgid_plural "%d people deleted."
+msgstr[0] "%d Person gelöscht."
+msgstr[1] "%d Personen gelöscht."
+
+msgid "%d updated."
+msgstr "%d aktualisiert."
+
+msgid "That person is no longer on this event."
+msgstr "Diese Person gehört nicht mehr zu dieser Veranstaltung."
+
+msgid "Taken back. The link that was sent no longer works."
+msgstr "Zurückgenommen. Der gesendete Link funktioniert nicht mehr."
+
+msgid "Link sent to %s."
+msgstr "Link an %s gesendet."
+
+msgid "Saved."
+msgstr "Gespeichert."
+
+msgid "Saved, and the ticket email is on its way."
+msgstr "Gespeichert, und die Ticket-E-Mail ist unterwegs."
+
+msgid "Tick at least one person first."
+msgstr "Markieren Sie zuerst mindestens eine Person."
+
+msgid "%1$d skipped: %2$s"
+msgstr "%1$d übersprungen: %2$s"
+
+msgid "Made %d blank ticket."
+msgid_plural "Made %d blank tickets."
+msgstr[0] "%d Blanko-Ticket erstellt."
+msgstr[1] "%d Blanko-Tickets erstellt."
+
+msgid "Pick a .csv file first."
+msgstr "Wählen Sie zuerst eine .csv-Datei."
+
+msgid "The file has a header row but no people under it."
+msgstr "Die Datei hat eine Kopfzeile, aber keine Personen darunter."
+
+msgid "Added. Their ticket is on its way."
+msgstr "Hinzugefügt. Das Ticket ist unterwegs."
+
+msgid "Added."
+msgstr "Hinzugefügt."
+
+msgid "That upload has expired. Please upload the file again."
+msgstr "Dieser Upload ist abgelaufen. Bitte laden Sie die Datei erneut hoch."
+
+msgid "Pick the column with names or emails."
+msgstr "Wählen Sie die Spalte mit Namen oder E-Mails."
+
+msgid "Imported %d person."
+msgid_plural "Imported %d people."
+msgstr[0] "%d Person importiert."
+msgstr[1] "%d Personen importiert."
+
+msgid "%d already had a ticket and was skipped."
+msgid_plural "%d already had a ticket and were skipped."
+msgstr[0] "%d hatte bereits ein Ticket und wurde übersprungen."
+msgstr[1] "%d hatten bereits ein Ticket und wurden übersprungen."
+
+msgid "Use \"Email everyone\" when you are ready to send their tickets."
+msgstr "Verwenden Sie „E-Mail an alle“, wenn Sie bereit sind, die Tickets zu versenden."
+
+msgid "%d ticket email is being sent in the background."
+msgid_plural "%d ticket emails are being sent in the background."
+msgstr[0] "%d Ticket-E-Mail wird im Hintergrund gesendet."
+msgstr[1] "%d Ticket-E-Mails werden im Hintergrund gesendet."
+
+msgid "Nobody to send to: everyone already has their ticket."
+msgstr "Niemand zum Anschreiben: Alle haben ihr Ticket bereits."
+
+msgid "Ticket code"
+msgstr "Ticketcode"
+
+msgid "Scans"
+msgstr "Scans"
+
+msgid "Last scan"
+msgstr "Letzter Scan"
+
+msgid "yes"
+msgstr "ja"
+
+msgid "no"
+msgstr "nein"
+
+msgid "Event copied. Change the name and date, then open it for sign-ups on the Sign-up form tab."
+msgstr "Veranstaltung kopiert. Ändern Sie Name und Datum und öffnen Sie dann die Anmeldung im Reiter „Anmeldeformular“."
+
+msgid "Type DELETE to confirm."
+msgstr "Geben Sie zur Bestätigung DELETE ein."
+
+msgid "Deleted \"%1$s\" and %2$d tickets."
+msgstr "„%1$s“ und %2$d Tickets gelöscht."
+
+msgid "PDF ticket"
+msgstr "PDF-Ticket"
+
+msgid "Apple Wallet pass (.pkpass)"
+msgstr "Apple-Wallet-Pass (.pkpass)"
+
+msgid "Calendar invite (.ics)"
+msgstr "Kalendereinladung (.ics)"
+
+msgid "Untitled event"
+msgstr "Unbenannte Veranstaltung"
+
+msgid "%s (copy)"
+msgstr "%s (Kopie)"
+
+msgid "Design Summit 2026"
+msgstr "Design Summit 2026"
+
+msgid "12 Harbour Street, Istanbul"
+msgstr "Hafenstraße 12, Istanbul"
+
+msgid "Doors open 30 minutes before the start. Bring this ticket on your phone or printed."
+msgstr "Einlass 30 Minuten vor Beginn. Bringen Sie dieses Ticket auf dem Smartphone oder ausgedruckt mit."
+
+msgid "Ada Lovelace"
+msgstr "Ada Lovelace"
+
+msgid "Add to Apple Wallet"
+msgstr "Zu Apple Wallet hinzufügen"
+
+msgid "Add to Google Wallet"
+msgstr "Zu Google Wallet hinzufügen"
+
+msgid "Download PDF"
+msgstr "PDF herunterladen"
+
+msgid "Add to calendar"
+msgstr "Zum Kalender hinzufügen"
+
+msgid "This ticket link is not valid."
+msgstr "Dieser Ticket-Link ist ungültig."
+
+msgid "Ticket not found"
+msgstr "Ticket nicht gefunden"
+
+msgid "Apple Wallet is not set up."
+msgstr "Apple Wallet ist nicht eingerichtet."
+
+msgid "This event has no date yet."
+msgstr "Diese Veranstaltung hat noch kein Datum."
+
+msgid "Unknown file type."
+msgstr "Unbekannter Dateityp."
+
+msgid "Google Wallet is not set up."
+msgstr "Google Wallet ist nicht eingerichtet."
+
+msgid "Your ticket – %s"
+msgstr "Ihr Ticket – %s"
+
+msgid "This ticket has been cancelled and will not be accepted at the entrance."
+msgstr "Dieses Ticket wurde storniert und wird am Eingang nicht akzeptiert."
+
+msgid "Short answer"
+msgstr "Kurze Antwort"
+
+msgid "Long answer"
+msgstr "Lange Antwort"
+
+msgid "Dropdown"
+msgstr "Auswahlliste"
+
+msgid "Pick one"
+msgstr "Eines auswählen"
+
+msgid "Pick several"
+msgstr "Mehrere auswählen"
+
+msgid "\"I agree\" box"
+msgstr "„Ich stimme zu“-Kästchen"
+
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+msgid "Number"
+msgstr "Zahl"
+
+msgid "Hidden value"
+msgstr "Versteckter Wert"
+
+msgid "is"
+msgstr "ist"
+
+msgid "is not"
+msgstr "ist nicht"
+
+msgid "contains"
+msgstr "enthält"
+
+msgid "starts with"
+msgstr "beginnt mit"
+
+msgid "ends with"
+msgstr "endet mit"
+
+msgid "is one of"
+msgstr "ist eines von"
+
+msgid "email domain is"
+msgstr "E-Mail-Domain ist"
+
+msgid "is filled in"
+msgstr "ist ausgefüllt"
+
+msgid "is empty"
+msgstr "ist leer"
+
+msgid "is ticked"
+msgstr "ist angehakt"
+
+msgid "is not ticked"
+msgstr "ist nicht angehakt"
+
+msgid "You're in! Your ticket is on its way to your inbox."
+msgstr "Sie sind dabei! Ihr Ticket ist auf dem Weg in Ihr Postfach."
+
+msgid "Thanks! We'll review your request and email you soon."
+msgstr "Vielen Dank! Wir prüfen Ihre Anfrage und melden uns bald per E-Mail."
+
+msgid "Sorry, this event is fully booked."
+msgstr "Diese Veranstaltung ist leider ausgebucht."
+
+msgid "You've already signed up with this email address."
+msgstr "Sie haben sich mit dieser E-Mail-Adresse bereits angemeldet."
+
+msgid "Full name"
+msgstr "Vollständiger Name"
+
+msgid "%d spot left"
+msgid_plural "%d spots left"
+msgstr[0] "Noch %d Platz frei"
+msgstr[1] "Noch %d Plätze frei"
+
+msgid "Matched your rules"
+msgstr "Passte zu Ihren Regeln"
+
+msgid "Did not match your rules"
+msgstr "Passte nicht zu Ihren Regeln"
+
+msgid "%s does not look like a valid email address."
+msgstr "%s sieht nicht nach einer gültigen E-Mail-Adresse aus."
+
+msgid "%s is not one of the available choices."
+msgstr "%s ist keine der verfügbaren Auswahlmöglichkeiten."
+
+msgid "Please tick this box to continue."
+msgstr "Bitte haken Sie dieses Kästchen an, um fortzufahren."
+
+msgid "%s is required."
+msgstr "%s ist ein Pflichtfeld."
+
+msgid "Ticket sent"
+msgstr "Ticket gesendet"
+
+msgid "Declined by your rules"
+msgstr "Durch Ihre Regeln abgelehnt"
+
+msgid "Ticket email"
+msgstr "Ticket-E-Mail"
+
+msgid "We got your request"
+msgstr "Anfrage erhalten"
+
+msgid "Sorry, no spot"
+msgstr "Leider kein Platz"
+
+msgid "Notice to you"
+msgstr "Hinweis an Sie"
+
+msgid "Your tickets (to the buyer)"
+msgstr "Ihre Tickets (an den Käufer)"
+
+msgid "A ticket for you"
+msgstr "Ein Ticket für Sie"
+
+msgid "When someone gets a ticket."
+msgstr "Wenn jemand ein Ticket erhält."
+
+msgid "When someone has to wait for your approval."
+msgstr "Wenn jemand auf Ihre Freigabe warten muss."
+
+msgid "When you decline someone."
+msgstr "Wenn Sie jemanden ablehnen."
+
+msgid "To you, when someone signs up."
+msgstr "An Sie, wenn sich jemand anmeldet."
+
+msgid "To the buyer, once an order is paid: every ticket, and links to pass them on."
+msgstr "An den Käufer, sobald eine Bestellung bezahlt ist: alle Tickets und Links zum Weitergeben."
+
+msgid "When a buyer passes a ticket on to someone by email."
+msgstr "Wenn ein Käufer ein Ticket per E-Mail an jemanden weitergibt."
+
+msgid "We received your registration"
+msgstr "Wir haben Ihre Anmeldung erhalten"
+
+msgid "Thanks, {name}!"
+msgstr "Vielen Dank, {name}!"
+
+msgid "We have your registration for <strong>{event}</strong> and will review it shortly."
+msgstr "Wir haben Ihre Anmeldung für <strong>{event}</strong> erhalten und prüfen sie in Kürze."
+
+msgid "You will get another email with your ticket once you are confirmed."
+msgstr "Sobald Sie bestätigt sind, erhalten Sie eine weitere E-Mail mit Ihrem Ticket."
+
+msgid "About your registration"
+msgstr "Zu Ihrer Anmeldung"
+
+msgid "Hi {name},"
+msgstr "Hallo {name},"
+
+msgid "Thanks for your interest in <strong>{event}</strong>. Unfortunately we are not able to confirm a place for you this time."
+msgstr "vielen Dank für Ihr Interesse an <strong>{event}</strong>. Leider können wir Ihnen diesmal keinen Platz bestätigen."
+
+msgid "New sign-up: {name} for {event}"
+msgstr "Neue Anmeldung: {name} für {event}"
+
+msgid "<strong>{name}</strong> ({email}) signed up for <strong>{event}</strong>."
+msgstr "<strong>{name}</strong> ({email}) hat sich für <strong>{event}</strong> angemeldet."
+
+msgid "Status: {status}"
+msgstr "Status: {status}"
+
+msgid "Your tickets for {event}"
+msgstr "Ihre Tickets für {event}"
+
+msgid "Your order is confirmed. Here are your {count} tickets for <strong>{event}</strong>."
+msgstr "Ihre Bestellung ist bestätigt. Hier sind Ihre {count} Tickets für <strong>{event}</strong>."
+
+msgid "Tickets without a name are waiting for their guests. Send each one on: the guest fills in their name and gets their own ticket."
+msgstr "Tickets ohne Namen warten auf ihre Gäste. Geben Sie jedes weiter: Der Gast trägt seinen Namen ein und erhält sein eigenes Ticket."
+
+msgid "{buyer} got you a ticket to {event}"
+msgstr "{buyer} hat ein Ticket für {event} für Sie"
+
+msgid "A ticket for you!"
+msgstr "Ein Ticket für Sie!"
+
+msgid "{buyer} got you a ticket to <strong>{event}</strong>."
+msgstr "{buyer} hat ein Ticket für <strong>{event}</strong> für Sie."
+
+msgid "Tell us who's coming and your ticket arrives straight away."
+msgstr "Sagen Sie uns, wer kommt, und Ihr Ticket kommt sofort."
+
+msgid "Your ticket for {event}"
+msgstr "Ihr Ticket für {event}"
+
+msgid "You're in, {name}!"
+msgstr "Sie sind dabei, {name}!"
+
+msgid "Here is your ticket. Show the QR code at the entrance — on your phone or printed."
+msgstr "Hier ist Ihr Ticket. Zeigen Sie den QR-Code am Eingang vor – auf dem Smartphone oder ausgedruckt."
+
+msgid "See you there!"
+msgstr "Bis bald!"
+
+msgid "Ticket holder name"
+msgstr "Name des Ticketinhabers"
+
+msgid "Their address"
+msgstr "Deren Adresse"
+
+msgid "Event date"
+msgstr "Datum der Veranstaltung"
+
+msgid "Start – end time"
+msgstr "Beginn – Ende"
+
+msgid "The designed ticket with QR"
+msgstr "Das gestaltete Ticket mit QR-Code"
+
+msgid "Just the QR image"
+msgstr "Nur das QR-Bild"
+
+msgid "Wallet / PDF / calendar buttons"
+msgstr "Wallet-, PDF- und Kalender-Schaltflächen"
+
+msgid "Link to the ticket page"
+msgstr "Link zur Ticketseite"
+
+msgid "PDF download link"
+msgstr "PDF-Downloadlink"
+
+msgid "Calendar file link"
+msgstr "Link zur Kalenderdatei"
+
+msgid "Apple Wallet link"
+msgstr "Apple-Wallet-Link"
+
+msgid "Google Wallet link"
+msgstr "Google-Wallet-Link"
+
+msgid "Form name"
+msgstr "Formularname"
+
+msgid "Site name"
+msgstr "Name der Website"
+
+msgid "Today's date"
+msgstr "Heutiges Datum"
+
+msgid "Any form field"
+msgstr "Beliebiges Formularfeld"
+
+msgid "Site"
+msgstr "Website"
+
+msgid "Sign-up link"
+msgstr "Anmeldelink"
+
+msgid "Ticket with QR"
+msgstr "Ticket mit QR-Code"
+
+msgid "QR code only"
+msgstr "Nur QR-Code"
+
+msgid "Wallet, PDF & calendar buttons"
+msgstr "Wallet-, PDF- & Kalender-Schaltflächen"
+
+msgid "Ticket page link"
+msgstr "Link zur Ticketseite"
+
+msgid "Review button"
+msgstr "Schaltfläche „Prüfen“"
+
+msgid "Number of tickets"
+msgstr "Anzahl der Tickets"
+
+msgid "List of the tickets"
+msgstr "Liste der Tickets"
+
+msgid "Manage tickets button"
+msgstr "Schaltfläche „Tickets verwalten“"
+
+msgid "Manage tickets link"
+msgstr "Link „Tickets verwalten“"
+
+msgid "Who sent it"
+msgstr "Absender"
+
+msgid "Claim button"
+msgstr "Schaltfläche „Abholen“"
+
+msgid "Claim link"
+msgstr "Abhol-Link"
+
+msgid "Review in WordPress"
+msgstr "In WordPress prüfen"
+
+msgid "Your ticket QR code"
+msgstr "QR-Code Ihres Tickets"
+
+msgid "A valid recipient address is required."
+msgstr "Eine gültige Empfängeradresse ist erforderlich."
+
+msgid "Subject and body are required."
+msgstr "Betreff und Inhalt sind erforderlich."
+
+msgid "Could not write to the mail queue."
+msgstr "Die E-Mail-Warteschlange konnte nicht beschrieben werden."
+
+msgid "Ticket not found."
+msgstr "Ticket nicht gefunden."
+
+msgid "That ticket has no email address."
+msgstr "Dieses Ticket hat keine E-Mail-Adresse."
+
+msgid "Cancelled tickets are not emailed."
+msgstr "Stornierte Tickets werden nicht per E-Mail verschickt."
+
+msgid "Manage your tickets"
+msgstr "Ihre Tickets verwalten"
+
+msgid "Claim my ticket"
+msgstr "Mein Ticket abholen"
+
+msgid "Registration"
+msgstr "Anmeldung"
+
+msgid "Your ticket"
+msgstr "Ihr Ticket"
+
+msgid "Not named yet"
+msgstr "Noch ohne Namen"
+
+msgid "Send this link to your guest"
+msgstr "Senden Sie diesen Link an Ihren Gast"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Test email sent to %s."
+msgstr "Test-E-Mail an %s gesendet."
+
+msgid "Sending failed: %s"
+msgstr "Senden fehlgeschlagen: %s"
+
+msgid "Scan at the entrance"
+msgstr "Am Eingang scannen"
+
+msgid "Revoked"
+msgstr "Storniert"
+
+msgid "Show this ticket on your phone or printed at the entrance. The QR code can only be used once."
+msgstr "Zeigen Sie dieses Ticket am Eingang auf dem Smartphone oder ausgedruckt vor. Der QR-Code kann nur einmal verwendet werden."
+
+msgid "Organised by %s"
+msgstr "Veranstaltet von %s"
+
+msgid "Issued to %s"
+msgstr "Ausgestellt für %s"
+
+msgid "Everyone"
+msgstr "Alle"
+
+msgid "Has ticket"
+msgstr "Mit Ticket"
+
+msgid "Problems"
+msgstr "Probleme"
+
+msgid "Cancelled & declined"
+msgstr "Storniert & abgelehnt"
+
+msgid "Cancelled"
+msgstr "Storniert"
+
+msgid "Email failed"
+msgstr "E-Mail fehlgeschlagen"
+
+msgid "Blank ticket"
+msgstr "Blanko-Ticket"
+
+msgid "Link sent, waiting"
+msgstr "Link gesendet, wartet"
+
+msgid "Not emailed yet"
+msgstr "Noch nicht per E-Mail verschickt"
+
+msgid "That does not apply to someone without a ticket."
+msgstr "Das gilt nicht für jemanden ohne Ticket."
+
+msgid "That does not apply to a ticket."
+msgstr "Das gilt nicht für ein Ticket."
+
+msgid "Add a name or an email address."
+msgstr "Geben Sie einen Namen oder eine E-Mail-Adresse ein."
+
+msgid "The file is empty."
+msgstr "Die Datei ist leer."
+
+msgid "The file needs a header row with Name and Email columns."
+msgstr "Die Datei braucht eine Kopfzeile mit den Spalten Name und E-Mail."
+
+msgid "Already checked in"
+msgstr "Bereits eingecheckt"
+
+msgid "Valid ticket"
+msgstr "Gültiges Ticket"
+
+msgid "Not valid"
+msgstr "Ungültig"
+
+msgid "This link is not valid."
+msgstr "Dieser Link ist ungültig."
+
+msgid "This event could not be found."
+msgstr "Diese Veranstaltung wurde nicht gefunden."
+
+msgid "This page could not be found."
+msgstr "Diese Seite wurde nicht gefunden."
+
+msgid "Not found"
+msgstr "Nicht gefunden"
+
+msgid "Sign-ups are not open for this event."
+msgstr "Für diese Veranstaltung ist die Anmeldung nicht geöffnet."
+
+msgid "Too many attempts. Wait ten minutes and try again."
+msgstr "Zu viele Versuche. Warten Sie zehn Minuten und versuchen Sie es erneut."
+
+msgid "That PIN is not right."
+msgstr "Diese PIN ist nicht richtig."
+
+msgid "Too many scans from this address. Wait a minute and try again."
+msgstr "Zu viele Scans von dieser Adresse. Warten Sie eine Minute und versuchen Sie es erneut."
+
+msgid "Missing code"
+msgstr "Code fehlt"
+
+msgid "Door – %s"
+msgstr "Einlass – %s"
+
+msgid "Door scanner"
+msgstr "Einlass-Scanner"
+
+msgid "Welcome in"
+msgstr "Willkommen"
+
+msgid "First scanned at %1$s · this is scan %2$d"
+msgstr "Zuerst gescannt um %1$s · dies ist Scan %2$d"
+
+msgid "Don't let in"
+msgstr "Nicht einlassen"
+
+msgid "Wrong event"
+msgstr "Falsche Veranstaltung"
+
+msgid "Typed in by hand – no QR signature."
+msgstr "Von Hand eingegeben – keine QR-Signatur."
+
+msgid "Starting camera…"
+msgstr "Kamera wird gestartet …"
+
+msgid "Point the camera at a ticket"
+msgstr "Richten Sie die Kamera auf ein Ticket"
+
+msgid "Camera unavailable. Type the code below."
+msgstr "Kamera nicht verfügbar. Geben Sie den Code unten ein."
+
+msgid "Checking…"
+msgstr "Wird geprüft …"
+
+msgid "Network error – try again."
+msgstr "Netzwerkfehler – bitte erneut versuchen."
+
+msgid "in"
+msgstr "drin"
+
+msgid "Tap for the next ticket"
+msgstr "Für das nächste Ticket tippen"
+
+msgid "Check in this ticket?"
+msgstr "Dieses Ticket einchecken?"
+
+msgid "Check in"
+msgstr "Einchecken"
+
+msgid "Not now"
+msgstr "Nicht jetzt"
+
+msgid "Already checked in at %s"
+msgstr "Bereits eingecheckt um %s"
+
+msgid "Staff only"
+msgstr "Nur für Personal"
+
+msgid "Enter the door PIN to start checking tickets in."
+msgstr "Geben Sie die Einlass-PIN ein, um mit dem Einchecken zu beginnen."
+
+msgid "Door PIN"
+msgstr "Einlass-PIN"
+
+msgid "Unlock scanner"
+msgstr "Scanner entsperren"
+
+msgid "Log in to check tickets in."
+msgstr "Melden Sie sich an, um Tickets einzuchecken."
+
+msgid "Log in"
+msgstr "Anmelden"
+
+msgid "Type a ticket code"
+msgstr "Ticketcode eingeben"
+
+msgid "Check"
+msgstr "Prüfen"
+
+msgid "Sound"
+msgstr "Ton"
+
+msgid "Lock scanner"
+msgstr "Scanner sperren"
+
+msgid "Sent & waiting"
+msgstr "Gesendet & wartend"
+
+msgid "Templates"
+msgstr "Vorlagen"
+
+msgid "Sender & test"
+msgstr "Absender & Test"
+
+msgid "Style"
+msgstr "Stil"
+
+msgid "Door & scanner"
+msgstr "Einlass & Scanner"
+
+msgid "Apple & Google Wallet"
+msgstr "Apple & Google Wallet"
+
+msgid "Wording"
+msgstr "Texte"
+
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgid "Tickets Settings"
+msgstr "Ticket-Einstellungen"
+
+msgid "Emails come from"
+msgstr "E-Mails kommen von"
+
+msgid "What attendees see in their inbox."
+msgstr "Was Teilnehmer in ihrem Postfach sehen."
+
+msgid "Leave empty to keep your site's usual sending address. The name above is used either way."
+msgstr "Leer lassen, um die übliche Absenderadresse Ihrer Website zu behalten. Der Name oben wird in jedem Fall verwendet."
+
+msgid "Sending speed"
+msgstr "Versandgeschwindigkeit"
+
+msgid "Emails per minute"
+msgstr "E-Mails pro Minute"
+
+msgid "Lower it if your host or email provider limits sending."
+msgstr "Verringern Sie den Wert, wenn Ihr Hoster oder E-Mail-Anbieter den Versand begrenzt."
+
+msgid "Email footer"
+msgstr "E-Mail-Fußzeile"
+
+msgid "Under every email."
+msgstr "Unter jeder E-Mail."
+
+msgid "Questions? Just reply to this email."
+msgstr "Fragen? Antworten Sie einfach auf diese E-Mail."
+
+msgid "Check that email works"
+msgstr "Prüfen, ob E-Mails funktionieren"
+
+msgid "Sends a short message right now. If it does not arrive, your site needs an SMTP plugin."
+msgstr "Sendet sofort eine kurze Nachricht. Kommt sie nicht an, braucht Ihre Website ein SMTP-Plugin."
+
+msgid "Send to"
+msgstr "Senden an"
+
+msgid "Send a test email"
+msgstr "Test-E-Mail senden"
+
+msgid "Save settings"
+msgstr "Einstellungen speichern"
+
+msgid "Settings saved."
+msgstr "Einstellungen gespeichert."
+
+msgid "[%s] Test email"
+msgstr "[%s] Test-E-Mail"
+
+msgid "It works. Ticket emails from this site will arrive like this one."
+msgstr "Es funktioniert. Ticket-E-Mails dieser Website kommen so an wie diese."
+
+msgid "Sent to %s. Check the inbox (and spam folder)."
+msgstr "An %s gesendet. Prüfen Sie den Posteingang (und den Spam-Ordner)."
+
+msgid "Logo"
+msgstr "Logo"
+
+msgid "Email header and PDF. A wide PNG around 400×120 works best."
+msgstr "E-Mail-Kopfzeile und PDF. Ein breites PNG mit etwa 400×120 Pixeln eignet sich am besten."
+
+msgid "Choose a logo"
+msgstr "Logo auswählen"
+
+msgid "Choose from Media Library"
+msgstr "Aus der Mediathek wählen"
+
+msgid "Remove logo"
+msgstr "Logo entfernen"
+
+msgid "Default style"
+msgstr "Standardstil"
+
+msgid "Every event uses this unless it picks its own in Event settings."
+msgstr "Jede Veranstaltung verwendet diesen, außer sie wählt in den Veranstaltungseinstellungen einen eigenen."
+
+msgid "Colours"
+msgstr "Farben"
+
+msgid "Fine-tune the default style. Events that pick a different style keep that style's own colours."
+msgstr "Feinabstimmung des Standardstils. Veranstaltungen mit einem anderen Stil behalten dessen eigene Farben."
+
+msgid "Reset to the style's colours"
+msgstr "Auf die Farben des Stils zurücksetzen"
+
+msgid "Buttons in emails"
+msgstr "Schaltflächen in E-Mails"
+
+msgid "Show Wallet, PDF and calendar buttons under the ticket"
+msgstr "Wallet-, PDF- und Kalender-Schaltflächen unter dem Ticket anzeigen"
+
+msgid "Save first to see your changes. The ticket email preview is on each event's Emails tab."
+msgstr "Speichern Sie zuerst, um Ihre Änderungen zu sehen. Die Vorschau der Ticket-E-Mail finden Sie im Reiter „E-Mails“ jeder Veranstaltung."
+
+msgid "Save style"
+msgstr "Stil speichern"
+
+msgid "Style saved."
+msgstr "Stil gespeichert."
+
+msgid "Lets volunteers scan tickets without a WordPress account."
+msgstr "Damit können Helfer Tickets ohne WordPress-Konto scannen."
+
+msgid "Type a new PIN to change it"
+msgstr "Neue PIN eingeben, um sie zu ändern"
+
+msgid "For example 4821"
+msgstr "Zum Beispiel 4821"
+
+msgid "PIN is set"
+msgstr "PIN ist festgelegt"
+
+msgid "No PIN yet"
+msgstr "Noch keine PIN"
+
+msgid "Remove PIN"
+msgstr "PIN entfernen"
+
+msgid "Volunteers stay unlocked for 24 hours. Changing the PIN locks every phone. Without a PIN, only logged-in admins can scan."
+msgstr "Helfer bleiben 24 Stunden entsperrt. Eine Änderung der PIN sperrt alle Smartphones. Ohne PIN können nur angemeldete Administratoren scannen."
+
+msgid "Scanner"
+msgstr "Scanner"
+
+msgid "Staff open this on a phone. Each event also has its own scanner link on its Door tab."
+msgstr "Das Personal öffnet dies auf einem Smartphone. Jede Veranstaltung hat außerdem einen eigenen Scanner-Link im Reiter „Einlass“."
+
+msgid "Use my own scanner page instead"
+msgstr "Stattdessen meine eigene Scanner-Seite verwenden"
+
+msgid "Page address"
+msgstr "Seitenadresse"
+
+msgid "A page of yours with the %s shortcode. Leave empty to use the built-in scanner."
+msgstr "Eine Ihrer Seiten mit dem Shortcode %s. Leer lassen, um den eingebauten Scanner zu verwenden."
+
+msgid "Web address for events"
+msgstr "Webadresse für Veranstaltungen"
+
+msgid "The word before each event's name in its link."
+msgstr "Das Wort vor dem Namen jeder Veranstaltung in ihrem Link."
+
+msgid "You also have a page called \"%s\" at this address. Event links win over it; pick another word if you still need that page."
+msgstr "Unter dieser Adresse gibt es auch eine Seite „%s“. Veranstaltungslinks haben Vorrang; wählen Sie ein anderes Wort, wenn Sie diese Seite noch brauchen."
+
+msgid "Changing this changes every event link. Links already shared will stop working."
+msgstr "Eine Änderung ändert alle Veranstaltungslinks. Bereits geteilte Links funktionieren dann nicht mehr."
+
+msgid "Your site uses plain permalinks, so event links look technical. For short links, pick any other option under %s."
+msgstr "Ihre Website verwendet einfache Permalinks, daher sehen Veranstaltungslinks technisch aus. Für kurze Links wählen Sie unter %s eine beliebige andere Option."
+
+msgid "QR codes now point at the new address (%d cached images refreshed). Tickets already sent keep working."
+msgstr "QR-Codes zeigen jetzt auf die neue Adresse (%d zwischengespeicherte Bilder aktualisiert). Bereits gesendete Tickets funktionieren weiterhin."
+
+msgid "Email, subject or code"
+msgstr "E-Mail, Betreff oder Code"
+
+msgid "Emails are sent automatically in the background, %d per minute, so you can close this page."
+msgstr "E-Mails werden automatisch im Hintergrund versendet, %d pro Minute, Sie können diese Seite also schließen."
+
+msgid "An email that fails is tried again after 5 minutes, 30 minutes and 2 hours before it counts as failed. Sent emails leave this log after %d days."
+msgstr "Eine fehlgeschlagene E-Mail wird nach 5 Minuten, 30 Minuten und 2 Stunden erneut versucht, bevor sie als fehlgeschlagen gilt. Gesendete E-Mails verschwinden nach %d Tagen aus diesem Protokoll."
+
+msgid "Next batch in %s."
+msgstr "Nächster Durchgang in %s."
+
+msgid "Send the next batch now"
+msgstr "Nächsten Durchgang jetzt senden"
+
+msgid "To"
+msgstr "An"
+
+msgid "Nothing here."
+msgstr "Hier ist nichts."
+
+msgid "%d tries"
+msgstr "%d Versuche"
+
+msgid "Trying again in %s"
+msgstr "Neuer Versuch in %s"
+
+msgid "Trying again now"
+msgstr "Neuer Versuch jetzt"
+
+msgid "to you"
+msgstr "an Sie"
+
+msgid "Fix address"
+msgstr "Adresse korrigieren"
+
+msgid "Retry"
+msgstr "Erneut versuchen"
+
+msgid "Remove this email from the log?"
+msgstr "Diese E-Mail aus dem Protokoll entfernen?"
+
+msgid "Retry all failed"
+msgstr "Alle fehlgeschlagenen erneut versuchen"
+
+msgid "Remove every sent email from the log? This does not unsend them."
+msgstr "Alle gesendeten E-Mails aus dem Protokoll entfernen? Sie werden dadurch nicht zurückgeholt."
+
+msgid "Clear sent emails from the log"
+msgstr "Gesendete E-Mails aus dem Protokoll entfernen"
+
+msgid "Email log"
+msgstr "E-Mail-Protokoll"
+
+msgid "That email is no longer in the log."
+msgstr "Diese E-Mail ist nicht mehr im Protokoll."
+
+msgid "Attachments"
+msgstr "Anhänge"
+
+msgid "Queued"
+msgstr "In der Warteschlange"
+
+msgid "Email queued again."
+msgstr "E-Mail erneut in die Warteschlange gestellt."
+
+msgid "Removed from the log."
+msgstr "Aus dem Protokoll entfernt."
+
+msgid "Another batch is being sent right now. Try again in a moment."
+msgstr "Gerade wird ein anderer Durchgang gesendet. Versuchen Sie es gleich noch einmal."
+
+msgid "Sent %1$d, failed %2$d."
+msgstr "%1$d gesendet, %2$d fehlgeschlagen."
+
+msgid "%d emails queued again."
+msgstr "%d E-Mails erneut in die Warteschlange gestellt."
+
+msgid "%d sent emails removed from the log."
+msgstr "%d gesendete E-Mails aus dem Protokoll entfernt."
+
+msgid "Nothing to do."
+msgstr "Nichts zu tun."
+
+msgid "Saved emails you can reuse in any event: on an event's Emails tab, pick \"Start from a template\". Each event keeps its own copy, so changing a template here does not change events that already used it."
+msgstr "Gespeicherte E-Mails, die Sie in jeder Veranstaltung wiederverwenden können: Wählen Sie im Reiter „E-Mails“ einer Veranstaltung „Mit einer Vorlage beginnen“. Jede Veranstaltung behält ihre eigene Kopie, daher ändert eine Änderung hier keine Veranstaltungen, die die Vorlage bereits verwendet haben."
+
+msgid "All templates"
+msgstr "Alle Vorlagen"
+
+msgid "Template name"
+msgstr "Name der Vorlage"
+
+msgid "Conference ticket"
+msgstr "Konferenzticket"
+
+msgid "Kind"
+msgstr "Art"
+
+msgid "Delete this template? Events that already used it keep their copy."
+msgstr "Diese Vorlage löschen? Veranstaltungen, die sie bereits verwendet haben, behalten ihre Kopie."
+
+msgid "Delete template"
+msgstr "Vorlage löschen"
+
+msgid "Save template"
+msgstr "Vorlage speichern"
+
+msgid "New"
+msgstr "Neu"
+
+msgid "None saved yet."
+msgstr "Noch nichts gespeichert."
+
+msgid "Template saved."
+msgstr "Vorlage gespeichert."
+
+msgid "Template deleted."
+msgstr "Vorlage gelöscht."
+
+msgid "Optional. Adds \"Add to Apple Wallet\" and \"Add to Google Wallet\" buttons to ticket emails and ticket pages. Tickets work fine without it."
+msgstr "Optional. Fügt Ticket-E-Mails und Ticketseiten die Schaltflächen „Zu Apple Wallet hinzufügen“ und „Zu Google Wallet hinzufügen“ hinzu. Tickets funktionieren auch ohne."
+
+msgid "Apple Wallet"
+msgstr "Apple Wallet"
+
+msgid "Ready"
+msgstr "Bereit"
+
+msgid "Not set up"
+msgstr "Nicht eingerichtet"
+
+msgid "Needs a paid Apple Developer account."
+msgstr "Erfordert ein kostenpflichtiges Apple-Developer-Konto."
+
+msgid "Apple's guide"
+msgstr "Anleitung von Apple"
+
+msgid "Create a Pass Type ID in your Apple Developer account."
+msgstr "Erstellen Sie in Ihrem Apple-Developer-Konto eine Pass Type ID."
+
+msgid "Make its certificate and export it with its private key as a .p12 file."
+msgstr "Erstellen Sie das zugehörige Zertifikat und exportieren Sie es mit dem privaten Schlüssel als .p12-Datei."
+
+msgid "Upload it below with its password, plus Apple's WWDR certificate."
+msgstr "Laden Sie es unten mit seinem Passwort hoch, dazu das WWDR-Zertifikat von Apple."
+
+msgid "Pass Type ID"
+msgstr "Pass Type ID"
+
+msgid "Team ID"
+msgstr "Team ID"
+
+msgid "Organisation name"
+msgstr "Name der Organisation"
+
+msgid "Certificate (.p12)"
+msgstr "Zertifikat (.p12)"
+
+msgid "Uploaded"
+msgstr "Hochgeladen"
+
+msgid "Certificate password"
+msgstr "Zertifikatspasswort"
+
+msgid "Saved – type to change"
+msgstr "Gespeichert – zum Ändern eingeben"
+
+msgid "My server refuses the .p12"
+msgstr "Mein Server lehnt die .p12-Datei ab"
+
+msgid "Certificate (.pem)"
+msgstr "Zertifikat (.pem)"
+
+msgid "Private key (.pem)"
+msgstr "Privater Schlüssel (.pem)"
+
+msgid "PEM files uploaded"
+msgstr "PEM-Dateien hochgeladen"
+
+msgid "Apple WWDR certificate"
+msgstr "Apple-WWDR-Zertifikat"
+
+msgid "Download %s from Apple."
+msgstr "Laden Sie %s bei Apple herunter."
+
+msgid "Download a sample pass"
+msgstr "Beispielpass herunterladen"
+
+msgid "Disconnect Apple Wallet"
+msgstr "Apple Wallet trennen"
+
+msgid "Google Wallet"
+msgstr "Google Wallet"
+
+msgid "Free."
+msgstr "Kostenlos."
+
+msgid "Google's guide"
+msgstr "Anleitung von Google"
+
+msgid "Create an issuer in the Google Pay & Wallet Console."
+msgstr "Erstellen Sie einen Aussteller in der Google Pay & Wallet Console."
+
+msgid "Create a Google Cloud service account with the Wallet API and add it to the issuer."
+msgstr "Erstellen Sie ein Google-Cloud-Dienstkonto mit der Wallet API und fügen Sie es dem Aussteller hinzu."
+
+msgid "Upload its JSON key below."
+msgstr "Laden Sie unten seinen JSON-Schlüssel hoch."
+
+msgid "Issuer ID"
+msgstr "Aussteller-ID"
+
+msgid "Service account key (.json)"
+msgstr "Schlüssel des Dienstkontos (.json)"
+
+msgid "Until Google approves your issuer, only test users can save passes."
+msgstr "Bis Google Ihren Aussteller freigibt, können nur Testnutzer Pässe speichern."
+
+msgid "Try a sample pass"
+msgstr "Beispielpass ausprobieren"
+
+msgid "Disconnect Google Wallet"
+msgstr "Google Wallet trennen"
+
+msgid "Save wallet settings"
+msgstr "Wallet-Einstellungen speichern"
+
+msgid "Saved, with problems: "
+msgstr "Gespeichert, mit Problemen: "
+
+msgid "Wallet settings saved."
+msgstr "Wallet-Einstellungen gespeichert."
+
+msgid "QR codes"
+msgstr "QR-Codes"
+
+msgid "Working (GD)."
+msgstr "Funktioniert (GD)."
+
+msgid "Working (built-in encoder)."
+msgstr "Funktioniert (eingebauter Encoder)."
+
+msgid "Neither GD nor zlib is available, so QR images cannot be made."
+msgstr "Weder GD noch zlib ist verfügbar, daher können keine QR-Bilder erzeugt werden."
+
+msgid "Background sending"
+msgstr "Hintergrundversand"
+
+msgid "Next run in %s."
+msgstr "Nächster Lauf in %s."
+
+msgid "DISABLE_WP_CRON is on: make sure a real cron job calls wp-cron.php."
+msgstr "DISABLE_WP_CRON ist aktiv: Stellen Sie sicher, dass ein echter Cronjob wp-cron.php aufruft."
+
+msgid "Not scheduled. Deactivate and reactivate the plugin to fix it."
+msgstr "Nicht geplant. Deaktivieren und aktivieren Sie das Plugin erneut, um das zu beheben."
+
+msgid "Short event links"
+msgstr "Kurze Veranstaltungslinks"
+
+msgid "On."
+msgstr "Aktiv."
+
+msgid "Your site uses plain permalinks, so event links look technical."
+msgstr "Ihre Website verwendet einfache Permalinks, daher sehen Veranstaltungslinks technisch aus."
+
+msgid "Apple Wallet support"
+msgstr "Apple-Wallet-Unterstützung"
+
+msgid "The zip extension is available."
+msgstr "Die zip-Erweiterung ist verfügbar."
+
+msgid "The PHP zip extension is missing, so Apple Wallet passes cannot be made."
+msgstr "Die PHP-Erweiterung zip fehlt, daher können keine Apple-Wallet-Pässe erstellt werden."
+
+msgid "Wallet signing"
+msgstr "Wallet-Signierung"
+
+msgid "OpenSSL is available."
+msgstr "OpenSSL ist verfügbar."
+
+msgid "OpenSSL is missing, so wallet passes cannot be signed."
+msgstr "OpenSSL fehlt, daher können Wallet-Pässe nicht signiert werden."
+
+msgid "System check"
+msgstr "Systemprüfung"
+
+msgid "Reset QR signature"
+msgstr "QR-Signatur zurücksetzen"
+
+msgid "Every QR code carries a secret signature so it cannot be faked. Only reset it if you think the secret leaked: every ticket and download link already sent will stop working."
+msgstr "Jeder QR-Code trägt eine geheime Signatur, damit er nicht gefälscht werden kann. Setzen Sie sie nur zurück, wenn Sie glauben, dass das Geheimnis bekannt geworden ist: Alle bereits gesendeten Tickets und Download-Links funktionieren dann nicht mehr."
+
+msgid "Reset the QR signature? Every ticket already sent will stop working at the door."
+msgstr "Die QR-Signatur zurücksetzen? Alle bereits gesendeten Tickets funktionieren am Einlass nicht mehr."
+
+msgid "Reset signature…"
+msgstr "Signatur zurücksetzen …"
+
+msgid "Signature reset; %d cached QR images cleared."
+msgstr "Signatur zurückgesetzt; %d zwischengespeicherte QR-Bilder gelöscht."
+
+msgid "What guests and buyers read on the claim page, the ticket list and the shop pages. Leave a box empty to use the standard wording, which is translated into your site's language automatically. Emails are edited on each event's Emails tab."
+msgstr "Was Gäste und Käufer auf der Abholseite, in der Ticketliste und auf den Shopseiten lesen. Lassen Sie ein Feld leer, um den Standardtext zu verwenden, der automatisch in die Sprache Ihrer Website übersetzt wird. E-Mails bearbeiten Sie im Reiter „E-Mails“ jeder Veranstaltung."
+
+msgid "Save wording"
+msgstr "Texte speichern"
+
+msgid "Saved. %d text uses your own words."
+msgid_plural "Saved. %d texts use your own words."
+msgstr[0] "Gespeichert. %d Text verwendet Ihre eigenen Worte."
+msgstr[1] "Gespeichert. %d Texte verwenden Ihre eigenen Worte."
+
+msgid "Saved. Everything uses the standard wording."
+msgstr "Gespeichert. Alles verwendet die Standardtexte."
+
+msgid "That sign-up no longer exists."
+msgstr "Diese Anmeldung existiert nicht mehr."
+
+msgid "The event for this sign-up no longer exists."
+msgstr "Die Veranstaltung zu dieser Anmeldung existiert nicht mehr."
+
+msgid "Could not create a ticket."
+msgstr "Es konnte kein Ticket erstellt werden."
+
+msgid "Claim page"
+msgstr "Abholseite"
+
+msgid "Where a guest fills in their name for a ticket someone passed on to them."
+msgstr "Wo ein Gast seinen Namen für ein an ihn weitergegebenes Ticket einträgt."
+
+msgid "Heading, when the sender is unknown"
+msgstr "Überschrift, wenn der Absender unbekannt ist"
+
+msgid "A ticket to {event} is waiting for you"
+msgstr "Ein Ticket für {event} wartet auf Sie"
+
+msgid "Text under the heading"
+msgstr "Text unter der Überschrift"
+
+msgid "Tell us who's coming. Your ticket arrives by email straight away and opens here too."
+msgstr "Sagen Sie uns, wer kommt. Ihr Ticket kommt sofort per E-Mail und öffnet sich auch hier."
+
+msgid "Button"
+msgstr "Schaltfläche"
+
+msgid "Message on the ticket afterwards"
+msgstr "Meldung auf dem Ticket danach"
+
+msgid "It's yours! Your ticket is also on its way to your inbox."
+msgstr "Es gehört Ihnen! Ihr Ticket ist auch auf dem Weg in Ihr Postfach."
+
+msgid "Link already used: heading"
+msgstr "Link bereits verwendet: Überschrift"
+
+msgid "This ticket has been claimed"
+msgstr "Dieses Ticket wurde abgeholt"
+
+msgid "Link already used: text"
+msgstr "Link bereits verwendet: Text"
+
+msgid "The ticket to {event} was emailed to {email}. Look in that inbox (and the spam folder) for the email with the QR code."
+msgstr "Das Ticket für {event} wurde an {email} gesendet. Suchen Sie in diesem Postfach (und im Spam-Ordner) nach der E-Mail mit dem QR-Code."
+
+msgid "Link already used: help"
+msgstr "Link bereits verwendet: Hilfe"
+
+msgid "Can't find it? Contact the organiser and they can send it again."
+msgstr "Nicht gefunden? Wenden Sie sich an den Veranstalter, er kann es erneut senden."
+
+msgid "Link taken back: heading"
+msgstr "Link zurückgenommen: Überschrift"
+
+msgid "This link does not work any more"
+msgstr "Dieser Link funktioniert nicht mehr"
+
+msgid "Link taken back: text"
+msgstr "Link zurückgenommen: Text"
+
+msgid "The ticket has already been claimed, or the person who sent it took it back. Ask them for a new link."
+msgstr "Das Ticket wurde bereits abgeholt oder die Person, die es gesendet hat, hat es zurückgenommen. Bitten Sie sie um einen neuen Link."
+
+msgid "Buyer's ticket list"
+msgstr "Ticketliste des Käufers"
+
+msgid "On the thank-you page, in My Account, at the private \"manage your tickets\" link and in the order emails."
+msgstr "Auf der Dankeseite, unter „Mein Konto“, unter dem privaten Link „Ihre Tickets verwalten“ und in den Bestell-E-Mails."
+
+msgid "Page heading"
+msgstr "Seitenüberschrift"
+
+msgid "Your tickets · Order #{order}"
+msgstr "Ihre Tickets · Bestellung #{order}"
+
+msgid "Heading per event"
+msgstr "Überschrift pro Veranstaltung"
+
+msgid "Heading in order emails"
+msgstr "Überschrift in Bestell-E-Mails"
+
+msgid "Your tickets"
+msgstr "Ihre Tickets"
+
+msgid "The buyer's own ticket"
+msgstr "Das eigene Ticket des Käufers"
+
+msgid "Marker next to the buyer"
+msgstr "Markierung neben dem Käufer"
+
+msgid "(you)"
+msgstr "(Sie)"
+
+msgid "Open ticket button"
+msgstr "Schaltfläche „Ticket öffnen“"
+
+msgid "Open ticket"
+msgstr "Ticket öffnen"
+
+msgid "A ticket without a name"
+msgstr "Ein Ticket ohne Namen"
+
+msgid "Hint under it"
+msgstr "Hinweis darunter"
+
+msgid "Send it on: your guest fills in their name and gets their own ticket."
+msgstr "Geben Sie es weiter: Ihr Gast trägt seinen Namen ein und erhält sein eigenes Ticket."
+
+msgid "Hint in emails, above the link"
+msgstr "Hinweis in E-Mails, über dem Link"
+
+msgid "Send this link to your guest:"
+msgstr "Senden Sie diesen Link an Ihren Gast:"
+
+msgid "Copy button"
+msgstr "Schaltfläche „Kopieren“"
+
+msgid "After copying"
+msgstr "Nach dem Kopieren"
+
+msgid "Email box"
+msgstr "E-Mail-Feld"
+
+msgid "Email button"
+msgstr "Schaltfläche „E-Mail“"
+
+msgid "Email it"
+msgstr "Per E-Mail senden"
+
+msgid "A sent ticket"
+msgstr "Ein gesendetes Ticket"
+
+msgid "Sent to {email}"
+msgstr "Gesendet an {email}"
+
+msgid "Waiting for them to fill in their name."
+msgstr "Wartet darauf, dass der Name eingetragen wird."
+
+msgid "Send again button"
+msgstr "Schaltfläche „Erneut senden“"
+
+msgid "Send again"
+msgstr "Erneut senden"
+
+msgid "Take back button"
+msgstr "Schaltfläche „Zurücknehmen“"
+
+msgid "Take back"
+msgstr "Zurücknehmen"
+
+msgid "A claimed ticket"
+msgstr "Ein abgeholtes Ticket"
+
+msgid "Has their ticket ({email})"
+msgstr "Hat sein Ticket ({email})"
+
+msgid "A claimed ticket, in emails"
+msgstr "Ein abgeholtes Ticket, in E-Mails"
+
+msgid "Ticket emailed to {email}"
+msgstr "Ticket per E-Mail an {email} gesendet"
+
+msgid "After sending"
+msgstr "Nach dem Senden"
+
+msgid "Sent to {email}. They fill in their name and get the ticket."
+msgstr "An {email} gesendet. Der Gast trägt seinen Namen ein und erhält das Ticket."
+
+msgid "After taking back"
+msgstr "Nach dem Zurücknehmen"
+
+msgid "Taken back. The link you sent no longer works."
+msgstr "Zurückgenommen. Der gesendete Link funktioniert nicht mehr."
+
+msgid "Manage button in emails"
+msgstr "Schaltfläche „Verwalten“ in E-Mails"
+
+msgid "Claim button in the gift email"
+msgstr "Schaltfläche „Abholen“ in der Geschenk-E-Mail"
+
+msgid "Shop pages"
+msgstr "Shopseiten"
+
+msgid "The product page of a ticket, and the ticket list on the event page."
+msgstr "Die Produktseite eines Tickets und die Ticketliste auf der Veranstaltungsseite."
+
+msgid "\"When\" label"
+msgstr "Beschriftung „Wann“"
+
+msgid "\"Where\" label"
+msgstr "Beschriftung „Wo“"
+
+msgid "Where"
+msgstr "Wo"
+
+msgid "Above the guest details"
+msgstr "Über den Gästeangaben"
+
+msgid "Who is coming? Each ticket is emailed to the person named on it."
+msgstr "Wer kommt? Jedes Ticket wird per E-Mail an die darauf genannte Person gesendet."
+
+msgid "Each guest block"
+msgstr "Jeder Gästeblock"
+
+msgid "Ticket {n}"
+msgstr "Ticket {n}"
+
+msgid "Shop button for tickets with guest details"
+msgstr "Shop-Schaltfläche für Tickets mit Gästeangaben"
+
+msgid "Choose tickets"
+msgstr "Tickets auswählen"
+
+msgid "Event page: heading"
+msgstr "Veranstaltungsseite: Überschrift"
+
+msgid "Event page: Buy button"
+msgstr "Veranstaltungsseite: Schaltfläche „Kaufen“"
+
+msgid "Buy"
+msgstr "Kaufen"
+
+msgid "Event page: Choose button"
+msgstr "Veranstaltungsseite: Schaltfläche „Auswählen“"
+
+msgid "Choose"
+msgstr "Auswählen"
+
+msgid "Event page: sold out"
+msgstr "Veranstaltungsseite: ausverkauft"
+
+msgid "Sold out"
+msgstr "Ausverkauft"
+
+msgid "No ticket code supplied."
+msgstr "Kein Ticketcode angegeben."
+
+msgid "This ticket does not exist."
+msgstr "Dieses Ticket existiert nicht."
+
+msgid "This ticket has been cancelled."
+msgstr "Dieses Ticket wurde storniert."
+
+msgid "This ticket has no name yet. The buyer has to pass it on to its guest first."
+msgstr "Dieses Ticket hat noch keinen Namen. Der Käufer muss es zuerst an seinen Gast weitergeben."
+
+msgid "This ticket is for %s."
+msgstr "Dieses Ticket gilt für %s."
+
+msgid "Valid, but already scanned %d time(s)."
+msgstr "Gültig, aber bereits %d-mal gescannt."
+
+msgid "Welcome. This ticket is valid."
+msgstr "Willkommen. Dieses Ticket ist gültig."
+
+msgid "The private key could not be read. Check the password."
+msgstr "Der private Schlüssel konnte nicht gelesen werden. Prüfen Sie das Passwort."
+
+msgid "The certificate PEM could not be read."
+msgstr "Das PEM-Zertifikat konnte nicht gelesen werden."
+
+msgid "No Pass Type ID certificate has been uploaded."
+msgstr "Es wurde kein Pass-Type-ID-Zertifikat hochgeladen."
+
+msgid "The .p12 file could not be opened. Check the password, or upload the certificate and key as PEM files instead (newer OpenSSL versions reject some older .p12 encryption)."
+msgstr "Die .p12-Datei konnte nicht geöffnet werden. Prüfen Sie das Passwort oder laden Sie Zertifikat und Schlüssel stattdessen als PEM-Dateien hoch (neuere OpenSSL-Versionen lehnen manche ältere .p12-Verschlüsselung ab)."
+
+msgid "Website"
+msgstr "Website"
+
+msgid "Ticket for %s"
+msgstr "Ticket für %s"
+
+msgid "The PHP zip extension is required for Apple Wallet passes."
+msgstr "Für Apple-Wallet-Pässe wird die PHP-Erweiterung zip benötigt."
+
+msgid "Could not create the pass archive."
+msgstr "Das Pass-Archiv konnte nicht erstellt werden."
+
+msgid "Signing the pass failed: "
+msgstr "Das Signieren des Passes ist fehlgeschlagen: "
+
+msgid "Could not read the signature produced by OpenSSL."
+msgstr "Die von OpenSSL erzeugte Signatur konnte nicht gelesen werden."
+
+msgid "The Google service account private key could not be read."
+msgstr "Der private Schlüssel des Google-Dienstkontos konnte nicht gelesen werden."
+
+msgid "Signing the Google Wallet token failed."
+msgstr "Das Signieren des Google-Wallet-Tokens ist fehlgeschlagen."
+
+msgid "That does not look like a service account key file (client_email and private_key are missing)."
+msgstr "Das sieht nicht nach einer Schlüsseldatei eines Dienstkontos aus (client_email und private_key fehlen)."
+
+msgid "Ticket code: %s"
+msgstr "Ticketcode: %s"
+
+msgid "The event"
+msgstr "Die Veranstaltung"
+
+msgid "Who gets a ticket"
+msgstr "Wer ein Ticket bekommt"
+
+msgid "Ticket & email"
+msgstr "Ticket & E-Mail"
+
+msgid "Go live"
+msgstr "Veröffentlichen"
+
+msgid "What's the event?"
+msgstr "Um welche Veranstaltung geht es?"
+
+msgid "Autumn Networking Night"
+msgstr "Herbst-Networking-Abend"
+
+msgid "Rooftop Terrace"
+msgstr "Dachterrasse"
+
+msgid "(optional, printed on the ticket)"
+msgstr "(optional, wird auf das Ticket gedruckt)"
+
+msgid "Limit the number of spots"
+msgstr "Anzahl der Plätze begrenzen"
+
+msgid "Times use your site timezone (%s). No date yet? Leave it empty and add it later."
+msgstr "Zeiten verwenden die Zeitzone Ihrer Website (%s). Noch kein Datum? Leer lassen und später ergänzen."
+
+msgid "What do you ask people?"
+msgstr "Was fragen Sie die Leute?"
+
+msgid "Name and email are always there: that's who the ticket is for and where it goes. Click a question to change it, or add more."
+msgstr "Name und E-Mail sind immer dabei: für wen das Ticket ist und wohin es geht. Klicken Sie auf eine Frage, um sie zu ändern, oder fügen Sie weitere hinzu."
+
+msgid "(the same person can't sign up twice)"
+msgstr "(dieselbe Person kann sich nicht zweimal anmelden)"
+
+msgid "How should the ticket look?"
+msgstr "Wie soll das Ticket aussehen?"
+
+msgid "Send these with the ticket email"
+msgstr "Diese mit der Ticket-E-Mail senden"
+
+msgid "(for printing)"
+msgstr "(zum Ausdrucken)"
+
+msgid "Calendar invite"
+msgstr "Kalendereinladung"
+
+msgid "(adds the event to their calendar; needs a date)"
+msgstr "(trägt die Veranstaltung in den Kalender ein; braucht ein Datum)"
+
+msgid "Apple Wallet pass"
+msgstr "Apple-Wallet-Pass"
+
+msgid "The ticket email is already written for you. Change the wording any time on the event's Emails tab."
+msgstr "Die Ticket-E-Mail ist bereits für Sie geschrieben. Den Text können Sie jederzeit im Reiter „E-Mails“ der Veranstaltung ändern."
+
+msgid "Nothing to set up: the event gets its own sign-up page and door scanner as soon as you press Finish."
+msgstr "Nichts einzurichten: Die Veranstaltung erhält ihre eigene Anmeldeseite und ihren eigenen Einlass-Scanner, sobald Sie auf „Fertig“ klicken."
+
+msgid "Sign-up link:"
+msgstr "Anmeldelink:"
+
+msgid "You can change the end of the link later in Event settings."
+msgstr "Das Ende des Links können Sie später in den Veranstaltungseinstellungen ändern."
+
+msgid "Open for sign-ups now"
+msgstr "Anmeldung jetzt öffnen"
+
+msgid "Want the form inside one of your own pages? After Finish, \"Share & place\" gives you a shortcode."
+msgstr "Möchten Sie das Formular in einer Ihrer eigenen Seiten? Nach „Fertig“ erhalten Sie unter „Teilen & einbinden“ einen Shortcode."
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Continue"
+msgstr "Weiter"
+
+msgid "Finish"
+msgstr "Fertig"
+
+msgid "The event could not be created."
+msgstr "Die Veranstaltung konnte nicht erstellt werden."
+
+msgid "Buying this issues tickets for an event."
+msgstr "Der Kauf erzeugt Tickets für eine Veranstaltung."
+
+msgid "+ New event"
+msgstr "+ Neue Veranstaltung"
+
+msgid "Open in Tickets"
+msgstr "In Tickets öffnen"
+
+msgid "Taken from the product name"
+msgstr "Aus dem Produktnamen übernommen"
+
+msgid "Optional"
+msgstr "Optional"
+
+msgid "For the whole event, every ticket type together."
+msgstr "Für die gesamte Veranstaltung, alle Ticketarten zusammen."
+
+msgid "Changes here update the event, for every ticket type it has."
+msgstr "Änderungen hier aktualisieren die Veranstaltung, für alle ihre Ticketarten."
+
+msgid "People per purchase"
+msgstr "Personen pro Kauf"
+
+msgid "2 for a couples ticket, 4 for a family pass. Each person gets their own ticket."
+msgstr "2 für ein Paarticket, 4 für einen Familienpass. Jede Person erhält ihr eigenes Ticket."
+
+msgid "Passing on"
+msgstr "Weitergeben"
+
+msgid "Buyers can pass their extra tickets on with a link. Untick for tickets that must stay with the buyer, such as named VIP tickets: every ticket is then made out to the buyer."
+msgstr "Käufer können ihre weiteren Tickets per Link weitergeben. Deaktivieren Sie dies für Tickets, die beim Käufer bleiben müssen, etwa personalisierte VIP-Tickets: Dann werden alle Tickets auf den Käufer ausgestellt."
+
+msgid "Guest details"
+msgstr "Gästeangaben"
+
+msgid "Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name."
+msgstr "Beim Kauf Name und E-Mail jedes Gastes (und die Anmeldefragen der Veranstaltung) abfragen. Andernfalls erhält der Käufer das erste Ticket und gibt die übrigen per Link weiter; jeder Gast trägt seinen eigenen Namen ein."
+
+msgid "Tickets are issued when the order is paid."
+msgstr "Tickets werden ausgestellt, sobald die Bestellung bezahlt ist."
+
+msgid "Order #%s"
+msgstr "Bestellung #%s"
+
+msgid "No way to pay is switched on yet."
+msgstr "Es ist noch keine Zahlungsart aktiviert."
+
+msgid "People can add tickets to their cart but cannot check out."
+msgstr "Besucher können Tickets in den Warenkorb legen, aber nicht zur Kasse gehen."
+
+msgid "Set up payments"
+msgstr "Zahlungen einrichten"
+
+msgid "Ticket types"
+msgstr "Ticketarten"
+
+msgid "Each ticket type is a WooCommerce product. They are listed on the event page with a Buy button; once paid, the tickets appear under People and are emailed like any other ticket."
+msgstr "Jede Ticketart ist ein WooCommerce-Produkt. Sie werden auf der Veranstaltungsseite mit einer Kaufen-Schaltfläche aufgelistet; nach der Bezahlung erscheinen die Tickets unter „Personen“ und werden wie jedes andere Ticket per E-Mail versendet."
+
+msgid "Nothing for sale yet. Add a ticket type below."
+msgstr "Noch nichts im Verkauf. Fügen Sie unten eine Ticketart hinzu."
+
+msgid "Ticket type"
+msgstr "Ticketart"
+
+msgid "Price"
+msgstr "Preis"
+
+msgid "Quantity"
+msgstr "Menge"
+
+msgid "Sold"
+msgstr "Verkauft"
+
+msgid "Has options"
+msgstr "Hat Varianten"
+
+msgid "Admits %d"
+msgstr "Für %d Personen"
+
+msgid "Asks attendee details"
+msgstr "Fragt Gästeangaben ab"
+
+msgid "Stays with the buyer"
+msgstr "Bleibt beim Käufer"
+
+msgid "Quantity left"
+msgstr "Verbleibende Menge"
+
+msgid "On sale"
+msgstr "Im Verkauf"
+
+msgid "Not on sale"
+msgstr "Nicht im Verkauf"
+
+msgid "Stop selling"
+msgstr "Verkauf beenden"
+
+msgid "Put on sale"
+msgstr "In den Verkauf nehmen"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Add a ticket type"
+msgstr "Ticketart hinzufügen"
+
+msgid "For example General admission, VIP or Student. For options such as sizes or dates, make a variable product in WooCommerce and tick \"Ticket\"."
+msgstr "Zum Beispiel Standard, VIP oder Ermäßigt. Für Varianten wie Größen oder Termine legen Sie in WooCommerce ein variables Produkt an und haken „Ticket“ an."
+
+msgid "General admission"
+msgstr "Standard"
+
+msgid "Price (%s)"
+msgstr "Preis (%s)"
+
+msgid "How many"
+msgstr "Wie viele"
+
+msgid "Admits"
+msgstr "Personen pro Ticket"
+
+msgid "Buyers can pass their extra tickets on with a link"
+msgstr "Käufer können ihre weiteren Tickets per Link weitergeben"
+
+msgid "(untick for tickets that must stay with the buyer)"
+msgstr "(deaktivieren für Tickets, die beim Käufer bleiben müssen)"
+
+msgid "Ask for each guest's name and answers when buying"
+msgstr "Beim Kauf Name und Antworten jedes Gastes abfragen"
+
+msgid "(otherwise the buyer gets the first ticket and passes the others on with a link)"
+msgstr "(andernfalls erhält der Käufer das erste Ticket und gibt die übrigen per Link weiter)"
+
+msgid "Add and put on sale"
+msgstr "Hinzufügen und in den Verkauf nehmen"
+
+msgid "Guests"
+msgstr "Gäste"
+
+msgid "Someone buying several tickets gets the first one, and a link for each of the others to send to their guests. Each guest fills in their own name and gets their own ticket."
+msgstr "Wer mehrere Tickets kauft, erhält das erste selbst und für jedes weitere einen Link, den er an seine Gäste sendet. Jeder Gast trägt seinen eigenen Namen ein und erhält sein eigenes Ticket."
+
+msgid "Tickets need a name to get in"
+msgstr "Tickets brauchen einen Namen für den Einlass"
+
+msgid "Off: a ticket nobody has claimed still works at the door, for the buyer. On: the scanner refuses it until its guest fills in their name."
+msgstr "Aus: Ein nicht abgeholtes Ticket gilt am Einlass weiterhin, für den Käufer. An: Der Scanner weist es ab, bis der Gast seinen Namen eingetragen hat."
+
+msgid "%d ticket has no name yet"
+msgid_plural "%d tickets have no name yet"
+msgstr[0] "%d Ticket hat noch keinen Namen"
+msgstr[1] "%d Tickets haben noch keinen Namen"
+
+msgid "The whole event has %1$d spots, shared by the shop and the sign-up form. %2$d are taken."
+msgstr "Die gesamte Veranstaltung hat %1$d Plätze, die sich Shop und Anmeldeformular teilen. %2$d sind vergeben."
+
+msgid "The event has no overall spot limit. Each ticket type can still have its own quantity."
+msgstr "Die Veranstaltung hat keine Gesamtbegrenzung der Plätze. Jede Ticketart kann trotzdem ihre eigene Menge haben."
+
+msgid "Change on the Sign-up form tab"
+msgstr "Im Reiter „Anmeldeformular“ ändern"
+
+msgid "%d spot is held by an order waiting for payment."
+msgid_plural "%d spots are held by orders waiting for payment."
+msgstr[0] "%d Platz ist durch eine Bestellung belegt, die auf Zahlung wartet."
+msgstr[1] "%d Plätze sind durch Bestellungen belegt, die auf Zahlung warten."
+
+msgid "Free sign-ups are open too, so people can also get a ticket without paying."
+msgstr "Die kostenlose Anmeldung ist ebenfalls geöffnet, man kann also auch ohne Bezahlung ein Ticket erhalten."
+
+msgid "Close sign-ups"
+msgstr "Anmeldung schließen"
+
+msgid "Give the ticket type a name and a price."
+msgstr "Geben Sie der Ticketart einen Namen und einen Preis."
+
+msgid "\"%s\" is on sale."
+msgstr "„%s“ ist im Verkauf."
+
+msgid "%d without a name"
+msgid_plural "%d without a name"
+msgstr[0] "%d ohne Namen"
+msgstr[1] "%d ohne Namen"
+
+msgid "waiting %s"
+msgstr "wartet seit %s"
+
+msgid "All tickets"
+msgstr "Alle Tickets"
+
+msgid "Tickets without a name"
+msgstr "Tickets ohne Namen"
+
+msgid "Email the buyer their tickets again"
+msgstr "Dem Käufer seine Tickets erneut per E-Mail senden"
+
+msgid "Tickets email sent to the buyer again."
+msgstr "Ticket-E-Mail erneut an den Käufer gesendet."
+
+msgid "No tickets email to send: the buyer has no tickets of their own left in this order."
+msgstr "Keine Ticket-E-Mail zu senden: Der Käufer hat in dieser Bestellung keine eigenen Tickets mehr."
+
+msgid "That ticket type no longer exists."
+msgstr "Diese Ticketart existiert nicht mehr."
+
+msgid "Stopped selling. Tickets already sold still work."
+msgstr "Verkauf beendet. Bereits verkaufte Tickets gelten weiterhin."
+
+msgid "Back on sale."
+msgstr "Wieder im Verkauf."
+
+msgid "Ticket %1$d: %2$s"
+msgstr "Ticket %1$d: %2$s"
+
+msgid "This event is no longer available."
+msgstr "Diese Veranstaltung ist nicht mehr verfügbar."
+
+msgid "Please add the attendee details for %s on its page."
+msgstr "Bitte ergänzen Sie die Gästeangaben für %s auf der Produktseite."
+
+msgid "Only %1$d spot is left for %2$s."
+msgid_plural "Only %1$d spots are left for %2$s."
+msgstr[0] "Für %2$s ist nur noch %1$d Platz frei."
+msgstr[1] "Für %2$s sind nur noch %1$d Plätze frei."
+
+msgid "%s is fully booked."
+msgstr "%s ist ausgebucht."
+
+msgid "Attendees"
+msgstr "Gäste"
+
+msgid "%s needs a name for each ticket. Remove it and add it again from its page."
+msgstr "%s braucht für jedes Ticket einen Namen. Entfernen Sie es und legen Sie es über die Produktseite erneut in den Warenkorb."
+
+msgid "An event in your cart is no longer available."
+msgstr "Eine Veranstaltung in Ihrem Warenkorb ist nicht mehr verfügbar."
+
+msgid "Paid, order #%s"
+msgstr "Bezahlt, Bestellung #%s"
+
+msgid "%1$d ticket issued for %2$s."
+msgid_plural "%1$d tickets issued for %2$s."
+msgstr[0] "%1$d Ticket für %2$s ausgestellt."
+msgstr[1] "%1$d Tickets für %2$s ausgestellt."
+
+msgid "That did not work. Please try again."
+msgstr "Das hat nicht geklappt. Bitte versuchen Sie es erneut."
+
+msgid "That ticket is not in this order."
+msgstr "Dieses Ticket gehört nicht zu dieser Bestellung."
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Home"
+msgstr "Start"

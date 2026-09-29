@@ -1,7 +1,11 @@
 <?php
 /**
- * Settings that apply to every event: sender, style, door, the email log,
- * saved email templates, wallet passes and the advanced corner.
+ * Two screens that apply to every event:
+ *
+ *   Tickets → Emails    what was sent and what failed, saved templates,
+ *                       the sender and a test
+ *   Tickets → Settings  style, door & scanner, wallet passes, the wording
+ *                       of public pages, and the advanced corner
  */
 
 if (!defined('ABSPATH')) exit;
@@ -9,28 +13,54 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_Settings {
 
     public static function init() {
-        foreach (['general', 'look', 'door', 'advanced', 'wallet', 'template', 'template_delete', 'queue'] as $a) {
+        foreach (['general', 'look', 'door', 'advanced', 'wallet', 'template', 'template_delete', 'queue', 'wording'] as $a) {
             add_action('admin_post_snn_set_' . $a, [__CLASS__, 'save_' . $a]);
         }
+        add_action('admin_init', [__CLASS__, 'moved_tabs']);
         add_action('admin_post_snn_wallet_test', [__CLASS__, 'wallet_test']);
         add_action('admin_post_snn_design_pdf', [__CLASS__, 'pdf_preview']);
         add_action('wp_ajax_snn_plain_test', [__CLASS__, 'ajax_plain_test']);
     }
 
-    private static function tabs() {
+    const EMAILS_PAGE   = 'snn-tickets-emails';
+    const SETTINGS_PAGE = 'snn-tickets-settings';
+
+    /** page => tab => label; the first tab is where a page opens. */
+    private static function pages() {
         return [
-            'general'   => __('General', 'snn-tickets'),
-            'look'      => __('Style', 'snn-tickets'),
-            'door'      => __('Door & scanner', 'snn-tickets'),
-            'log'       => __('Email log', 'snn-tickets'),
-            'templates' => __('Email templates', 'snn-tickets'),
-            'wallet'    => __('Apple & Google Wallet', 'snn-tickets'),
-            'advanced'  => __('Advanced', 'snn-tickets'),
+            self::EMAILS_PAGE => [
+                'log'       => __('Sent & waiting', 'snn-tickets'),
+                'templates' => __('Templates', 'snn-tickets'),
+                'general'   => __('Sender & test', 'snn-tickets'),
+            ],
+            self::SETTINGS_PAGE => [
+                'look'     => __('Style', 'snn-tickets'),
+                'door'     => __('Door & scanner', 'snn-tickets'),
+                'wallet'   => __('Apple & Google Wallet', 'snn-tickets'),
+                'wording'  => __('Wording', 'snn-tickets'),
+                'advanced' => __('Advanced', 'snn-tickets'),
+            ],
         ];
     }
 
-    private static function url($tab, $args = []) {
-        return add_query_arg(array_merge(['page' => 'snn-tickets-settings', 'tab' => $tab], $args), admin_url('admin.php'));
+    private static function page_of($tab) {
+        foreach (self::pages() as $page => $tabs) if (isset($tabs[$tab])) return $page;
+        return self::SETTINGS_PAGE;
+    }
+
+    public static function url($tab, $args = []) {
+        return add_query_arg(array_merge(['page' => self::page_of($tab), 'tab' => $tab], $args), admin_url('admin.php'));
+    }
+
+    /** Email tabs used to live under Settings: old links land in the new place. */
+    public static function moved_tabs() {
+        if (($_GET['page'] ?? '') !== self::SETTINGS_PAGE) return;
+        $tab = sanitize_key(wp_unslash($_GET['tab'] ?? ''));
+        if ($tab === '' || self::page_of($tab) !== self::EMAILS_PAGE) return;
+        $args = array_map(function ($v) { return is_string($v) ? sanitize_text_field(wp_unslash($v)) : ''; }, $_GET);
+        unset($args['page'], $args['tab']);
+        wp_safe_redirect(self::url($tab, $args));
+        exit;
     }
 
     private static function form_open($action, $multipart = false) {
@@ -45,16 +75,18 @@ class SNN_T_Settings {
 
     public static function render() {
         SNN_T_Admin::cap();
-        $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'general';
-        if (!isset(self::tabs()[$tab])) $tab = 'general';
+        $page = ($_GET['page'] ?? '') === self::EMAILS_PAGE ? self::EMAILS_PAGE : self::SETTINGS_PAGE;
+        $tabs = self::pages()[$page];
+        $tab  = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
+        if (!isset($tabs[$tab])) $tab = array_key_first($tabs);
         $failed = SNN_T_Mailer::queue_counts()['failed'];
         ?>
         <div class="wrap snn-wrap">
-            <h1><?php esc_html_e('Tickets Settings', 'snn-tickets'); ?></h1>
+            <h1><?php echo $page === self::EMAILS_PAGE ? esc_html__('Emails', 'snn-tickets') : esc_html__('Tickets Settings', 'snn-tickets'); ?></h1>
             <?php SNN_T_Admin::notice(); ?>
             <div class="snn-page">
                 <nav class="snn-tabs">
-                    <?php foreach (self::tabs() as $k => $l): ?>
+                    <?php foreach ($tabs as $k => $l): ?>
                         <a class="<?php echo $tab === $k ? 'on' : ''; ?>" href="<?php echo esc_url(self::url($k)); ?>"><?php echo esc_html($l); ?><?php if ($k === 'log' && $failed): ?> <span class="cnt"><?php echo (int)$failed; ?></span><?php endif; ?></a>
                     <?php endforeach; ?>
                 </nav>
@@ -77,6 +109,9 @@ class SNN_T_Settings {
                     <label class="snn-field"><span><?php esc_html_e('Address', 'snn-tickets'); ?></span><input type="email" name="from_email" value="<?php echo esc_attr(get_option(SNN_T_Mailer::FROM_EMAIL_OPTION, '')); ?>" placeholder="<?php echo esc_attr(get_option('admin_email')); ?>"><small><?php esc_html_e('Leave empty to keep your site\'s usual sending address. The name above is used either way.', 'snn-tickets'); ?></small></label>
                 </div>
             </div></div>
+            <div class="snn-set"><div><h3><?php esc_html_e('Sending speed', 'snn-tickets'); ?></h3></div><div class="body">
+                <label class="snn-field" style="max-width:220px"><span><?php esc_html_e('Emails per minute', 'snn-tickets'); ?></span><input type="number" name="batch_size" min="1" max="200" value="<?php echo esc_attr(SNN_T_Mailer::batch_size()); ?>"><small><?php esc_html_e('Lower it if your host or email provider limits sending.', 'snn-tickets'); ?></small></label>
+            </div></div>
             <div class="snn-set"><div><h3><?php esc_html_e('Email footer', 'snn-tickets'); ?></h3><p class="snn-muted snn-small"><?php esc_html_e('Under every email.', 'snn-tickets'); ?></p></div><div class="body">
                 <textarea name="footer" rows="2" placeholder="<?php esc_attr_e('Questions? Just reply to this email.', 'snn-tickets'); ?>"><?php echo esc_textarea($d['footer']); ?></textarea>
             </div></div>
@@ -96,6 +131,7 @@ class SNN_T_Settings {
         $email = sanitize_email(wp_unslash($_POST['from_email'] ?? ''));
         update_option(SNN_T_Mailer::FROM_NAME_OPTION, sanitize_text_field(wp_unslash($_POST['from_name'] ?? '')));
         update_option(SNN_T_Mailer::FROM_EMAIL_OPTION, ($email && is_email($email)) ? $email : '');
+        if (isset($_POST['batch_size'])) update_option(SNN_T_Mailer::BATCH_SIZE_OPTION, max(1, min(200, (int)$_POST['batch_size'])));
         $d = SNN_T_Design::settings();
         $d['footer'] = sanitize_textarea_field(wp_unslash($_POST['footer'] ?? ''));
         update_option(SNN_T_Design::OPTION, SNN_T_Design::sanitize_settings($d));
@@ -103,7 +139,7 @@ class SNN_T_Settings {
     }
 
     public static function ajax_plain_test() {
-        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Forbidden'], 403);
+        if (!current_user_can(SNN_T_Tickets::cap())) wp_send_json_error(['message' => 'Forbidden'], 403);
         check_ajax_referer('snn_email_tools', 'nonce');
         $to = sanitize_email(wp_unslash($_POST['to'] ?? ''));
         if (!$to || !is_email($to)) wp_send_json_error(['message' => __('That email address does not look right.', 'snn-tickets')]);
@@ -280,6 +316,7 @@ class SNN_T_Settings {
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="snn_set_queue"><?php wp_nonce_field('snn_set_queue'); ?>
             <div class="snn-hint"><?php printf(esc_html__('Emails are sent automatically in the background, %d per minute, so you can close this page.', 'snn-tickets'), (int)SNN_T_Mailer::batch_size()); ?>
+                <?php printf(esc_html__('An email that fails is tried again after 5 minutes, 30 minutes and 2 hours before it counts as failed. Sent emails leave this log after %d days.', 'snn-tickets'), (int)SNN_T_Mailer::KEEP_SENT_DAYS); ?>
                 <?php if ($next): ?><?php echo esc_html(sprintf(__('Next batch in %s.', 'snn-tickets'), human_time_diff($next, time()))); ?><?php endif; ?>
                 <button class="snn-link" name="do" value="process"><?php esc_html_e('Send the next batch now', 'snn-tickets'); ?></button></div>
             <div class="snn-table-wrap" style="margin-top:12px"><table class="snn-table">
@@ -287,7 +324,10 @@ class SNN_T_Settings {
                 <tbody>
                 <?php if (!$rows): ?><tr><td colspan="5" class="snn-empty"><?php esc_html_e('Nothing here.', 'snn-tickets'); ?></td></tr><?php endif; ?>
                 <?php foreach ($rows as $r): ?>
-                    <tr><td><?php echo SNN_T_Admin::status_badge($r->status); ?><?php if ((int)$r->attempts > 1): ?><br><span class="snn-muted snn-small"><?php echo esc_html(sprintf(__('%d tries', 'snn-tickets'), (int)$r->attempts)); ?></span><?php endif; ?></td>
+                    <tr><td><?php echo SNN_T_Admin::status_badge($r->status); ?><?php if ((int)$r->attempts > 1): ?><br><span class="snn-muted snn-small"><?php echo esc_html(sprintf(__('%d tries', 'snn-tickets'), (int)$r->attempts)); ?></span><?php endif; ?>
+                        <?php if ($r->status === 'pending' && (int)$r->attempts > 0): $at = strtotime($r->scheduled_at); ?><br><span class="snn-small" style="color:#8a5a00"><?php echo esc_html($at > current_time('timestamp')
+                            ? sprintf(__('Trying again in %s', 'snn-tickets'), human_time_diff(current_time('timestamp'), $at))
+                            : __('Trying again now', 'snn-tickets')); ?></span><?php endif; ?></td>
                         <td><?php echo esc_html($r->to_email); ?><?php if ($r->role === 'admin'): ?> <?php echo SNN_T_Admin::chip(__('to you', 'snn-tickets')); ?><?php endif; ?></td>
                         <td><?php echo esc_html($r->subject); ?><br><span class="snn-muted snn-small"><?php echo esc_html($roles[$r->role] ?? $r->role); ?><?php if ($r->attachments): ?> · 📎 <?php echo esc_html(strtoupper(str_replace(',', ', ', $r->attachments))); ?><?php endif; ?></span>
                             <?php if ($r->last_error): ?><br><span class="snn-small" style="color:#b3261e"><?php echo esc_html($r->last_error); ?></span><?php endif; ?></td>
@@ -540,16 +580,15 @@ class SNN_T_Settings {
             [function_exists('openssl_sign'), __('Wallet signing', 'snn-tickets'), function_exists('openssl_sign') ? __('OpenSSL is available.', 'snn-tickets') : __('OpenSSL is missing, so wallet passes cannot be signed.', 'snn-tickets')],
         ];
         self::form_open('advanced'); ?>
-            <div class="snn-set"><div><h3><?php esc_html_e('Sending speed', 'snn-tickets'); ?></h3></div><div class="body">
-                <label class="snn-field" style="max-width:220px"><span><?php esc_html_e('Emails per minute', 'snn-tickets'); ?></span><input type="number" name="batch_size" min="1" max="200" value="<?php echo esc_attr(SNN_T_Mailer::batch_size()); ?>"><small><?php esc_html_e('Lower it if your host or email provider limits sending.', 'snn-tickets'); ?></small></label>
-            </div></div>
             <div class="snn-set"><div><h3><?php esc_html_e('System check', 'snn-tickets'); ?></h3></div><div class="body">
                 <ul class="snn-syscheck"><?php foreach ($rows as $r): ?><li><span class="<?php echo $r[0] ? 'y' : 'n'; ?>"><?php echo $r[0] ? '✓' : '✕'; ?></span><span><b><?php echo esc_html($r[1]); ?></b><br><span class="snn-muted snn-small"><?php echo esc_html($r[2]); ?></span></span></li><?php endforeach; ?></ul>
             </div></div>
+            <?php if (current_user_can('manage_options')): ?>
             <div class="snn-set"><div><h3 style="color:#b32d2e"><?php esc_html_e('Reset QR signature', 'snn-tickets'); ?></h3></div><div class="body">
                 <p class="snn-muted snn-small" style="margin:0"><?php esc_html_e('Every QR code carries a secret signature so it cannot be faked. Only reset it if you think the secret leaked: every ticket and download link already sent will stop working.', 'snn-tickets'); ?></p>
                 <div><button class="button button-link-delete" name="reset_secret" value="1" data-confirm="<?php esc_attr_e('Reset the QR signature? Every ticket already sent will stop working at the door.', 'snn-tickets'); ?>"><?php esc_html_e('Reset signature…', 'snn-tickets'); ?></button></div>
             </div></div>
+            <?php endif; ?>
             <?php self::save_row(__('Save', 'snn-tickets')); ?>
         </form>
         <?php
@@ -557,16 +596,44 @@ class SNN_T_Settings {
 
     public static function save_advanced() {
         SNN_T_Admin::cap(); check_admin_referer('snn_set_advanced');
-        if (!empty($_POST['reset_secret'])) {
+        if (!empty($_POST['reset_secret']) && current_user_can('manage_options')) {
             delete_option(SNN_T_QR::SECRET_OPTION);
             SNN_T_QR::secret();
             $n = SNN_T_QR::flush_cache();
             SNN_T_Admin::go(self::url('advanced'), sprintf(__('Signature reset; %d cached QR images cleared.', 'snn-tickets'), $n));
         }
-        update_option(SNN_T_Mailer::BATCH_SIZE_OPTION, max(1, min(200, (int)($_POST['batch_size'] ?? 10))));
         SNN_T_Admin::go(self::url('advanced'), __('Saved.', 'snn-tickets'));
     }
 
     /** The old name of the Settings screen callback. */
+    /* ------------------------------------------------------------------
+     * Wording
+     * ---------------------------------------------------------------- */
+
+    private static function tab_wording() {
+        $saved = SNN_T_Texts::saved();
+        self::form_open('wording'); ?>
+            <div class="snn-hint"><?php esc_html_e('What guests and buyers read on the claim page, the ticket list and the shop pages. Leave a box empty to use the standard wording, which is translated into your site\'s language automatically. Emails are edited on each event\'s Emails tab.', 'snn-tickets'); ?></div>
+            <?php foreach (SNN_T_Texts::groups() as $group): ?>
+                <div class="snn-set"><div><h3><?php echo esc_html($group['title']); ?></h3><p class="snn-muted snn-small"><?php echo esc_html($group['intro']); ?></p></div><div class="body">
+                    <?php foreach ($group['fields'] as $key => $f): ?>
+                        <label class="snn-field"><span><?php echo esc_html($f[0]); ?><?php if ($f[2] !== ''): ?> <small class="snn-mono"><?php echo esc_html($f[2]); ?></small><?php endif; ?></span>
+                            <input type="text" name="texts[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($saved[$key] ?? ''); ?>" placeholder="<?php echo esc_attr($f[1]); ?>"></label>
+                    <?php endforeach; ?>
+                </div></div>
+            <?php endforeach; ?>
+            <?php self::save_row(__('Save wording', 'snn-tickets')); ?>
+        </form>
+        <?php
+    }
+
+    public static function save_wording() {
+        SNN_T_Admin::cap(); check_admin_referer('snn_set_wording');
+        $n = count(SNN_T_Texts::save((array)wp_unslash($_POST['texts'] ?? [])));
+        SNN_T_Admin::go(self::url('wording'), $n
+            ? sprintf(_n('Saved. %d text uses your own words.', 'Saved. %d texts use your own words.', $n, 'snn-tickets'), $n)
+            : __('Saved. Everything uses the standard wording.', 'snn-tickets'));
+    }
+
     public static function render_settings_page() { self::render(); }
 }

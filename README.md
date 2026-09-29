@@ -6,14 +6,15 @@ WordPress plugin for event sign-ups and tickets: a guided event setup, sign-up f
 
 ## How it's organised
 
-The **Tickets** menu has four entries:
+The **Tickets** menu has five entries. On a WooCommerce site shop managers can use all of it (only resetting the QR signature stays with administrators); without WooCommerce it is for administrators. The `snn_tickets_capability` filter changes who gets in.
 
 | Menu | What's there |
 |---|---|
 | **Home** | What needs you (people waiting for approval, failed emails, full events), upcoming events, last check-ins, and a getting-started list |
 | **Events** | Every event: upcoming, past and undated. Each event has its own page (below) |
 | **Add New Event** | A five-step guide: the event, questions, who gets a ticket, ticket & email, go live |
-| **Settings** | Sender, style, door & scanner, email log, email templates, Apple & Google Wallet, advanced |
+| **Emails** | Sent & waiting (every email, failures first to fix, retry and view), saved templates, sender name and address, sending speed and a test email |
+| **Settings** | Style, door & scanner, Apple & Google Wallet, wording of the public pages, advanced |
 
 Each **event page** has these tabs (Sell tickets only when WooCommerce is active):
 
@@ -56,7 +57,9 @@ Every event is live as soon as it's created:
 - Live preview (desktop and phone), send a test, reset to default
 - **Template library**: "Save as template" from any email, "Start from a template" in any event; events keep their own copy
 - Designed, Outlook-safe email shell with logo, footer and plain-text alternative
-- Background queue on WP-Cron with rate limiting, retries and an email log
+- Background queue on WP-Cron with rate limiting and an email log. Queuing mail asks for a send straight away, so tickets are not held until the next visitor on a quiet site
+- A failed email is tried again after 5 minutes, 30 minutes and 2 hours; an email cut off mid-send is picked up again; sent emails leave the log after 90 days
+- "Notice to you" goes to one or several addresses
 
 ### Tickets
 - PDF (built-in writer, Turkish and Central European letters), Apple Wallet (.pkpass), Google Wallet, calendar invite (.ics)
@@ -70,13 +73,18 @@ Every event is live as soon as it's created:
 - **Attendee details** (optional per product): the product page asks the event's sign-up questions once per ticket, and each ticket is emailed to its attendee. Without it, every ticket goes to the buyer
 - Tickets are issued when an order is paid (processing / completed) and cancelled when it is cancelled, refunded, failed or trashed. Partial refunds cancel that many tickets, newest and unused first. Reopened orders get their old codes back
 - The event's spot limit is shared by the shop and the sign-up form; unpaid orders hold their spots (pending for WooCommerce's hold-stock time, on-hold until paid)
-- **Passing tickets on**: someone buying several tickets gets the first one; each of the others waits for a name and has a private link. The buyer copies the link or emails it from their ticket list, and the guest fills in their name (and the event's questions) on a page that needs no account. Claiming gives the ticket a new code, so a QR the buyer kept stops working. Links can be sent again or taken back until they are claimed
+- **Passing tickets on**: someone buying several tickets gets the first one; each of the others waits for a name and has a private link. The buyer copies the link or emails it from their ticket list, and the guest fills in their name (and the event's questions) on a page that needs no account. Claiming gives the ticket a new code, so a QR the buyer kept stops working. Links can be sent again or taken back until they are claimed, by the buyer or by you from the person's panel in People. Opening a used link says the ticket was claimed and which (masked) address it went to, without showing the ticket
+- **Ticket types that stay with the buyer**: untick "Passing on" for a product (e.g. named VIP tickets) and every ticket it makes is in the buyer's name
+- "Notice to you" can also tell you when a guest claims a ticket
 - **One email per person**: the buyer gets one "Your tickets" email per event (their own ticket plus the links), each guest gets their own ticket email. Both are editable in the event's Emails tab, like every other email
 - The buyer's ticket list is on the thank-you page, in My Account → Orders, in the order emails and at a private link (`/events/tickets/{order}/`) that works without an account
 - Unclaimed tickets work at the door for the buyer by default; **Tickets need a name to get in** (Sell tickets → Guests) makes the scanner refuse them
-- People has a "Not named yet" filter and shows each waiting ticket's link; WooCommerce → Orders gets a Tickets column ("4 · 2 without a name"), a filter, and an "Email the buyer their tickets again" action. The order screen lists each line's ticket codes
+- People has a "Not named yet" filter and shows each waiting ticket's link; WooCommerce → Orders gets a Tickets column ("4 · 2 without a name · waiting 3 days"), a filter, and an "Email the buyer their tickets again" action. The order screen lists each line's ticket codes
 - The event page lists what is for sale with Buy buttons
 - Works with the block and classic cart and checkout, and with HPOS
+
+### Wording
+- Settings → Wording holds every text of the claim page, the buyer's ticket list and the shop pages. A blank box uses the standard wording, translated into the site's language
 
 ### Door
 - Mobile scanner: full-screen green / amber / red, sound, vibration, counter, recent scans, typed codes

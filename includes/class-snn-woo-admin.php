@@ -182,6 +182,12 @@ class SNN_T_Woo_Admin {
                         'description'       => __('2 for a couples ticket, 4 for a family pass. Each person gets their own ticket.', 'snn-tickets'),
                     ]);
                     woocommerce_wp_checkbox([
+                        'id'          => SNN_T_Woo::META_PASS,
+                        'label'       => __('Passing on', 'snn-tickets'),
+                        'value'       => (!$p || SNN_T_Woo::passes($p)) ? 'yes' : 'no',
+                        'description' => __('Buyers can pass their extra tickets on with a link. Untick for tickets that must stay with the buyer, such as named VIP tickets: every ticket is then made out to the buyer.', 'snn-tickets'),
+                    ]);
+                    woocommerce_wp_checkbox([
                         'id'          => SNN_T_Woo::META_ASK,
                         'label'       => __('Guest details', 'snn-tickets'),
                         'value'       => $ask ? 'yes' : 'no',
@@ -267,6 +273,8 @@ class SNN_T_Woo_Admin {
             $product->update_meta_data(SNN_T_Woo::META_PER, max(1, min(50, absint(wp_unslash($_POST[SNN_T_Woo::META_PER])))));
         }
         $product->update_meta_data(SNN_T_Woo::META_ASK, isset($_POST[SNN_T_Woo::META_ASK]) ? 'yes' : 'no');
+        // Only the Tickets tab posts this box, so a save from elsewhere keeps the setting.
+        if (isset($_POST['snn_ev'])) $product->update_meta_data(SNN_T_Woo::META_PASS, isset($_POST[SNN_T_Woo::META_PASS]) ? 'yes' : 'no');
         // Tickets never ship.
         if ($on && $product->is_type('simple')) $product->set_virtual(true);
     }
@@ -365,6 +373,7 @@ class SNN_T_Woo_Admin {
                                 $simple ? '' : __('Has options', 'snn-tickets'),
                                 SNN_T_Woo::per_unit($p) > 1 ? sprintf(__('Admits %d', 'snn-tickets'), SNN_T_Woo::per_unit($p)) : '',
                                 SNN_T_Woo::asks($p) ? __('Asks attendee details', 'snn-tickets') : '',
+                                SNN_T_Woo::passes($p) ? '' : __('Stays with the buyer', 'snn-tickets'),
                             ]))); ?></span></div></td>
                         <?php if ($simple): ?>
                             <td><input form="<?php echo esc_attr($fid); ?>" type="text" inputmode="decimal" name="price" value="<?php echo esc_attr(wc_format_localized_price($p->get_regular_price())); ?>" style="width:90px" aria-label="<?php esc_attr_e('Price', 'snn-tickets'); ?>"> <span class="snn-muted"><?php echo esc_html(html_entity_decode($cur)); ?></span></td>
@@ -400,6 +409,7 @@ class SNN_T_Woo_Admin {
                     <label class="snn-field"><span><?php esc_html_e('How many', 'snn-tickets'); ?> <small><?php esc_html_e('(optional)', 'snn-tickets'); ?></small></span><input type="number" min="0" name="stock" placeholder="∞"></label>
                     <label class="snn-field"><span><?php esc_html_e('Admits', 'snn-tickets'); ?></span><input type="number" min="1" max="50" name="per" value="1"></label>
                 </div>
+                <label class="snn-check"><input type="checkbox" name="pass" value="1" checked> <span><?php esc_html_e('Buyers can pass their extra tickets on with a link', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(untick for tickets that must stay with the buyer)', 'snn-tickets'); ?></span></span></label>
                 <label class="snn-check"><input type="checkbox" name="ask" value="1"> <span><?php esc_html_e('Ask for each guest\'s name and answers when buying', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(otherwise the buyer gets the first ticket and passes the others on with a link)', 'snn-tickets'); ?></span></span></label>
                 <div><button class="button button-primary"><?php esc_html_e('Add and put on sale', 'snn-tickets'); ?></button></div>
             </div></div>
@@ -472,6 +482,7 @@ class SNN_T_Woo_Admin {
         $p->update_meta_data(SNN_T_Woo::META_EVENT, $id);
         $p->update_meta_data(SNN_T_Woo::META_PER, max(1, min(50, (int)($in['per'] ?? 1))));
         $p->update_meta_data(SNN_T_Woo::META_ASK, !empty($in['ask']) ? 'yes' : 'no');
+        $p->update_meta_data(SNN_T_Woo::META_PASS, !empty($in['pass']) ? 'yes' : 'no');
         $p->save();
 
         self::back($id, sprintf(__('"%s" is on sale.', 'snn-tickets'), $tier));
@@ -506,7 +517,11 @@ class SNN_T_Woo_Admin {
         if (!$active) { echo '<span style="color:#a7aaad">–</span>'; return; }
         $open = count(array_filter($active, ['SNN_T_Claims', 'is_open']));
         echo (int)count($active);
-        if ($open) echo '<br><small style="color:#8a5a00;font-weight:600">' . esc_html(sprintf(_n('%d without a name', '%d without a name', $open, 'snn-tickets'), $open)) . '</small>';
+        if ($open) {
+            $since = $order->get_date_paid() ?: $order->get_date_created();
+            echo '<br><small style="color:#8a5a00;font-weight:600">' . esc_html(sprintf(_n('%d without a name', '%d without a name', $open, 'snn-tickets'), $open)) . '</small>';
+            if ($since) echo '<br><small style="color:#646970">' . esc_html(sprintf(__('waiting %s', 'snn-tickets'), human_time_diff($since->getTimestamp(), time()))) . '</small>';
+        }
     }
 
     public static function orders_filter() {

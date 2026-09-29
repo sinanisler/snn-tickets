@@ -54,7 +54,7 @@ class SNN_T_Scanner {
     }
 
     public static function is_staff() {
-        if (current_user_can('manage_options')) return true;
+        if (current_user_can(SNN_T_Tickets::cap())) return true;
         if (!self::pin_set() || empty($_COOKIE[self::COOKIE])) return false;
 
         $raw = sanitize_text_field(wp_unslash($_COOKIE[self::COOKIE]));
@@ -321,7 +321,7 @@ body{padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px))}
                 <ul class="snn-scan-recent" data-recent></ul>
                 <div class="snn-scan-foot">
                     <label style="font-size:.85rem;"><input type="checkbox" data-sound checked> <?php esc_html_e('Sound', 'snn-tickets'); ?></label>
-                    <?php if (!current_user_can('manage_options')): ?>
+                    <?php if (!current_user_can(SNN_T_Tickets::cap())): ?>
                         <button type="button" class="ghost" data-logout><?php esc_html_e('Lock scanner', 'snn-tickets'); ?></button>
                     <?php endif; ?>
                 </div>

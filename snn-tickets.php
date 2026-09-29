@@ -18,7 +18,7 @@ define('SNN_TICKETS_URL', plugin_dir_url(__FILE__));
 define('SNN_TICKETS_VERSION', '0.27');
 
 foreach ([
-    'db', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms', 'submissions',
+    'db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms', 'submissions',
     'people', 'router', 'scanner', 'admin', 'dashboard', 'events-admin', 'wizard', 'settings', 'woo', 'woo-admin',
 ] as $class) {
     require_once SNN_TICKETS_DIR . 'includes/class-snn-' . $class . '.php';
@@ -42,6 +42,7 @@ class SNN_Tickets_Plugin {
         add_action('init', [$this, 'load_textdomain']);
         add_action('admin_init', ['SNN_T_DB', 'maybe_upgrade']);
         add_action('admin_menu', [$this, 'admin_menu']);
+        add_filter('plugin_action_links_' . plugin_basename(SNN_TICKETS_FILE), [$this, 'action_links']);
 
         SNN_T_QR::init();
         SNN_T_Mailer::init();
@@ -88,21 +89,32 @@ class SNN_Tickets_Plugin {
         flush_rewrite_rules(false);
     }
 
+    /** "Events | Settings" under the plugin's name on the Plugins screen. */
+    public function action_links($links){
+        array_unshift($links,
+            '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-events')) . '">' . esc_html__('Events', 'snn-tickets') . '</a>',
+            '<a href="' . esc_url(admin_url('admin.php?page=snn-tickets-settings')) . '">' . esc_html__('Settings', 'snn-tickets') . '</a>');
+        return $links;
+    }
+
     public function admin_menu(){
+        $cap = SNN_T_Tickets::cap();
         $waiting = SNN_T_Submissions::counts()['pending'];
         $badge   = $waiting ? ' <span class="awaiting-mod"><span class="pending-count">' . (int)$waiting . '</span></span>' : '';
 
-        add_menu_page(__('Tickets', 'snn-tickets'), __('Tickets', 'snn-tickets') . $badge, 'manage_options', 'snn-tickets',
+        add_menu_page(__('Tickets', 'snn-tickets'), __('Tickets', 'snn-tickets') . $badge, $cap, 'snn-tickets',
             ['SNN_T_Dashboard', 'render'], 'dashicons-tickets-alt', 26);
 
-        add_submenu_page('snn-tickets', __('Tickets', 'snn-tickets'), __('Home', 'snn-tickets'), 'manage_options', 'snn-tickets', ['SNN_T_Dashboard', 'render']);
-        add_submenu_page('snn-tickets', __('Events', 'snn-tickets'), __('Events', 'snn-tickets') . $badge, 'manage_options', 'snn-tickets-events', ['SNN_T_Events_Admin', 'render_page']);
-        add_submenu_page('snn-tickets', __('Add New Event', 'snn-tickets'), __('Add New Event', 'snn-tickets'), 'manage_options', 'snn-tickets-new', ['SNN_T_Wizard', 'render']);
-        add_submenu_page('snn-tickets', __('Tickets Settings', 'snn-tickets'), __('Settings', 'snn-tickets'), 'manage_options', 'snn-tickets-settings', ['SNN_T_Settings', 'render']);
+        add_submenu_page('snn-tickets', __('Tickets', 'snn-tickets'), __('Home', 'snn-tickets'), $cap, 'snn-tickets', ['SNN_T_Dashboard', 'render']);
+        add_submenu_page('snn-tickets', __('Events', 'snn-tickets'), __('Events', 'snn-tickets') . $badge, $cap, 'snn-tickets-events', ['SNN_T_Events_Admin', 'render_page']);
+        add_submenu_page('snn-tickets', __('Add New Event', 'snn-tickets'), __('Add New Event', 'snn-tickets'), $cap, 'snn-tickets-new', ['SNN_T_Wizard', 'render']);
+        $failed = SNN_T_Mailer::queue_counts()['failed'];
+        add_submenu_page('snn-tickets', __('Emails', 'snn-tickets'), __('Emails', 'snn-tickets') . ($failed ? ' <span class="awaiting-mod"><span class="pending-count">' . (int)$failed . '</span></span>' : ''), $cap, 'snn-tickets-emails', ['SNN_T_Settings', 'render']);
+        add_submenu_page('snn-tickets', __('Tickets Settings', 'snn-tickets'), __('Settings', 'snn-tickets'), $cap, 'snn-tickets-settings', ['SNN_T_Settings', 'render']);
 
         // Old screens stay reachable so bookmarks redirect to their new home.
         foreach (SNN_T_Admin::LEGACY as $slug) {
-            add_submenu_page('', __('Tickets', 'snn-tickets'), '', 'manage_options', $slug, '__return_null');
+            add_submenu_page('', __('Tickets', 'snn-tickets'), '', $cap, $slug, '__return_null');
         }
     }
 }

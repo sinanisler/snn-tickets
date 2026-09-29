@@ -462,7 +462,18 @@ class SNN_T_Events_Admin {
                         <div class="snn-hint"><p><b><?php echo $ticket->holder === SNN_T_Claims::SENT
                             ? esc_html(sprintf(__('Link sent to %s; they have not filled in their name yet.', 'snn-tickets'), $ticket->claim_email))
                             : esc_html__('This ticket has no name yet. The buyer can pass it on with this link:', 'snn-tickets'); ?></b></p>
-                            <p class="snn-row"><span class="snn-mono snn-small" style="word-break:break-all"><?php echo esc_html(SNN_T_Claims::url($ticket)); ?></span> <?php echo SNN_T_Admin::copy_button(SNN_T_Claims::url($ticket), __('Copy link', 'snn-tickets')); ?></p></div>
+                            <p class="snn-row"><span class="snn-mono snn-small" style="word-break:break-all"><?php echo esc_html(SNN_T_Claims::url($ticket)); ?></span> <?php echo SNN_T_Admin::copy_button(SNN_T_Claims::url($ticket), __('Copy link', 'snn-tickets')); ?></p>
+                            <?php if ($ticket->holder === SNN_T_Claims::SENT): ?>
+                                <div class="snn-row"><?php echo $action('linkresend', __('Send the link again', 'snn-tickets')); ?>
+                                    <?php echo $action('linktakeback', __('Take it back', 'snn-tickets'), '', __('Take this ticket back? The link that was sent stops working.', 'snn-tickets')); ?></div>
+                            <?php else: ?>
+                                <form method="post" action="<?php echo $post; ?>" class="snn-row">
+                                    <input type="hidden" name="action" value="snn_person"><input type="hidden" name="event" value="<?php echo (int)$event->id; ?>"><input type="hidden" name="person" value="<?php echo esc_attr($p->key); ?>"><input type="hidden" name="do" value="linksend">
+                                    <?php wp_nonce_field('snn_person'); ?>
+                                    <input type="email" name="link_email" required placeholder="<?php esc_attr_e("Guest's email", 'snn-tickets'); ?>" style="flex:1;min-width:180px">
+                                    <button class="button"><?php esc_html_e('Email the link', 'snn-tickets'); ?></button>
+                                </form>
+                            <?php endif; ?></div>
                     <?php endif; ?>
                     <?php if ($ticket): ?>
                         <div><h3><?php esc_html_e('Ticket', 'snn-tickets'); ?></h3>
@@ -520,7 +531,7 @@ class SNN_T_Events_Admin {
                                 $roles = SNN_T_Mailer::roles(); ?>
                                 <li class="<?php echo $m->status === 'failed' ? 'bad' : ''; ?>"><b><?php echo esc_html($roles[$m->role] ?? $m->role); ?></b> · <?php echo SNN_T_Admin::status_badge($m->status); ?>
                                     <?php if ($m->attachments): ?><span class="snn-muted snn-small">📎 <?php echo esc_html(strtoupper(str_replace(',', ', ', $m->attachments))); ?></span><?php endif; ?>
-                                    <a class="snn-small" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-settings&tab=log&view=' . (int)$m->id)); ?>"><?php esc_html_e('View', 'snn-tickets'); ?></a>
+                                    <a class="snn-small" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-emails&tab=log&view=' . (int)$m->id)); ?>"><?php esc_html_e('View', 'snn-tickets'); ?></a>
                                     <time><?php echo esc_html($m->to_email); ?> · <?php echo SNN_T_Admin::when($m->sent_at ?: $m->created_at); ?></time></li>
                             <?php endforeach; ?>
                             <?php if ($p->vc > 0): ?>
@@ -703,8 +714,11 @@ class SNN_T_Events_Admin {
                         <label class="snn-field"><span><?php esc_html_e('Send it when', 'snn-tickets'); ?></span><select name="mail[when]">
                             <option value="waiting" <?php selected($cur['when'], 'waiting'); ?>><?php esc_html_e('Someone is waiting for my approval', 'snn-tickets'); ?></option>
                             <option value="all" <?php selected($cur['when'], 'all'); ?>><?php esc_html_e('Anyone signs up', 'snn-tickets'); ?></option></select></label>
-                        <label class="snn-field"><span><?php esc_html_e('Send it to', 'snn-tickets'); ?></span><input type="email" name="mail[to]" value="<?php echo esc_attr($cur['to']); ?>" placeholder="<?php echo esc_attr(get_option('admin_email')); ?>"></label>
+                        <label class="snn-field"><span><?php esc_html_e('Send it to', 'snn-tickets'); ?></span><input type="text" name="mail[to]" value="<?php echo esc_attr($cur['to']); ?>" placeholder="<?php echo esc_attr(get_option('admin_email')); ?>"><small><?php esc_html_e('Several addresses: separate them with commas.', 'snn-tickets'); ?></small></label>
                     </div>
+                    <?php if (SNN_T_Woo::active()): ?>
+                        <label class="snn-check"><input type="checkbox" name="mail[claims]" value="1" <?php checked(!empty($cur['claims'])); ?>> <span><?php esc_html_e('Also when a guest claims a ticket someone passed on to them', 'snn-tickets'); ?></span></label>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?php
                 $after = '';
@@ -936,6 +950,7 @@ class SNN_T_Events_Admin {
         if ($role === 'admin') {
             $emails['admin']['when'] = $in['when'] ?? 'waiting';
             $emails['admin']['to']   = $in['to'] ?? '';
+            if (SNN_T_Woo::active()) $emails['admin']['claims'] = !empty($in['claims']) ? 1 : 0;
         }
         SNN_T_Events::save_emails($id, $emails);
         SNN_T_Admin::go(SNN_T_Admin::event_admin_url($id, ['tab' => 'emails', 'mail' => $role]), __('Email saved.', 'snn-tickets'));
@@ -969,6 +984,23 @@ class SNN_T_Events_Admin {
         $id  = self::guard('snn_person');
         $key = sanitize_key($_POST['person'] ?? '');
         $do  = sanitize_key($_POST['do'] ?? '');
+
+        // A ticket waiting for a name: the admin can send, resend or take back its link.
+        if (in_array($do, ['linksend', 'linkresend', 'linktakeback'], true)) {
+            $p = SNN_T_People::find($id, $key);
+            $t = ($p && $p->kind === 't') ? SNN_T_Tickets::get($p->id) : null;
+            if (!$t) self::back_to_people($id, __('That person is no longer on this event.', 'snn-tickets'), true);
+            if ($do === 'linktakeback') {
+                $r = SNN_T_Claims::take_back($t);
+                $msg = __('Taken back. The link that was sent no longer works.', 'snn-tickets');
+            } else {
+                $to  = $do === 'linkresend' ? $t->claim_email : wp_unslash($_POST['link_email'] ?? '');
+                $r   = SNN_T_Claims::send($t, $to, (string)apply_filters('snn_tickets_claim_from', '', $t));
+                $msg = sprintf(__('Link sent to %s.', 'snn-tickets'), sanitize_email($to));
+                if (!is_wp_error($r)) SNN_T_Mailer::process_queue();
+            }
+            self::back_to_people($id, is_wp_error($r) ? $r->get_error_message() : $msg, is_wp_error($r));
+        }
 
         if ($do === 'save' || $do === 'save_send') {
             $p = SNN_T_People::find($id, $key);

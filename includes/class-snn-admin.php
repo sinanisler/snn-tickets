@@ -21,7 +21,7 @@ class SNN_T_Admin {
     }
 
     public static function cap() {
-        if (!current_user_can('manage_options')) wp_die(esc_html__('Insufficient permissions', 'snn-tickets'));
+        if (!current_user_can(SNN_T_Tickets::cap())) wp_die(esc_html__('Insufficient permissions', 'snn-tickets'));
     }
 
     public static function page() {
@@ -92,7 +92,7 @@ class SNN_T_Admin {
     /** Send bookmarks of pre-0.26 screens to where things live now. */
     public static function legacy_redirect() {
         $page = self::page();
-        if (!in_array($page, self::LEGACY, true) || !current_user_can('manage_options')) return;
+        if (!in_array($page, self::LEGACY, true) || !current_user_can(SNN_T_Tickets::cap())) return;
 
         $g = function ($k) { return isset($_GET[$k]) ? sanitize_text_field(wp_unslash($_GET[$k])) : ''; };
         $to = admin_url('admin.php?page=snn-tickets-events');
@@ -109,8 +109,8 @@ class SNN_T_Admin {
             case 'snn-tickets-lists':
                 if ((int)$g('list')) $to = self::event_admin_url((int)$g('list'), ['tab' => $g('edit') ? 'settings' : 'people']);
                 break;
-            case 'snn-tickets-templates': $to = admin_url('admin.php?page=snn-tickets-settings&tab=templates'); break;
-            case 'snn-tickets-queue':     $to = admin_url('admin.php?page=snn-tickets-settings&tab=log'); break;
+            case 'snn-tickets-templates': $to = admin_url('admin.php?page=snn-tickets-emails&tab=templates'); break;
+            case 'snn-tickets-queue':     $to = admin_url('admin.php?page=snn-tickets-emails&tab=log'); break;
             case 'snn-tickets-design':    $to = admin_url('admin.php?page=snn-tickets-settings&tab=look'); break;
             case 'snn-tickets-mailer':
             case 'snn-tickets-generator':
@@ -361,7 +361,7 @@ class SNN_T_Admin {
 
     /** Save a template from any email editor. */
     public static function ajax_save_template() {
-        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Forbidden'], 403);
+        if (!current_user_can(SNN_T_Tickets::cap())) wp_send_json_error(['message' => 'Forbidden'], 403);
         check_ajax_referer('snn_email_tools', 'nonce');
         $name = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
         $role = sanitize_key($_POST['role'] ?? 'ticket');

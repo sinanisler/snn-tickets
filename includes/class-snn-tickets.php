@@ -7,6 +7,15 @@ if (!defined('ABSPATH')) exit;
 
 class SNN_T_Tickets {
 
+    /**
+     * Who runs events: shop managers on a WooCommerce site, administrators
+     * otherwise. Filterable, e.g. to give an "event staff" role access.
+     */
+    public static function cap() {
+        $cap = class_exists('WooCommerce') ? 'manage_woocommerce' : 'manage_options';
+        return function_exists('apply_filters') ? (string)apply_filters('snn_tickets_capability', $cap) : $cap;
+    }
+
     /** Max scan attempts per IP inside the rate-limit window. */
     const RATE_LIMIT_MAX    = 60;
     const RATE_LIMIT_WINDOW = 60; // seconds
@@ -266,7 +275,7 @@ class SNN_T_Tickets {
      * @return bool true when the request is allowed through
      */
     public static function rate_limit_ok() {
-        if (current_user_can('manage_options')) return true;
+        if (current_user_can(self::cap())) return true;
 
         $ip  = self::client_ip();
         $key = 'snn_t_rl_' . md5($ip);

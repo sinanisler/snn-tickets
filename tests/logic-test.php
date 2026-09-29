@@ -363,6 +363,25 @@ check(SNN_T_Woo::plan([$t(1)], -2)['revoke'] === [1], 'negative counts are treat
 check(SNN_T_Woo::plan([$t(1)], 3, 1) === ['restore' => [], 'revoke' => [], 'create' => 1], 'never makes more than the line paid for');
 check(SNN_T_Woo::plan([$t(1, 'revoked')], 3, 0) === ['restore' => [1], 'revoke' => [], 'create' => 0], 'restores even when nothing new may be made');
 
+/* ================= 12. email and wording ================= */
+section('Email retries, recipients and wording');
+
+check(SNN_T_Mailer::retry_delay(1) === 300 && SNN_T_Mailer::retry_delay(2) === 1800 && SNN_T_Mailer::retry_delay(3) === 7200, 'retries wait 5 min, 30 min, 2 h');
+check(SNN_T_Mailer::retry_delay(9) === 7200 && SNN_T_Mailer::retry_delay(0) === 300, 'retry delay stays in range');
+check(SNN_T_Mailer::MAX_ATTEMPTS === count(SNN_T_Mailer::RETRY_DELAYS) + 1, 'one delay between each pair of tries');
+check(SNN_T_Events::parse_recipients('a@x.com, B@Y.com;bad  a@x.com') === ['a@x.com', 'b@y.com'], 'recipient list: valid, lower-case, no repeats');
+check(SNN_T_Events::parse_recipients('') === [], 'empty recipient list');
+check(SNN_T_Claims::mask_email('bob@example.com') === 'b***@example.com', 'email masked');
+check(SNN_T_Claims::mask_email('nope') === '', 'not an email: nothing shown');
+check(SNN_T_Texts::get('claim_title_from', ['buyer' => 'Sinan', 'event' => 'Gala']) === 'Sinan got you a ticket to Gala', 'wording default with placeholders');
+update_option(SNN_T_Texts::OPTION, ['buy' => 'Get tickets']);
+check(SNN_T_Texts::get('buy') === 'Get tickets', 'own wording wins');
+update_option(SNN_T_Texts::OPTION, ['buy' => '   ']);
+check(SNN_T_Texts::get('buy') === 'Buy', 'blank own wording falls back to the default');
+$kept = SNN_T_Texts::save(['buy' => 'Buy', 'sold_out' => 'Gone!', 'nonsense' => 'x']);
+check($kept === ['sold_out' => 'Gone!'], 'only changed, known texts are stored');
+check(SNN_T_Texts::get('missing_key') === 'missing_key', 'unknown key shows itself');
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

@@ -74,6 +74,7 @@ function get_transient($k) { return $GLOBALS['snn_transients'][$k] ?? false; }
 function set_transient($k, $v, $t = 0) { $GLOBALS['snn_transients'][$k] = $v; return true; }
 function delete_transient($k) { unset($GLOBALS['snn_transients'][$k]); return true; }
 function wp_next_scheduled() { return false; }
+function wp_schedule_single_event() { return true; }
 function wp_schedule_event() { return true; }
 function wp_unschedule_event() { return true; }
 function shortcode_atts($pairs, $atts) { return array_merge($pairs, (array)$atts); }
@@ -133,6 +134,6 @@ function current_user_can_stub() { return false; }
 
 /* ================= load the plugin classes ================= */
 
-foreach (['db', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms'] as $c) {
+foreach (['db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms'] as $c) {
     require_once __DIR__ . '/../includes/class-snn-' . $c . '.php';
 }

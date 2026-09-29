@@ -304,7 +304,7 @@ class SNN_T_Events {
             'ticket'       => ['on' => 1, 'subject' => '', 'body' => ''],
             'confirmation' => ['on' => 1, 'subject' => '', 'body' => ''],
             'rejection'    => ['on' => 0, 'subject' => '', 'body' => ''],
-            'admin'        => ['on' => 1, 'subject' => '', 'body' => '', 'when' => 'waiting', 'to' => ''],
+            'admin'        => ['on' => 1, 'subject' => '', 'body' => '', 'when' => 'waiting', 'to' => '', 'claims' => 1],
             // Shop orders: the buyer's list of tickets, and a ticket passed on to someone.
             'order'        => ['on' => 1, 'subject' => '', 'body' => ''],
             'gift'         => ['on' => 1, 'subject' => '', 'body' => ''],
@@ -322,9 +322,27 @@ class SNN_T_Events {
         }
         $when = $in['admin']['when'] ?? '';
         $out['admin']['when'] = in_array($when, ['waiting', 'all'], true) ? $when : 'waiting';
-        $to = sanitize_email($in['admin']['to'] ?? '');
-        $out['admin']['to'] = ($to && is_email($to)) ? $to : '';
+        $out['admin']['to'] = implode(', ', self::parse_recipients($in['admin']['to'] ?? ''));
+        // Events saved before this switch existed get the notice.
+        $out['admin']['claims'] = isset($in['admin']['claims']) ? (!empty($in['admin']['claims']) ? 1 : 0) : 1;
         return $out;
+    }
+
+    /** "a@x.com, b@y.com" → valid addresses only. */
+    public static function parse_recipients($raw) {
+        $out = [];
+        foreach (preg_split('/[\s,;]+/', (string)$raw) as $a) {
+            $a = strtolower(sanitize_email($a));
+            if ($a !== '' && is_email($a) && !in_array($a, $out, true)) $out[] = $a;
+        }
+        return $out;
+    }
+
+    /** Who gets an event's "Notice to you": its own list, else the site admin. */
+    public static function admin_recipients($event) {
+        $to = self::parse_recipients(self::emails($event)['admin']['to']);
+        if (!$to && is_email(get_option('admin_email'))) $to = [get_option('admin_email')];
+        return $to;
     }
 
     public static function emails($event) {

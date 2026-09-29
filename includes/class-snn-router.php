@@ -127,12 +127,12 @@ class SNN_T_Router {
         if ($route === 'ticket') {
             $code = sanitize_text_field(wp_unslash(get_query_var('snn_code')));
             $key  = sanitize_text_field(wp_unslash($_GET['k'] ?? ''));
-            $ticket = ($code !== '' && (hash_equals(SNN_T_Files::key($code), $key) || current_user_can('manage_options')))
+            $ticket = ($code !== '' && (hash_equals(SNN_T_Files::key($code), $key) || current_user_can(SNN_T_Tickets::cap())))
                 ? SNN_T_Tickets::get_by_code($code) : null;
             nocache_headers();
             if (!$ticket) self::not_found(__('This ticket link is not valid.', 'snn-tickets'));
             SNN_T_Files::render_ticket_page(SNN_T_Events::ticket_data($ticket),
-                !empty($_GET['claimed']) ? __("It's yours! Your ticket is also on its way to your inbox.", 'snn-tickets') : '');
+                !empty($_GET['claimed']) ? SNN_T_Texts::get('claim_done') : '');
             exit;
         }
 

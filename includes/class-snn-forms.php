@@ -380,7 +380,7 @@ class SNN_T_Forms {
         $form = self::get((int)$atts['id']);
 
         if (!$form) {
-            return current_user_can('manage_options')
+            return current_user_can(SNN_T_Tickets::cap())
                 ? '<p><strong>SNN Tickets:</strong> no form with id ' . (int)$atts['id'] . '.</p>'
                 : '';
         }
@@ -934,23 +934,22 @@ class SNN_T_Forms {
         if (empty($cfg['on'])) return;
         if ($cfg['when'] === 'waiting' && $status !== 'pending') return;
 
-        $to = $cfg['to'] !== '' ? $cfg['to'] : get_option('admin_email');
-        if (!$to || !is_email($to)) return;
-
         $labels = [
             'approved' => __('Ticket sent', 'snn-tickets'),
             'pending'  => __('Waiting for your approval', 'snn-tickets'),
             'rejected' => __('Declined by your rules', 'snn-tickets'),
         ];
-        SNN_T_Mailer::send_event_email('admin', (int)$form->list_id, [
-            'name'          => $name,
-            'email'         => $email,
-            'to_email'      => $to,
-            'form_name'     => $form->name,
-            'status'        => $labels[$status] ?? $status,
-            'submission_id' => $submission_id,
-            'person'        => 's' . (int)$submission_id,
-        ]);
+        foreach (SNN_T_Events::admin_recipients($event) as $to) {
+            SNN_T_Mailer::send_event_email('admin', (int)$form->list_id, [
+                'name'          => $name,
+                'email'         => $email,
+                'to_email'      => $to,
+                'form_name'     => $form->name,
+                'status'        => $labels[$status] ?? $status,
+                'submission_id' => $submission_id,
+                'person'        => 's' . (int)$submission_id,
+            ]);
+        }
     }
 
     private static function bounce($redirect, $form_id, $result) {

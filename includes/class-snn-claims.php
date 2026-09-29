@@ -36,6 +36,22 @@ class SNN_T_Claims {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . SNN_T_DB::tickets() . " WHERE claim_key = %s", $key));
     }
 
+    /** The ticket a link used to open before its guest claimed it. */
+    public static function by_used_key($key) {
+        global $wpdb;
+        $key = preg_replace('/[^a-f0-9]/', '', strtolower((string)$key));
+        if (strlen($key) !== 32) return null;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . SNN_T_DB::tickets() . " WHERE claimed_key = %s", $key));
+    }
+
+    /** "b***@example.com": enough to recognise, not enough to learn. */
+    public static function mask_email($email) {
+        $email = (string)$email;
+        $at = strpos($email, '@');
+        if ($at === false) return '';
+        return substr($email, 0, 1) . str_repeat('*', max(3, min(8, $at - 1))) . substr($email, $at);
+    }
+
     public static function url($ticket) {
         return ($ticket && $ticket->claim_key !== '') ? SNN_T_Router::claim_url($ticket->claim_key) : '';
     }
@@ -76,7 +92,7 @@ class SNN_T_Claims {
             'vars'      => [
                 '{buyer}'        => $from !== '' ? $from : get_bloginfo('name'),
                 '{claim_url}'    => $url,
-                '{claim_button}' => SNN_T_Mailer::button_html($url, __('Claim my ticket', 'snn-tickets')),
+                '{claim_button}' => SNN_T_Mailer::button_html($url, SNN_T_Texts::get('claim_button')),
             ],
         ]);
         do_action('snn_tickets_claim_changed', (int)$ticket->id);
@@ -115,7 +131,7 @@ class SNN_T_Claims {
         $code = SNN_T_Tickets::unique_code(max(8, strlen($old)));
         $row  = [
             'ticket_code' => $code, 'name' => sanitize_text_field($name), 'email' => strtolower(sanitize_email($email)),
-            'holder' => '', 'claim_key' => '', 'claim_email' => '',
+            'holder' => '', 'claim_key' => '', 'claim_email' => '', 'claimed_key' => (string)$ticket->claim_key,
         ];
         // Keep the answers of an earlier sign-up record if there is no new one.
         if ($sid) $row['submission_id'] = $sid;
@@ -131,9 +147,28 @@ class SNN_T_Claims {
 
         $fresh = SNN_T_Tickets::get($ticket->id);
         if ($fresh && $fresh->email !== '') SNN_T_Mailer::queue_ticket($fresh);
+        if ($fresh) self::notify_admin($fresh, $sid);
         do_action('snn_tickets_claim_changed', (int)$ticket->id);
         do_action('snn_tickets_claimed', (int)$ticket->id, $old);
         return $fresh;
+    }
+
+    /** "Notice to you" when a guest claims a ticket, if the event wants it. */
+    public static function notify_admin($ticket, $sid = 0) {
+        $event = SNN_T_Events::get((int)$ticket->list_id);
+        if (!$event) return;
+        $cfg = SNN_T_Events::emails($event)['admin'];
+        if (empty($cfg['on']) || empty($cfg['claims'])) return;
+        foreach (SNN_T_Events::admin_recipients($event) as $to) {
+            SNN_T_Mailer::send_event_email('admin', (int)$event->id, [
+                'name'          => $ticket->name,
+                'email'         => $ticket->email,
+                'to_email'      => $to,
+                'status'        => __('Claimed a ticket passed on to them', 'snn-tickets'),
+                'submission_id' => $sid ?: null,
+                'person'        => 't' . (int)$ticket->id,
+            ]);
+        }
     }
 
     /* ------------------------------------------------------------------
@@ -149,11 +184,24 @@ class SNN_T_Claims {
     public static function route($key) {
         $ticket = self::by_key($key);
         $event  = $ticket ? SNN_T_Events::get((int)$ticket->list_id) : null;
+
+        // A link that was used: say so, without showing the guest's ticket
+        // to whoever else holds the link (usually the buyer).
+        $used = !$ticket ? self::by_used_key($key) : null;
+        if ($used && $used->status === 'active') {
+            $ev = SNN_T_Events::get((int)$used->list_id);
+            SNN_T_Router::render_in_theme(__('Ticket link', 'snn-tickets'), self::wrap(
+                '<h1>' . esc_html(SNN_T_Texts::get('claim_used_title')) . '</h1>'
+                . '<p>' . esc_html(SNN_T_Texts::get('claim_used_text', ['event' => $ev ? $ev->name : '', 'email' => self::mask_email($used->email)])) . '</p>'
+                . '<p>' . esc_html(SNN_T_Texts::get('claim_used_help')) . '</p>'), true);
+            return;
+        }
+
         if (!$ticket || !$event || $ticket->status !== 'active' || !self::is_open($ticket)) {
             status_header(404);
             SNN_T_Router::render_in_theme(__('Ticket link', 'snn-tickets'), self::wrap(
-                '<h1>' . esc_html__('This link does not work any more', 'snn-tickets') . '</h1>'
-                . '<p>' . esc_html__('The ticket has already been claimed, or the person who sent it took it back. Ask them for a new link.', 'snn-tickets') . '</p>'), true);
+                '<h1>' . esc_html(SNN_T_Texts::get('claim_dead_title')) . '</h1>'
+                . '<p>' . esc_html(SNN_T_Texts::get('claim_dead_text')) . '</p>'), true);
             return;
         }
 
@@ -187,10 +235,10 @@ class SNN_T_Claims {
         SNN_T_Forms::render_styles();
         echo '<p class="snn-event-when">' . esc_html($when) . '</p>';
         echo '<h1 class="snn-event-title">' . esc_html($from !== ''
-            ? sprintf(__('%1$s got you a ticket to %2$s', 'snn-tickets'), $from, $event->name)
-            : sprintf(__('A ticket to %s is waiting for you', 'snn-tickets'), $event->name)) . '</h1>';
+            ? SNN_T_Texts::get('claim_title_from', ['buyer' => $from, 'event' => $event->name])
+            : SNN_T_Texts::get('claim_title', ['event' => $event->name])) . '</h1>';
         if ($where !== '') echo '<p class="snn-event-where">' . esc_html($where) . '</p>';
-        echo '<p>' . esc_html__("Tell us who's coming. Your ticket arrives by email straight away and opens here too.", 'snn-tickets') . '</p>';
+        echo '<p>' . esc_html(SNN_T_Texts::get('claim_intro')) . '</p>';
 
         echo '<div class="snn-ticket-form-wrap"><form method="post" class="snn-ticket-form" novalidate>';
         if (!empty($errors['_'])) echo '<div class="snn-form-notice snn-err" role="alert">' . esc_html($errors['_']) . '</div>';
@@ -201,7 +249,7 @@ class SNN_T_Claims {
             if ($value === null && $ticket->claim_email !== '' && $field['map_to'] === 'email') $value = $ticket->claim_email;
             SNN_T_Forms::render_field($field, $value, $errors[$field['key']] ?? '');
         }
-        echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">' . esc_html__('Get my ticket', 'snn-tickets') . '</button></p>';
+        echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">' . esc_html(SNN_T_Texts::get('claim_submit')) . '</button></p>';
         echo '</form></div>';
 
         SNN_T_Router::render_in_theme($event->name, self::wrap(ob_get_clean()));

@@ -24,11 +24,13 @@ class SNN_T_Woo {
     const META_EVENT = '_snn_event';      // event (list) id
     const META_PER   = '_snn_per_unit';   // tickets per unit bought
     const META_ASK   = '_snn_attendees';  // 'yes' to ask attendee details
+    const META_PASS  = '_snn_transfer';   // 'no' when buyers may not pass tickets on
 
     /** Order item meta. */
     const ITEM_ATTENDEES = '_snn_attendees';
     const ITEM_EVENT     = '_snn_event';
     const ITEM_PER       = '_snn_per_unit';
+    const ITEM_PASS      = '_snn_transfer';
     const ITEM_ISSUED    = '_snn_issued';        // tickets ever made for the line
     const ITEM_AUTO_OFF  = '_snn_auto_revoked';  // ticket ids the order itself cancelled
 
@@ -136,6 +138,12 @@ class SNN_T_Woo {
     public static function per_unit($product) {
         $p = self::base_product($product);
         return $p ? max(1, min(50, (int)$p->get_meta(self::META_PER))) : 1;
+    }
+
+    /** Can a buyer pass this product's extra tickets on? Yes unless switched off. */
+    public static function passes($product) {
+        $p = self::base_product($product);
+        return !$p || $p->get_meta(self::META_PASS) !== 'no';
     }
 
     public static function asks($product) {
@@ -257,8 +265,8 @@ class SNN_T_Woo {
         $form  = SNN_T_Forms::for_list($event->id);
 
         echo '<div class="snn-product-event">';
-        if ($when !== '')  echo '<p class="snn-product-when"><strong>' . esc_html__('When', 'snn-tickets') . ':</strong> ' . esc_html($when) . '</p>';
-        if ($where !== '') echo '<p class="snn-product-where"><strong>' . esc_html__('Where', 'snn-tickets') . ':</strong> ' . esc_html($where) . '</p>';
+        if ($when !== '')  echo '<p class="snn-product-when"><strong>' . esc_html(SNN_T_Texts::get('when')) . ':</strong> ' . esc_html($when) . '</p>';
+        if ($where !== '') echo '<p class="snn-product-where"><strong>' . esc_html(SNN_T_Texts::get('where')) . ':</strong> ' . esc_html($where) . '</p>';
         if ($left === 0) {
             echo '<p class="snn-product-full" style="font-weight:600">' . esc_html($form ? $form->settings['full_message'] : __('Sorry, this event is fully booked.', 'snn-tickets')) . '</p>';
         } elseif ($left !== null && $form && !empty($form->settings['show_remaining'])) {
@@ -283,7 +291,7 @@ class SNN_T_Woo {
         SNN_T_Forms::render_styles();
         echo '<div class="snn-attendees snn-ticket-form" data-snn-attendees data-per="' . (int)$per . '">';
         echo '<input type="hidden" name="snn_att_on" value="1">';
-        echo '<p class="snn-attendees-intro">' . esc_html__('Who is coming? Each ticket is emailed to the person named on it.', 'snn-tickets') . '</p>';
+        echo '<p class="snn-attendees-intro">' . esc_html(SNN_T_Texts::get('attendees_intro')) . '</p>';
         echo '<div data-snn-att-list>';
         for ($i = 0; $i < $count; $i++) self::attendee_block($form, $i, $old[$i] ?? []);
         echo '</div><template data-snn-att-template>';
@@ -320,7 +328,7 @@ JS
 
     private static function attendee_block($form, $i, $old) {
         $n = $i === '__i__' ? '__n__' : (string)((int)$i + 1);
-        echo '<fieldset class="snn-attendee"><legend>' . esc_html(sprintf(__('Ticket %s', 'snn-tickets'), $n)) . '</legend>';
+        echo '<fieldset class="snn-attendee"><legend>' . esc_html(SNN_T_Texts::get('attendee_legend', ['n' => $n])) . '</legend>';
         foreach ($form->fields as $field) {
             SNN_T_Forms::render_field($field, $old[$field['key']] ?? null, '', 'snn_att[' . $i . ']');
         }
@@ -339,7 +347,7 @@ JS
 
     public static function loop_text($text, $product) {
         return (self::is_ticket($product) && self::asks($product) && $product->is_type('simple') && $product->is_purchasable() && $product->is_in_stock())
-            ? __('Choose tickets', 'snn-tickets') : $text;
+            ? SNN_T_Texts::get('choose_tickets') : $text;
     }
 
     /* ------------------------------------------------------------------
@@ -474,6 +482,7 @@ JS
         if (!$product || !self::is_ticket($product)) return;
         $item->add_meta_data(self::ITEM_EVENT, self::event_id($product), true);
         $item->add_meta_data(self::ITEM_PER, self::per_unit($product), true);
+        $item->add_meta_data(self::ITEM_PASS, self::passes($product) ? 'yes' : 'no', true);
         if (!empty($values['snn_attendees'])) {
             $item->add_meta_data(self::ITEM_ATTENDEES, $values['snn_attendees'], true);
             $item->add_meta_data(__('Attendees', 'snn-tickets'), self::attendee_names($values['snn_attendees']), true);
@@ -492,6 +501,14 @@ JS
             $per     = self::per_unit($product);
         }
         return [$list_id, max(1, $per)];
+    }
+
+    /** Whether a line's extra tickets may be passed on, as it was when bought. */
+    public static function item_passes($item) {
+        $v = (string)$item->get_meta(self::ITEM_PASS);
+        if ($v !== '') return $v !== 'no';
+        $product = $item->get_product();
+        return $product ? self::passes($product) : true;
     }
 
     public static function set_holds($order) {
@@ -635,6 +652,7 @@ JS
         ];
         $form = SNN_T_Forms::for_list($list_id);
         $made = 0; $ids = [];
+        $pass = self::item_passes($item);
 
         for ($i = 0; $i < $plan['create']; $i++) {
             $a = $attendees[$issued + $i] ?? null;
@@ -644,8 +662,9 @@ JS
             if (is_array($a)) {
                 $name  = ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
                 $email = ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
-            } elseif (!self::buyer_ticket($order)) {
-                $name = $buyer['name']; $email = $buyer['email']; $mine = true;
+            } elseif (!self::buyer_ticket($order) || !$pass) {
+                // A ticket type that cannot be passed on stays with the buyer.
+                $name = $buyer['name']; $email = $buyer['email']; $mine = !self::buyer_ticket($order);
             } else {
                 $name = ''; $email = $buyer['email']; $open = true;
             }
@@ -746,7 +765,7 @@ JS
                 '{count}'         => (string)count($all),
                 '{tickets_list}'  => SNN_T_Mailer::tickets_list_html(self::list_rows($all, $buyer)),
                 '{manage_url}'    => $manage,
-                '{manage_button}' => SNN_T_Mailer::button_html($manage, __('Manage your tickets', 'snn-tickets')),
+                '{manage_button}' => SNN_T_Mailer::button_html($manage, SNN_T_Texts::get('manage_button')),
             ],
         ]);
     }
@@ -756,13 +775,13 @@ JS
         $rows = [];
         foreach ($tickets as $t) {
             if (($t->holder ?? '') === SNN_T_Claims::OPEN) {
-                $rows[] = ['label' => __('Not named yet', 'snn-tickets'), 'note' => __('Send this link to your guest:', 'snn-tickets'), 'url' => SNN_T_Claims::url($t), 'link_label' => ''];
+                $rows[] = ['label' => SNN_T_Texts::get('unnamed'), 'note' => SNN_T_Texts::get('email_link_note'), 'url' => SNN_T_Claims::url($t), 'link_label' => ''];
             } elseif (($t->holder ?? '') === SNN_T_Claims::SENT) {
-                $rows[] = ['label' => sprintf(__('Sent to %s', 'snn-tickets'), $t->claim_email), 'note' => __('Waiting for them to fill in their name', 'snn-tickets'), 'url' => '', 'link_label' => ''];
+                $rows[] = ['label' => SNN_T_Texts::get('sent', ['email' => $t->claim_email]), 'note' => SNN_T_Texts::get('sent_hint'), 'url' => '', 'link_label' => ''];
             } elseif ($t->email === $buyer) {
-                $rows[] = ['label' => $t->name !== '' ? $t->name : __('Your ticket', 'snn-tickets'), 'note' => __('Your ticket', 'snn-tickets'), 'url' => '', 'link_label' => ''];
+                $rows[] = ['label' => $t->name !== '' ? $t->name : SNN_T_Texts::get('your_ticket'), 'note' => SNN_T_Texts::get('your_ticket'), 'url' => SNN_T_Router::ticket_url($t->ticket_code), 'link_label' => SNN_T_Texts::get('open')];
             } else {
-                $rows[] = ['label' => $t->name, 'note' => sprintf(__('Ticket emailed to %s', 'snn-tickets'), $t->email), 'url' => '', 'link_label' => ''];
+                $rows[] = ['label' => $t->name, 'note' => SNN_T_Texts::get('email_emailed', ['email' => $t->email]), 'url' => '', 'link_label' => ''];
             }
         }
         return $rows;
@@ -815,7 +834,7 @@ JS
         $key = sanitize_text_field(wp_unslash($_GET['key'] ?? ''));
         $ok  = ($key !== '' && hash_equals($order->get_order_key(), $key))
             || (get_current_user_id() && (int)$order->get_customer_id() === get_current_user_id())
-            || current_user_can('manage_woocommerce');
+            || current_user_can(SNN_T_Tickets::cap());
         if (!$ok) return;
 
         $msg = ''; $bad = false;
@@ -829,10 +848,10 @@ JS
                 if ($t && ($do === 'send' || $do === 'resend')) {
                     $to = $do === 'resend' ? $t->claim_email : wp_unslash($_POST['email'] ?? '');
                     $r  = SNN_T_Claims::send($t, $to, $order->get_billing_first_name());
-                    if (!is_wp_error($r)) $msg = sprintf(__('Sent to %s. They fill in their name and get the ticket.', 'snn-tickets'), sanitize_email($to));
+                    if (!is_wp_error($r)) $msg = SNN_T_Texts::get('msg_sent', ['email' => sanitize_email($to)]);
                 } elseif ($t && $do === 'takeback') {
                     $r = SNN_T_Claims::take_back($t);
-                    if (!is_wp_error($r)) $msg = __('Taken back. The link you sent no longer works.', 'snn-tickets');
+                    if (!is_wp_error($r)) $msg = SNN_T_Texts::get('msg_taken');
                 }
                 if (is_wp_error($r)) { $msg = $r->get_error_message(); $bad = true; }
             }
@@ -843,13 +862,13 @@ JS
 
         ob_start();
         echo '<div class="snn-event-page snn-manage-page" style="max-width:720px;margin:0 auto;padding:32px 16px 48px">';
-        echo '<h1>' . esc_html(sprintf(__('Your tickets · Order #%s', 'snn-tickets'), $order->get_order_number())) . '</h1>';
+        echo '<h1>' . esc_html(SNN_T_Texts::get('manage_title', ['order' => $order->get_order_number()])) . '</h1>';
         if (!empty($_GET['snn_msg'])) {
             echo '<p class="snn-manage-msg" role="status" style="padding:12px 14px;border-radius:6px;background:' . (!empty($_GET['snn_bad']) ? '#fcf0f1' : '#edf7ed') . '">' . esc_html(sanitize_text_field(wp_unslash($_GET['snn_msg']))) . '</p>';
         }
         self::manage_html($order);
         echo '</div>';
-        SNN_T_Router::render_in_theme(__('Your tickets', 'snn-tickets'), ob_get_clean(), true);
+        SNN_T_Router::render_in_theme(SNN_T_Texts::get('email_title'), ob_get_clean(), true);
         exit;
     }
 
@@ -874,25 +893,25 @@ JS
         echo '<section id="snn-tickets" class="snn-order-tickets woocommerce-order-tickets">';
         foreach ($groups as $list_id => $list) {
             $event = SNN_T_Events::get($list_id);
-            echo '<h2 class="woocommerce-column__title">' . esc_html(sprintf(__('Your tickets for %s', 'snn-tickets'), $event ? $event->name : '')) . '</h2>';
+            echo '<h2 class="woocommerce-column__title">' . esc_html(SNN_T_Texts::get('list_title', ['event' => $event ? $event->name : ''])) . '</h2>';
             if ($event && ($when = SNN_T_Events::format_when($event)) !== '') echo '<p class="snn-mt-when">' . esc_html($when) . '</p>';
             echo '<table class="woocommerce-table shop_table snn-mt"><tbody>';
             foreach ($list as $i => $t) {
                 echo '<tr><td class="snn-mt-n">' . ((int)$i + 1) . '</td><td>';
                 if (($t->holder ?? '') === SNN_T_Claims::OPEN) {
                     $url = SNN_T_Claims::url($t);
-                    echo '<strong>' . esc_html__('Not named yet', 'snn-tickets') . '</strong><br><small>' . esc_html__('Send it on: your guest fills in their name and gets their own ticket.', 'snn-tickets') . '</small>';
+                    echo '<strong>' . esc_html(SNN_T_Texts::get('unnamed')) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('unnamed_hint')) . '</small>';
                     echo '<div class="snn-mt-share"><input type="text" readonly value="' . esc_attr($url) . '" onclick="this.select()" aria-label="' . esc_attr__('Ticket link', 'snn-tickets') . '">'
-                        . '<button type="button" class="button" onclick="var i=this.previousElementSibling;i.select();(navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).catch(function(){document.execCommand(\'copy\')});this.textContent=' . esc_attr(wp_json_encode(__('Copied', 'snn-tickets'))) . '">' . esc_html__('Copy link', 'snn-tickets') . '</button></div>';
-                    echo $form($t, 'send', __('Email it', 'snn-tickets'), '<input type="email" name="email" required placeholder="' . esc_attr__("Guest's email", 'snn-tickets') . '"> ');
+                        . '<button type="button" class="button" onclick="var i=this.previousElementSibling;i.select();(navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).catch(function(){document.execCommand(\'copy\')});this.textContent=' . esc_attr(wp_json_encode(SNN_T_Texts::get('copied'))) . '">' . esc_html(SNN_T_Texts::get('copy')) . '</button></div>';
+                    echo $form($t, 'send', SNN_T_Texts::get('email_button'), '<input type="email" name="email" required placeholder="' . esc_attr(SNN_T_Texts::get('email_placeholder')) . '"> ');
                 } elseif (($t->holder ?? '') === SNN_T_Claims::SENT) {
-                    echo '<strong>' . esc_html(sprintf(__('Sent to %s', 'snn-tickets'), $t->claim_email)) . '</strong><br><small>' . esc_html__('Waiting for them to fill in their name.', 'snn-tickets') . '</small>';
-                    echo '<div class="snn-mt-actions">' . $form($t, 'resend', __('Send again', 'snn-tickets')) . $form($t, 'takeback', __('Take back', 'snn-tickets')) . '</div>';
+                    echo '<strong>' . esc_html(SNN_T_Texts::get('sent', ['email' => $t->claim_email])) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('sent_hint')) . '</small>';
+                    echo '<div class="snn-mt-actions">' . $form($t, 'resend', SNN_T_Texts::get('resend')) . $form($t, 'takeback', SNN_T_Texts::get('takeback')) . '</div>';
                 } elseif ($t->email === $buyer) {
-                    echo '<strong>' . esc_html($t->name !== '' ? $t->name : __('Your ticket', 'snn-tickets')) . '</strong> <small>' . esc_html__('(you)', 'snn-tickets') . '</small>';
-                    echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html__('Open ticket', 'snn-tickets') . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a></div>';
+                    echo '<strong>' . esc_html($t->name !== '' ? $t->name : SNN_T_Texts::get('your_ticket')) . '</strong> <small>' . esc_html(SNN_T_Texts::get('you')) . '</small>';
+                    echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html(SNN_T_Texts::get('open')) . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a></div>';
                 } else {
-                    echo '<strong>' . esc_html($t->name) . '</strong><br><small>' . esc_html(sprintf(__('Has their ticket (%s)', 'snn-tickets'), $t->email)) . '</small>';
+                    echo '<strong>' . esc_html($t->name) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('guest', ['email' => $t->email])) . '</small>';
                 }
                 echo '</td></tr>';
             }
@@ -947,14 +966,14 @@ JS
         $rows   = self::list_rows($tickets, self::buyer_email($order));
         $manage = self::manage_url($order);
         if ($plain_text) {
-            echo "\n" . strtoupper(__('Your tickets', 'snn-tickets')) . "\n\n";
+            echo "\n" . strtoupper(SNN_T_Texts::get('email_title')) . "\n\n";
             foreach ($rows as $i => $r) echo ((int)$i + 1) . '. ' . $r['label'] . ($r['url'] !== '' ? ' ' . $r['url'] : '') . "\n";
-            echo "\n" . __('Manage your tickets', 'snn-tickets') . ': ' . $manage . "\n\n";
+            echo "\n" . SNN_T_Texts::get('manage_button') . ': ' . $manage . "\n\n";
             return;
         }
-        echo '<h2>' . esc_html__('Your tickets', 'snn-tickets') . '</h2>';
+        echo '<h2>' . esc_html(SNN_T_Texts::get('email_title')) . '</h2>';
         echo SNN_T_Mailer::tickets_list_html($rows); // escaped inside
-        echo SNN_T_Mailer::button_html($manage, __('Manage your tickets', 'snn-tickets'));
+        echo SNN_T_Mailer::button_html($manage, SNN_T_Texts::get('manage_button'));
     }
 
     /* ------------------------------------------------------------------
@@ -968,7 +987,7 @@ JS
         $left = self::spots_left($event->id);
         $form = SNN_T_Forms::for_list($event->id);
 
-        $out = '<section class="snn-event-shop"><h2 class="snn-event-shop-title">' . esc_html__('Tickets', 'snn-tickets') . '</h2>';
+        $out = '<section class="snn-event-shop"><h2 class="snn-event-shop-title">' . esc_html(SNN_T_Texts::get('shop_title')) . '</h2>';
         if ($left === 0) {
             $out .= '<p class="snn-form-notice snn-warn">' . esc_html($form ? $form->settings['full_message'] : __('Sorry, this event is fully booked.', 'snn-tickets')) . '</p>';
         }
@@ -976,11 +995,11 @@ JS
         foreach ($products as $p) {
             $buyable = $left !== 0 && $p->is_purchasable() && $p->is_in_stock();
             if (!$buyable) {
-                $button = '<span class="snn-tier-out">' . esc_html__('Sold out', 'snn-tickets') . '</span>';
+                $button = '<span class="snn-tier-out">' . esc_html(SNN_T_Texts::get('sold_out')) . '</span>';
             } elseif ($p->is_type('simple') && !self::asks($p)) {
-                $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url(add_query_arg('add-to-cart', $p->get_id(), wc_get_cart_url())) . '">' . esc_html__('Buy', 'snn-tickets') . '</a>';
+                $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url(add_query_arg('add-to-cart', $p->get_id(), wc_get_cart_url())) . '">' . esc_html(SNN_T_Texts::get('buy')) . '</a>';
             } else {
-                $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url($p->get_permalink()) . '">' . esc_html__('Choose', 'snn-tickets') . '</a>';
+                $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url($p->get_permalink()) . '">' . esc_html(SNN_T_Texts::get('choose')) . '</a>';
             }
             $desc = wp_strip_all_tags((string)$p->get_short_description());
             $out .= '<li class="snn-tier"><div class="snn-tier-main"><span class="snn-tier-name">' . esc_html(self::tier_label($p, $event)) . '</span>'

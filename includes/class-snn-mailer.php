@@ -16,7 +16,19 @@ class SNN_T_Mailer {
     const BATCH_SIZE_OPTION = 'snn_tickets_mailer_batch_size';
     const CRON_HOOK         = 'snn_tickets_process_queue';
     const QR_CID            = 'snn-ticket-qr';
-    const MAX_ATTEMPTS      = 3;
+    const MAX_ATTEMPTS      = 4;
+
+    /** Wait before try 2, 3 and 4: a mail server that is down for a while gets time to come back. */
+    const RETRY_DELAYS      = [300, 1800, 7200];
+
+    /** An email "sending" for longer than this was cut off (PHP died mid-send). */
+    const STUCK_AFTER       = 900;
+
+    /** Sent emails older than this many days leave the log. */
+    const KEEP_SENT_DAYS    = 90;
+
+    /** Set once a request has queued mail, so it asks for a send straight away. */
+    private static $asked = false;
 
     /** State for the message currently being handed to PHPMailer. */
     private static $inline_qr_path = null;
@@ -469,7 +481,28 @@ class SNN_T_Mailer {
             return new WP_Error('snn_queue_insert', __('Could not write to the mail queue.', 'snn-tickets'));
         }
 
+        self::send_soon();
         return (int)$wpdb->insert_id;
+    }
+
+    /**
+     * WP-Cron only runs when someone visits the site, so on a quiet site a
+     * ticket bought at night could wait until morning. Queuing mail asks
+     * for a run right away (a background request after this page is done);
+     * the minute-by-minute schedule stays as the safety net.
+     */
+    public static function send_soon() {
+        if (self::$asked) return;
+        self::$asked = true;
+        if (!wp_next_scheduled(self::CRON_HOOK, ['soon'])) {
+            wp_schedule_single_event(time(), self::CRON_HOOK, ['soon']);
+        }
+        add_action('shutdown', [__CLASS__, 'spawn']);
+    }
+
+    public static function spawn() {
+        if ((function_exists('wp_doing_cron') && wp_doing_cron()) || !function_exists('spawn_cron')) return;
+        spawn_cron();
     }
 
     /**
@@ -589,6 +622,34 @@ class SNN_T_Mailer {
         return $r;
     }
 
+    /** Seconds to wait after the given failed attempt. */
+    public static function retry_delay($attempts) {
+        $d = self::RETRY_DELAYS;
+        return $d[max(0, min(count($d) - 1, (int)$attempts - 1))];
+    }
+
+    /**
+     * Rescue emails a crashed run left "sending", and let old sent emails
+     * go (the log would otherwise keep every message's HTML forever).
+     */
+    public static function housekeeping() {
+        global $wpdb;
+        $queue = SNN_T_DB::queue();
+        $stuck = date('Y-m-d H:i:s', current_time('timestamp') - self::STUCK_AFTER);
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$queue} SET status = CASE WHEN attempts >= %d THEN 'failed' ELSE 'pending' END,
+                    last_error = %s
+             WHERE status = 'sending' AND scheduled_at < %s",
+            self::MAX_ATTEMPTS, 'Sending was interrupted; trying again.', $stuck));
+
+        if (!get_transient('snn_t_log_pruned')) {
+            $days = max(7, (int)apply_filters('snn_tickets_keep_sent_days', self::KEEP_SENT_DAYS));
+            $wpdb->query($wpdb->prepare("DELETE FROM {$queue} WHERE status = 'sent' AND sent_at < %s",
+                date('Y-m-d H:i:s', current_time('timestamp') - $days * DAY_IN_SECONDS)));
+            set_transient('snn_t_log_pruned', 1, DAY_IN_SECONDS);
+        }
+    }
+
     public static function batch_size() {
         $size = (int)get_option(self::BATCH_SIZE_OPTION, 10);
         return max(1, min(200, $size));
@@ -611,6 +672,7 @@ class SNN_T_Mailer {
         $queue = SNN_T_DB::queue();
         $limit = self::batch_size();
         $now   = current_time('mysql');
+        self::housekeeping();
 
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$queue}
@@ -624,9 +686,9 @@ class SNN_T_Mailer {
         foreach ($rows as $row) {
             // Claim it. If another worker got there first, skip.
             $claimed = $wpdb->query($wpdb->prepare(
-                "UPDATE {$queue} SET status = 'sending', attempts = attempts + 1
+                "UPDATE {$queue} SET status = 'sending', attempts = attempts + 1, scheduled_at = %s
                  WHERE id = %d AND status = 'pending'",
-                $row->id
+                $now, $row->id
             ));
             if (!$claimed) continue;
 
@@ -642,9 +704,10 @@ class SNN_T_Mailer {
             } else {
                 $attempts = (int)$row->attempts + 1;
                 $wpdb->update($queue, [
-                    'status'     => $attempts >= self::MAX_ATTEMPTS ? 'failed' : 'pending',
-                    'last_error' => is_string($result) ? $result : 'Unknown send error',
-                ], ['id' => $row->id], ['%s', '%s'], ['%d']);
+                    'status'       => $attempts >= self::MAX_ATTEMPTS ? 'failed' : 'pending',
+                    'last_error'   => is_string($result) ? $result : 'Unknown send error',
+                    'scheduled_at' => date('Y-m-d H:i:s', current_time('timestamp') + self::retry_delay($attempts)),
+                ], ['id' => $row->id], ['%s', '%s', '%s'], ['%d']);
                 $failed++;
             }
         }
@@ -835,7 +898,8 @@ class SNN_T_Mailer {
             $out .= '<tr><td style="padding:10px 0;border-top:1px solid #e5e5e5;vertical-align:top;width:28px;color:#888;">' . ((int)$i + 1) . '</td>'
                 . '<td style="padding:10px 0;border-top:1px solid #e5e5e5;"><strong>' . esc_html($r['label']) . '</strong>'
                 . ($r['note'] !== '' ? '<br><span style="color:#666;font-size:13px;">' . esc_html($r['note']) . '</span>' : '')
-                . ($r['url'] !== '' ? '<br><a href="' . esc_url($r['url']) . '" style="font-size:13px;word-break:break-all;">' . esc_html($r['url']) . '</a>' : '')
+                // A labelled link reads better; a bare URL is for copying on.
+                . ($r['url'] !== '' ? '<br><a href="' . esc_url($r['url']) . '" style="font-size:13px;word-break:break-all;">' . esc_html(($r['link_label'] ?? '') !== '' ? $r['link_label'] : $r['url']) . '</a>' : '')
                 . '</td></tr>';
         }
         return $out . '</table>';
@@ -874,7 +938,7 @@ class SNN_T_Mailer {
     }
 
     public static function ajax_preview() {
-        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Forbidden'], 403);
+        if (!current_user_can(SNN_T_Tickets::cap())) wp_send_json_error(['message' => 'Forbidden'], 403);
         check_ajax_referer('snn_email_tools', 'nonce');
 
         list($role, $tpl, $list_id) = self::request_template();
@@ -884,7 +948,7 @@ class SNN_T_Mailer {
     }
 
     public static function ajax_test() {
-        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Forbidden'], 403);
+        if (!current_user_can(SNN_T_Tickets::cap())) wp_send_json_error(['message' => 'Forbidden'], 403);
         check_ajax_referer('snn_email_tools', 'nonce');
 
         $to = sanitize_email(wp_unslash($_POST['to'] ?? ''));
@@ -930,9 +994,12 @@ class SNN_T_Mailer {
     public static function retry_failed($id = 0) {
         global $wpdb;
         $queue = SNN_T_DB::queue();
-        $sql = "UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL WHERE status IN ('failed','sending')";
-        if ($id) $sql = $wpdb->prepare($sql . ' AND id = %d', (int)$id);
-        return (int)$wpdb->query($sql);
+        // A retry by hand goes now, not after the automatic back-off.
+        $sql = $wpdb->prepare("UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL, scheduled_at = %s WHERE status IN ('failed','sending')", current_time('mysql'));
+        if ($id) $sql .= $wpdb->prepare(' AND id = %d', (int)$id);
+        $n = (int)$wpdb->query($sql);
+        if ($n) self::send_soon();
+        return $n;
     }
 
     public static function delete_row($id) {
