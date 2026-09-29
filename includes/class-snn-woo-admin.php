@@ -140,7 +140,7 @@ class SNN_T_Woo_Admin {
                             </optgroup>
                         <?php endforeach; ?>
                     </select>
-                    <span class="description" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>><a href="<?php echo esc_url($f['url']); ?>" data-snn-link><?php esc_html_e('Open in Tickets', 'snn-tickets'); ?> →</a></span>
+                    <span class="description" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>><a href="<?php echo esc_url($f['url']); ?>" data-snn-link><?php esc_html_e('Edit full event settings', 'snn-tickets'); ?> →</a></span>
                 </p>
                 <p class="form-field" data-snn-new <?php echo $linked ? 'hidden' : ''; ?>>
                     <label for="snn_ev_name"><?php esc_html_e('Event name', 'snn-tickets'); ?></label>
@@ -149,6 +149,7 @@ class SNN_T_Woo_Admin {
                 <p class="form-field">
                     <label for="snn_ev_date"><?php esc_html_e('Date', 'snn-tickets'); ?></label>
                     <input type="date" class="short" id="snn_ev_date" name="snn_ev[date]" value="<?php echo esc_attr($f['date']); ?>" data-snn-f="date">
+                    <span class="description" data-snn-nodate style="color:#b32d2e" <?php echo $f['date'] !== '' ? 'hidden' : ''; ?>><?php esc_html_e('No date yet, so tickets and emails will not show one. Fine for an undated pass.', 'snn-tickets'); ?></span>
                 </p>
                 <p class="form-field">
                     <label for="snn_ev_start"><?php esc_html_e('Time', 'snn-tickets'); ?></label>
@@ -156,22 +157,22 @@ class SNN_T_Woo_Admin {
                     <span style="float:left;margin:0 8px;line-height:30px">–</span>
                     <input type="time" name="snn_ev[end]" value="<?php echo esc_attr($f['end']); ?>" style="width:auto" data-snn-f="end" aria-label="<?php esc_attr_e('Ends', 'snn-tickets'); ?>">
                 </p>
-                <p class="form-field">
-                    <label for="snn_ev_venue"><?php esc_html_e('Venue', 'snn-tickets'); ?></label>
-                    <input type="text" class="short" id="snn_ev_venue" name="snn_ev[venue]" value="<?php echo esc_attr($f['venue']); ?>" placeholder="<?php esc_attr_e('Optional', 'snn-tickets'); ?>" data-snn-f="venue">
-                </p>
-                <p class="form-field">
-                    <label for="snn_ev_spots"><?php esc_html_e('Spots', 'snn-tickets'); ?></label>
-                    <input type="number" min="0" class="short" id="snn_ev_spots" name="snn_ev[spots]" value="<?php echo esc_attr($f['spots']); ?>" placeholder="<?php esc_attr_e('No limit', 'snn-tickets'); ?>" data-snn-f="spots">
-                    <span class="description"><?php esc_html_e('For the whole event, every ticket type together.', 'snn-tickets'); ?></span>
-                </p>
                 <p class="form-field" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>>
                     <span class="description"><?php esc_html_e('Changes here update the event, for every ticket type it has.', 'snn-tickets'); ?></span>
                 </p>
             </div>
             <div class="options_group">
-                <details style="padding:0 12px 4px" <?php echo ($per > 1 || $ask) ? 'open' : ''; ?>>
+                <details style="padding:0 12px 4px" <?php echo ($per > 1 || $ask || $f['venue'] !== '' || $f['spots'] !== '') ? 'open' : ''; ?>>
                     <summary style="cursor:pointer;padding:10px 0;font-weight:600"><?php esc_html_e('More options', 'snn-tickets'); ?></summary>
+                    <p class="form-field">
+                        <label for="snn_ev_venue"><?php esc_html_e('Venue', 'snn-tickets'); ?></label>
+                        <input type="text" class="short" id="snn_ev_venue" name="snn_ev[venue]" value="<?php echo esc_attr($f['venue']); ?>" placeholder="<?php esc_attr_e('Optional', 'snn-tickets'); ?>" data-snn-f="venue">
+                    </p>
+                    <p class="form-field">
+                        <label for="snn_ev_spots"><?php esc_html_e('Spots', 'snn-tickets'); ?></label>
+                        <input type="number" min="0" class="short" id="snn_ev_spots" name="snn_ev[spots]" value="<?php echo esc_attr($f['spots']); ?>" placeholder="<?php esc_attr_e('No limit', 'snn-tickets'); ?>" data-snn-f="spots">
+                        <span class="description"><?php esc_html_e('For the whole event, every ticket type together.', 'snn-tickets'); ?></span>
+                    </p>
                     <?php
                     woocommerce_wp_text_input([
                         'id'                => SNN_T_Woo::META_PER,
@@ -222,7 +223,10 @@ class SNN_T_Woo_Admin {
                     $(this).val(e ? (e[k] || '') : '');
                 });
                 if (e) panel.find('[data-snn-link]').attr('href', e.url);
+                nudge();
             }
+            function nudge(){ panel.find('[data-snn-nodate]').prop('hidden', $('#snn_ev_date').val() !== ''); }
+            $('#snn_ev_date').on('input change', nudge);
             box.on('change', function(){
                 sync();
                 // Straight to the tab that needs filling in.
