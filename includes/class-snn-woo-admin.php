@@ -140,7 +140,7 @@ class SNN_T_Woo_Admin {
                             </optgroup>
                         <?php endforeach; ?>
                     </select>
-                    <span class="description" data-snn-existing <?php echo $linked ? '' : 'hidden'; ?>><a href="<?php echo esc_url($f['url']); ?>" data-snn-link><?php esc_html_e('Edit full event settings', 'snn-tickets'); ?> →</a></span>
+                    <a href="<?php echo esc_url($f['url']); ?>" class="button button-primary" style="margin-left:8px;float:none" data-snn-existing data-snn-link <?php echo $linked ? '' : 'hidden'; ?>><?php esc_html_e('Edit full event settings', 'snn-tickets'); ?> →</a>
                 </p>
                 <p class="form-field" data-snn-new <?php echo $linked ? 'hidden' : ''; ?>>
                     <label for="snn_ev_name"><?php esc_html_e('Event name', 'snn-tickets'); ?></label>
