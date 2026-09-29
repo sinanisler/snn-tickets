@@ -31,6 +31,9 @@ class SNN_T_Woo {
     const ITEM_EVENT     = '_snn_event';
     const ITEM_PER       = '_snn_per_unit';
     const ITEM_PASS      = '_snn_transfer';
+    const ITEM_GIFT      = '_snn_gift';          // 'yes' when bought as a gift: no ticket for the buyer
+    const ITEM_GIFT_TO   = '_snn_gift_email';    // optional: where the first ticket's link goes after payment
+    const ITEM_GIFT_SENT = '_snn_gift_sent';
     const ITEM_ISSUED    = '_snn_issued';        // tickets ever made for the line
     const ITEM_AUTO_OFF  = '_snn_auto_revoked';  // ticket ids the order itself cancelled
 
@@ -45,6 +48,9 @@ class SNN_T_Woo {
 
     /** Attendee details checked in add-to-cart validation, used when the item is added. */
     private static $attendees = null;
+
+    /** "Me or a gift" checked in add-to-cart validation: [gift?, email]. */
+    private static $gift = null;
 
     public static function boot() {
         add_action('before_woocommerce_init', [__CLASS__, 'declare_compat']);
@@ -74,7 +80,10 @@ class SNN_T_Woo {
 
         // Product page
         add_action('woocommerce_single_product_summary', [__CLASS__, 'product_event_info'], 25);
+        add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'gift_choice'], 5);
         add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'attendee_fields']);
+        add_filter('woocommerce_quantity_input_args', [__CLASS__, 'quantity_args'], 10, 2);
+        add_filter('woocommerce_store_api_product_quantity_maximum', [__CLASS__, 'block_quantity_max'], 10, 3);
         add_filter('woocommerce_product_supports', [__CLASS__, 'no_ajax_add'], 10, 3);
         add_filter('woocommerce_product_add_to_cart_url', [__CLASS__, 'loop_url'], 10, 2);
         add_filter('woocommerce_product_add_to_cart_text', [__CLASS__, 'loop_text'], 10, 2);
@@ -326,6 +335,57 @@ JS
         );
     }
 
+    /**
+     * "Who are these tickets for?" on tickets that can be passed on and do
+     * not ask for guest details (there the buyer names everyone anyway).
+     * A gift gives the buyer no ticket of their own: every ticket comes with
+     * a link, and an email typed here gets the first link after payment.
+     */
+    public static function gift_choice() {
+        global $product;
+        if (!$product || !self::is_ticket($product) || self::asks($product) || !self::passes($product)) return;
+        $gift  = isset($_POST['snn_for']) && $_POST['snn_for'] === 'gift';
+        $email = isset($_POST['snn_gift_email']) ? sanitize_email(wp_unslash($_POST['snn_gift_email'])) : '';
+        echo '<fieldset class="snn-gift" data-snn-gift><legend>' . esc_html(SNN_T_Texts::get('for_question')) . '</legend>';
+        echo '<label class="snn-gift-opt"><input type="radio" name="snn_for" value="me"' . checked(!$gift, true, false) . '> <span><strong>' . esc_html(SNN_T_Texts::get('for_me')) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('for_me_hint')) . '</small></span></label>';
+        echo '<label class="snn-gift-opt"><input type="radio" name="snn_for" value="gift"' . checked($gift, true, false) . '> <span><strong>' . esc_html(SNN_T_Texts::get('for_gift')) . '</strong><br><small data-snn-gift-hint>' . esc_html(SNN_T_Texts::get('for_gift_hint')) . '</small></span></label>';
+        echo '<p class="snn-gift-email" data-snn-gift-email' . ($gift ? '' : ' hidden') . '><label>' . esc_html(SNN_T_Texts::get('gift_email_label'))
+            . '<input type="email" name="snn_gift_email" value="' . esc_attr($email) . '" autocomplete="off"></label><small>' . esc_html(SNN_T_Texts::get('gift_email_hint')) . '</small></p>';
+        echo '</fieldset>';
+        echo '<style>.snn-gift{border:0;padding:0;margin:0 0 1.2em}.snn-gift legend{font-weight:700;padding:0;margin:0 0 6px}.snn-gift-opt{display:flex;gap:8px;align-items:flex-start;margin:0 0 8px;cursor:pointer}.snn-gift-opt input{margin-top:.3em}.snn-gift-email{margin:4px 0 0 24px}.snn-gift-email[hidden]{display:none}.snn-gift-email label{display:block;font-weight:600}.snn-gift-email input{display:block;width:100%;max-width:320px;margin:4px 0}</style>';
+        SNN_T_Forms::footer_script('snn-tickets-gift', <<<'JS'
+(function(){
+    document.querySelectorAll('[data-snn-gift]').forEach(function(box){
+        var row = box.querySelector('[data-snn-gift-email]');
+        function sync(){ var g = box.querySelector('input[name=snn_for]:checked'); row.hidden = !(g && g.value === 'gift'); }
+        box.addEventListener('change', sync);
+        sync();
+    });
+})();
+JS
+        );
+    }
+
+    /** The quantity box stops at the spots that are left. */
+    public static function quantity_args($args, $product) {
+        if (!$product || !self::is_ticket($product)) return $args;
+        $left = self::spots_left(self::event_id($product));
+        if ($left === null) return $args;
+        $max = max(1, (int)floor($left / self::per_unit($product)));
+        $args['max_value'] = !empty($args['max_value']) && (int)$args['max_value'] > 0 ? min((int)$args['max_value'], $max) : $max;
+        return $args;
+    }
+
+    public static function block_quantity_max($value, $product, $cart_item = null) {
+        if (!$product || !self::is_ticket($product)) return $value;
+        $left = self::spots_left(self::event_id($product));
+        if ($left === null) return $value;
+        // Room for what this line already holds, plus what is still free.
+        $mine = $cart_item ? (int)$cart_item['quantity'] * self::per_unit($product) : 0;
+        $max  = max(1, (int)floor(($left - self::in_cart(self::event_id($product)) + $mine) / self::per_unit($product)));
+        return min((int)$value, $max);
+    }
+
     private static function attendee_block($form, $i, $old) {
         $n = $i === '__i__' ? '__n__' : (string)((int)$i + 1);
         echo '<fieldset class="snn-attendee"><legend>' . esc_html(SNN_T_Texts::get('attendee_legend', ['n' => $n])) . '</legend>';
@@ -373,7 +433,17 @@ JS
     public static function validate_add($passed, $product_id, $qty, $variation_id = 0, $variations = []) {
         $product = wc_get_product($variation_id ?: $product_id);
         self::$attendees = null;
+        self::$gift = null;
         if (!$passed || !$product || !self::is_ticket($product)) return $passed;
+
+        if (isset($_POST['snn_for']) && $_POST['snn_for'] === 'gift' && self::passes($product) && !self::asks($product)) {
+            $to = trim((string)wp_unslash($_POST['snn_gift_email'] ?? ''));
+            if ($to !== '' && !is_email(sanitize_email($to))) {
+                wc_add_notice(__('The gift email address does not look right.', 'snn-tickets'), 'error');
+                return false;
+            }
+            self::$gift = [true, strtolower(sanitize_email($to))];
+        }
 
         $list_id = self::event_id($product);
         $event   = SNN_T_Events::get($list_id);
@@ -416,6 +486,11 @@ JS
             $data['snn_attendees'] = self::$attendees;
             self::$attendees = null;
         }
+        if (self::$gift !== null) {
+            // A gift is its own cart line, never merged with tickets for the buyer.
+            $data['snn_gift'] = self::$gift[1] !== '' ? self::$gift[1] : 'yes';
+            self::$gift = null;
+        }
         return $data;
     }
 
@@ -428,6 +503,10 @@ JS
     public static function show_item_data($item_data, $cart_item) {
         if (!empty($cart_item['snn_attendees'])) {
             $item_data[] = ['key' => __('Attendees', 'snn-tickets'), 'value' => self::attendee_names($cart_item['snn_attendees'])];
+        }
+        if (!empty($cart_item['snn_gift'])) {
+            $item_data[] = ['key' => SNN_T_Texts::get('cart_gift'), 'value' => $cart_item['snn_gift'] !== 'yes'
+                ? SNN_T_Texts::get('cart_gift_for', ['email' => $cart_item['snn_gift']]) : SNN_T_Texts::get('cart_gift_link')];
         }
         return $item_data;
     }
@@ -486,6 +565,12 @@ JS
         if (!empty($values['snn_attendees'])) {
             $item->add_meta_data(self::ITEM_ATTENDEES, $values['snn_attendees'], true);
             $item->add_meta_data(__('Attendees', 'snn-tickets'), self::attendee_names($values['snn_attendees']), true);
+        }
+        if (!empty($values['snn_gift'])) {
+            $to = $values['snn_gift'] !== 'yes' ? $values['snn_gift'] : '';
+            $item->add_meta_data(self::ITEM_GIFT, 'yes', true);
+            $item->add_meta_data(self::ITEM_GIFT_TO, $to, true);
+            $item->add_meta_data(SNN_T_Texts::get('cart_gift'), $to !== '' ? SNN_T_Texts::get('cart_gift_for', ['email' => $to]) : SNN_T_Texts::get('cart_gift_link'), true);
         }
     }
 
@@ -653,6 +738,7 @@ JS
         $form = SNN_T_Forms::for_list($list_id);
         $made = 0; $ids = [];
         $pass = self::item_passes($item);
+        $gift = $pass && $item->get_meta(self::ITEM_GIFT) === 'yes';
 
         for ($i = 0; $i < $plan['create']; $i++) {
             $a = $attendees[$issued + $i] ?? null;
@@ -662,7 +748,7 @@ JS
             if (is_array($a)) {
                 $name  = ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
                 $email = ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
-            } elseif (!self::buyer_ticket($order) || !$pass) {
+            } elseif (!$gift && (!self::buyer_ticket($order) || !$pass)) {
                 // A ticket type that cannot be passed on stays with the buyer.
                 $name = $buyer['name']; $email = $buyer['email']; $mine = !self::buyer_ticket($order);
             } else {
@@ -697,6 +783,16 @@ JS
 
         $item->update_meta_data(self::ITEM_ISSUED, $issued + $made);
         $item->save_meta_data();
+
+        // A gift with an address: all of its tickets' links go there, in one email, once.
+        $to = (string)$item->get_meta(self::ITEM_GIFT_TO);
+        if ($gift && $to !== '' && $item->get_meta(self::ITEM_GIFT_SENT) !== 'yes') {
+            $open = array_values(array_filter(array_map(['SNN_T_Tickets', 'get'], $ids), ['SNN_T_Claims', 'is_open']));
+            if ($open && !is_wp_error(SNN_T_Claims::send_many($open, $to, $order->get_billing_first_name()))) {
+                $item->update_meta_data(self::ITEM_GIFT_SENT, 'yes');
+                $item->save_meta_data();
+            }
+        }
         $order->add_order_note(sprintf(_n('%1$d ticket issued for %2$s.', '%1$d tickets issued for %2$s.', $made, 'snn-tickets'),
             $made, SNN_T_Events::get($list_id)->name));
         return $ids;
@@ -817,6 +913,27 @@ JS
         return $order ? ($order->get_billing_first_name() ?: $from) : $from;
     }
 
+    /** The buyer's own ticket can still become a gift: not used yet, and its ticket type allows passing on. */
+    public static function can_give_away($order, $t) {
+        if (!$t || $t->status !== 'active' || SNN_T_Claims::is_open($t) || (int)$t->validate_count > 0) return false;
+        if ($t->email !== self::buyer_email($order)) return false;
+        $item = $t->order_item_id ? $order->get_item((int)$t->order_item_id) : null;
+        return $item && self::item_passes($item);
+    }
+
+    /**
+     * Turn the buyer's own ticket into one waiting for a name. Its QR still
+     * works for the buyer until someone claims it; claiming gives it a new code.
+     */
+    public static function give_away($order, $t) {
+        if (!self::can_give_away($order, $t)) return new WP_Error('snn_giveaway', __('This ticket cannot be passed on.', 'snn-tickets'));
+        SNN_T_Claims::open((int)$t->id);
+        global $wpdb;
+        $wpdb->update(SNN_T_DB::tickets(), ['name' => ''], ['id' => (int)$t->id]);
+        do_action('snn_tickets_claim_changed', (int)$t->id);
+        return true;
+    }
+
     /** Buyer's view of a ticket they may act on, or null. */
     private static function own_ticket($order, $id) {
         $t = SNN_T_Tickets::get((int)$id);
@@ -852,6 +969,9 @@ JS
                 } elseif ($t && $do === 'takeback') {
                     $r = SNN_T_Claims::take_back($t);
                     if (!is_wp_error($r)) $msg = SNN_T_Texts::get('msg_taken');
+                } elseif ($t && $do === 'giveaway') {
+                    $r = self::give_away($order, $t);
+                    if (!is_wp_error($r)) $msg = SNN_T_Texts::get('msg_giveaway');
                 }
                 if (is_wp_error($r)) { $msg = $r->get_error_message(); $bad = true; }
             }
@@ -909,7 +1029,8 @@ JS
                     echo '<div class="snn-mt-actions">' . $form($t, 'resend', SNN_T_Texts::get('resend')) . $form($t, 'takeback', SNN_T_Texts::get('takeback')) . '</div>';
                 } elseif ($t->email === $buyer) {
                     echo '<strong>' . esc_html($t->name !== '' ? $t->name : SNN_T_Texts::get('your_ticket')) . '</strong> <small>' . esc_html(SNN_T_Texts::get('you')) . '</small>';
-                    echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html(SNN_T_Texts::get('open')) . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a></div>';
+                    echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html(SNN_T_Texts::get('open')) . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a>'
+                        . (self::can_give_away($order, $t) ? ' ' . $form($t, 'giveaway', SNN_T_Texts::get('giveaway')) : '') . '</div>';
                 } else {
                     echo '<strong>' . esc_html($t->name) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('guest', ['email' => $t->email])) . '</small>';
                 }

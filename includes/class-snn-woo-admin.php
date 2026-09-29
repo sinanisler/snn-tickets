@@ -256,7 +256,13 @@ class SNN_T_Woo_Admin {
             if (!$event_id) {
                 $name = sanitize_text_field($in['name'] ?? '');
                 if ($name === '') $name = self::event_name_from($product->get_name());
-                $event_id = SNN_T_Events::create(array_merge(['name' => $name], $fresh ? $details : []));
+                // An unsaved product is called "AUTO-DRAFT" by WooCommerce: without a
+                // real name there is no event to make yet; the next save makes it.
+                if ($name === '' || strcasecmp($name, 'AUTO-DRAFT') === 0) {
+                    $name = ''; $event_id = 0;
+                } else {
+                    $event_id = SNN_T_Events::create(array_merge(['name' => $name], $fresh ? $details : []));
+                }
                 // Sign-ups start closed: the event page sells this product.
                 if ($event_id) SNN_T_Forms::save(0, [
                     'name' => $name, 'list_id' => $event_id, 'status' => 'closed',

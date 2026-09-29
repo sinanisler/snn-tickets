@@ -74,28 +74,51 @@ class SNN_T_Claims {
      * @return true|WP_Error
      */
     public static function send($ticket, $email, $from = '') {
-        $email = strtolower(sanitize_email($email));
-        if (!self::is_open($ticket) || $ticket->status !== 'active') {
-            return new WP_Error('snn_claim_state', __('This ticket already has a name on it.', 'snn-tickets'));
+        return self::send_many([$ticket], $email, $from);
+    }
+
+    /**
+     * Email the links of several tickets to one person, in one email: a
+     * couples ticket or three tickets given to the same friend.
+     *
+     * @return true|WP_Error
+     */
+    public static function send_many($tickets, $email, $from = '') {
+        $email   = strtolower(sanitize_email($email));
+        $tickets = array_values(array_filter((array)$tickets));
+        if (!$tickets) return new WP_Error('snn_claim_state', __('This ticket already has a name on it.', 'snn-tickets'));
+        foreach ($tickets as $t) {
+            if (!self::is_open($t) || $t->status !== 'active') {
+                return new WP_Error('snn_claim_state', __('This ticket already has a name on it.', 'snn-tickets'));
+            }
         }
         if (!$email || !is_email($email)) {
             return new WP_Error('snn_claim_email', __('That email address does not look right.', 'snn-tickets'));
         }
-        $key = self::new_key();
-        self::set($ticket->id, ['holder' => self::SENT, 'claim_key' => $key, 'claim_email' => $email]);
-        $url = SNN_T_Router::claim_url($key);
+        $urls = [];
+        foreach ($tickets as $t) {
+            $key = self::new_key();
+            self::set($t->id, ['holder' => self::SENT, 'claim_key' => $key, 'claim_email' => $email]);
+            $urls[] = SNN_T_Router::claim_url($key);
+        }
+        $n = count($urls);
+        $buttons = '';
+        foreach ($urls as $i => $u) {
+            $buttons .= SNN_T_Mailer::button_html($u, $n > 1 ? SNN_T_Texts::get('claim_button_n', ['n' => $i + 1]) : SNN_T_Texts::get('claim_button'));
+        }
 
-        SNN_T_Mailer::send_event_email('gift', (int)$ticket->list_id, [
+        SNN_T_Mailer::send_event_email('gift', (int)$tickets[0]->list_id, [
             'name'      => '',
             'email'     => $email,
-            'ticket_id' => (int)$ticket->id,
+            'ticket_id' => (int)$tickets[0]->id,
             'vars'      => [
                 '{buyer}'        => $from !== '' ? $from : get_bloginfo('name'),
-                '{claim_url}'    => $url,
-                '{claim_button}' => SNN_T_Mailer::button_html($url, SNN_T_Texts::get('claim_button')),
+                '{count}'        => (string)$n,
+                '{claim_url}'    => $urls[0],
+                '{claim_button}' => $buttons,
             ],
         ]);
-        do_action('snn_tickets_claim_changed', (int)$ticket->id);
+        foreach ($tickets as $t) do_action('snn_tickets_claim_changed', (int)$t->id);
         return true;
     }
 

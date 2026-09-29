@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-28T17:30:38+00:00\n"
+"POT-Creation-Date: 2026-09-29T07:13:31+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snn-tickets\n"
@@ -135,7 +135,7 @@ msgstr ""
 #: includes/class-snn-events-admin.php:831
 #: includes/class-snn-wizard.php:45
 #: includes/class-snn-wizard.php:48
-#: includes/class-snn-woo-admin.php:409
+#: includes/class-snn-woo-admin.php:415
 msgid "(optional)"
 msgstr ""
 
@@ -513,12 +513,13 @@ msgstr ""
 msgid "Saved as template \"%s\". Use it in any event with \"Start from a template\"."
 msgstr ""
 
-#: includes/class-snn-claims.php:79
-#: includes/class-snn-claims.php:104
+#: includes/class-snn-claims.php:89
+#: includes/class-snn-claims.php:92
+#: includes/class-snn-claims.php:127
 msgid "This ticket already has a name on it."
 msgstr ""
 
-#: includes/class-snn-claims.php:82
+#: includes/class-snn-claims.php:96
 #: includes/class-snn-people.php:207
 #: includes/class-snn-settings.php:145
 #: includes/class-snn-submissions.php:122
@@ -526,30 +527,30 @@ msgstr ""
 msgid "That email address does not look right."
 msgstr ""
 
-#: includes/class-snn-claims.php:119
+#: includes/class-snn-claims.php:142
 msgid "This ticket has already been claimed."
 msgstr ""
 
-#: includes/class-snn-claims.php:144
 #: includes/class-snn-claims.php:167
+#: includes/class-snn-claims.php:190
 msgid "Claimed a ticket passed on to them"
 msgstr ""
 
-#: includes/class-snn-claims.php:193
-#: includes/class-snn-claims.php:202
+#: includes/class-snn-claims.php:216
+#: includes/class-snn-claims.php:225
 #: includes/class-snn-events-admin.php:1148
 #: includes/class-snn-mailer.php:885
-#: includes/class-snn-woo.php:904
+#: includes/class-snn-woo.php:1024
 msgid "Ticket link"
 msgstr ""
 
-#: includes/class-snn-claims.php:213
+#: includes/class-snn-claims.php:236
 #: includes/class-snn-forms.php:94
 #: includes/class-snn-forms.php:959
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/class-snn-claims.php:218
+#: includes/class-snn-claims.php:241
 #: includes/class-snn-forms.php:895
 msgid "A valid email address is required."
 msgstr ""
@@ -634,10 +635,10 @@ msgid "Details"
 msgstr ""
 
 #: includes/class-snn-dashboard.php:112
-#: includes/class-snn-texts.php:78
+#: includes/class-snn-texts.php:91
 #: includes/class-snn-woo-admin.php:57
-#: includes/class-snn-woo-admin.php:505
-#: includes/class-snn-woo-admin.php:507
+#: includes/class-snn-woo-admin.php:511
+#: includes/class-snn-woo-admin.php:513
 #: snn-tickets.php:105
 #: snn-tickets.php:108
 #: snn-tickets.php:117
@@ -964,7 +965,7 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:90
 #: includes/class-snn-settings.php:323
-#: includes/class-snn-texts.php:73
+#: includes/class-snn-texts.php:86
 msgid "When"
 msgstr ""
 
@@ -972,7 +973,7 @@ msgstr ""
 #: includes/class-snn-events-admin.php:591
 #: includes/class-snn-wizard.php:51
 #: includes/class-snn-woo-admin.php:164
-#: includes/class-snn-woo-admin.php:432
+#: includes/class-snn-woo-admin.php:438
 msgid "Spots"
 msgstr ""
 
@@ -991,7 +992,7 @@ msgstr ""
 #: includes/class-snn-mailer.php:231
 #: includes/class-snn-settings.php:323
 #: includes/class-snn-settings.php:363
-#: includes/class-snn-woo-admin.php:364
+#: includes/class-snn-woo-admin.php:370
 msgid "Status"
 msgstr ""
 
@@ -1244,7 +1245,7 @@ msgstr ""
 #: includes/class-snn-events-admin.php:1147
 #: includes/class-snn-mailer.php:218
 #: includes/class-snn-settings.php:108
-#: includes/class-snn-woo-admin.php:406
+#: includes/class-snn-woo-admin.php:412
 msgid "Name"
 msgstr ""
 
@@ -1497,8 +1498,8 @@ msgstr ""
 #: includes/class-snn-events-admin.php:500
 #: includes/class-snn-settings.php:259
 #: includes/class-snn-settings.php:592
-#: includes/class-snn-woo-admin.php:390
-#: includes/class-snn-woo-admin.php:427
+#: includes/class-snn-woo-admin.php:396
+#: includes/class-snn-woo-admin.php:433
 msgid "Save"
 msgstr ""
 
@@ -2078,7 +2079,7 @@ msgstr ""
 
 #: includes/class-snn-events-admin.php:884
 #: includes/class-snn-events-admin.php:1133
-#: includes/class-snn-woo-admin.php:451
+#: includes/class-snn-woo-admin.php:457
 msgid "That event no longer exists."
 msgstr ""
 
@@ -2179,8 +2180,8 @@ msgstr ""
 #: includes/class-snn-events-admin.php:1017
 #: includes/class-snn-settings.php:269
 #: includes/class-snn-settings.php:605
-#: includes/class-snn-woo-admin.php:494
-#: includes/class-snn-woo-admin.php:593
+#: includes/class-snn-woo-admin.php:500
+#: includes/class-snn-woo-admin.php:599
 msgid "Saved."
 msgstr ""
 
@@ -2474,8 +2475,8 @@ msgid "Thanks! We'll review your request and email you soon."
 msgstr ""
 
 #: includes/class-snn-forms.php:92
-#: includes/class-snn-woo.php:271
-#: includes/class-snn-woo.php:992
+#: includes/class-snn-woo.php:280
+#: includes/class-snn-woo.php:1113
 msgid "Sorry, this event is fully booked."
 msgstr ""
 
@@ -2488,7 +2489,7 @@ msgid "Full name"
 msgstr ""
 
 #: includes/class-snn-forms.php:457
-#: includes/class-snn-woo.php:273
+#: includes/class-snn-woo.php:282
 #, php-format
 msgid "%d spot left"
 msgid_plural "%d spots left"
@@ -2821,12 +2822,12 @@ msgid "Cancelled tickets are not emailed."
 msgstr ""
 
 #: includes/class-snn-mailer.php:857
-#: includes/class-snn-texts.php:65
+#: includes/class-snn-texts.php:67
 msgid "Manage your tickets"
 msgstr ""
 
 #: includes/class-snn-mailer.php:864
-#: includes/class-snn-texts.php:66
+#: includes/class-snn-texts.php:68
 msgid "Claim my ticket"
 msgstr ""
 
@@ -4037,82 +4038,186 @@ msgid "Taken back. The link you sent no longer works."
 msgstr ""
 
 #: includes/class-snn-texts.php:65
-msgid "Manage button in emails"
+msgid "Give it away button"
+msgstr ""
+
+#: includes/class-snn-texts.php:65
+msgid "Give it away"
 msgstr ""
 
 #: includes/class-snn-texts.php:66
+msgid "After giving away"
+msgstr ""
+
+#: includes/class-snn-texts.php:66
+msgid "This ticket now has a link to pass on. It still works for you until someone claims it."
+msgstr ""
+
+#: includes/class-snn-texts.php:67
+msgid "Manage button in emails"
+msgstr ""
+
+#: includes/class-snn-texts.php:68
 msgid "Claim button in the gift email"
 msgstr ""
 
-#: includes/class-snn-texts.php:70
-msgid "Shop pages"
+#: includes/class-snn-texts.php:69
+msgid "Claim buttons, when several tickets are given"
 msgstr ""
 
-#: includes/class-snn-texts.php:71
-msgid "The product page of a ticket, and the ticket list on the event page."
+#: includes/class-snn-texts.php:69
+msgid "Claim ticket {n}"
 msgstr ""
 
 #: includes/class-snn-texts.php:73
-msgid "\"When\" label"
+msgid "Shop pages"
 msgstr ""
 
 #: includes/class-snn-texts.php:74
-msgid "\"Where\" label"
-msgstr ""
-
-#: includes/class-snn-texts.php:74
-msgid "Where"
-msgstr ""
-
-#: includes/class-snn-texts.php:75
-msgid "Above the guest details"
-msgstr ""
-
-#: includes/class-snn-texts.php:75
-msgid "Who is coming? Each ticket is emailed to the person named on it."
+msgid "The product page of a ticket, and the ticket list on the event page."
 msgstr ""
 
 #: includes/class-snn-texts.php:76
-msgid "Each guest block"
+msgid "Me-or-gift question"
 msgstr ""
 
 #: includes/class-snn-texts.php:76
-msgid "Ticket {n}"
+msgid "Who are these tickets for?"
 msgstr ""
 
 #: includes/class-snn-texts.php:77
-msgid "Shop button for tickets with guest details"
+msgid "Choice: for me"
 msgstr ""
 
 #: includes/class-snn-texts.php:77
-msgid "Choose tickets"
+msgid "For me"
 msgstr ""
 
 #: includes/class-snn-texts.php:78
+msgid "Hint under \"for me\""
+msgstr ""
+
+#: includes/class-snn-texts.php:78
+msgid "The first ticket is yours. Any others come with a link to pass on."
+msgstr ""
+
+#: includes/class-snn-texts.php:79
+msgid "Choice: a gift"
+msgstr ""
+
+#: includes/class-snn-texts.php:79
+msgid "It's a gift"
+msgstr ""
+
+#: includes/class-snn-texts.php:80
+msgid "Hint under \"a gift\""
+msgstr ""
+
+#: includes/class-snn-texts.php:80
+msgid "Every ticket comes with a link to pass on. Nothing is made out to you."
+msgstr ""
+
+#: includes/class-snn-texts.php:81
+msgid "Gift email box"
+msgstr ""
+
+#: includes/class-snn-texts.php:81
+msgid "Their email (optional)"
+msgstr ""
+
+#: includes/class-snn-texts.php:82
+msgid "Hint under the gift email"
+msgstr ""
+
+#: includes/class-snn-texts.php:82
+msgid "We email them the tickets once you've paid. Leave it empty to send them yourself."
+msgstr ""
+
+#: includes/class-snn-texts.php:83
+msgid "Cart: gift label"
+msgstr ""
+
+#: includes/class-snn-texts.php:83
+msgid "Gift"
+msgstr ""
+
+#: includes/class-snn-texts.php:84
+msgid "Cart: gift with an address"
+msgstr ""
+
+#: includes/class-snn-texts.php:84
+msgid "The tickets go to {email} after payment"
+msgstr ""
+
+#: includes/class-snn-texts.php:85
+msgid "Cart: gift without an address"
+msgstr ""
+
+#: includes/class-snn-texts.php:85
+msgid "You get a link to pass on"
+msgstr ""
+
+#: includes/class-snn-texts.php:86
+msgid "\"When\" label"
+msgstr ""
+
+#: includes/class-snn-texts.php:87
+msgid "\"Where\" label"
+msgstr ""
+
+#: includes/class-snn-texts.php:87
+msgid "Where"
+msgstr ""
+
+#: includes/class-snn-texts.php:88
+msgid "Above the guest details"
+msgstr ""
+
+#: includes/class-snn-texts.php:88
+msgid "Who is coming? Each ticket is emailed to the person named on it."
+msgstr ""
+
+#: includes/class-snn-texts.php:89
+msgid "Each guest block"
+msgstr ""
+
+#: includes/class-snn-texts.php:89
+msgid "Ticket {n}"
+msgstr ""
+
+#: includes/class-snn-texts.php:90
+msgid "Shop button for tickets with guest details"
+msgstr ""
+
+#: includes/class-snn-texts.php:90
+msgid "Choose tickets"
+msgstr ""
+
+#: includes/class-snn-texts.php:91
 msgid "Event page: heading"
 msgstr ""
 
-#: includes/class-snn-texts.php:79
+#: includes/class-snn-texts.php:92
 msgid "Event page: Buy button"
 msgstr ""
 
-#: includes/class-snn-texts.php:79
+#: includes/class-snn-texts.php:92
 msgid "Buy"
 msgstr ""
 
-#: includes/class-snn-texts.php:80
+#: includes/class-snn-texts.php:93
 msgid "Event page: Choose button"
 msgstr ""
 
-#: includes/class-snn-texts.php:80
+#: includes/class-snn-texts.php:93
 msgid "Choose"
 msgstr ""
 
-#: includes/class-snn-texts.php:81
+#: includes/class-snn-texts.php:94
 msgid "Event page: sold out"
 msgstr ""
 
-#: includes/class-snn-texts.php:81
+#: includes/class-snn-texts.php:94
 msgid "Sold out"
 msgstr ""
 
@@ -4374,303 +4479,311 @@ msgstr ""
 msgid "Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:308
+#: includes/class-snn-woo-admin.php:314
 msgid "Tickets are issued when the order is paid."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:322
+#: includes/class-snn-woo-admin.php:328
 #, php-format
 msgid "Order #%s"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:352
+#: includes/class-snn-woo-admin.php:358
 msgid "No way to pay is switched on yet."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:353
+#: includes/class-snn-woo-admin.php:359
 msgid "People can add tickets to their cart but cannot check out."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:354
+#: includes/class-snn-woo-admin.php:360
 msgid "Set up payments"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:358
+#: includes/class-snn-woo-admin.php:364
 msgid "Ticket types"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:359
+#: includes/class-snn-woo-admin.php:365
 msgid "Each ticket type is a WooCommerce product. They are listed on the event page with a Buy button; once paid, the tickets appear under People and are emailed like any other ticket."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:361
+#: includes/class-snn-woo-admin.php:367
 msgid "Nothing for sale yet. Add a ticket type below."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:364
+#: includes/class-snn-woo-admin.php:370
 msgid "Ticket type"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:364
-#: includes/class-snn-woo-admin.php:379
+#: includes/class-snn-woo-admin.php:370
+#: includes/class-snn-woo-admin.php:385
 msgid "Price"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:364
+#: includes/class-snn-woo-admin.php:370
 msgid "Quantity"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:364
+#: includes/class-snn-woo-admin.php:370
 msgid "Sold"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:373
+#: includes/class-snn-woo-admin.php:379
 msgid "Has options"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:374
+#: includes/class-snn-woo-admin.php:380
 #, php-format
 msgid "Admits %d"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:375
+#: includes/class-snn-woo-admin.php:381
 msgid "Asks attendee details"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:376
+#: includes/class-snn-woo-admin.php:382
 msgid "Stays with the buyer"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:380
+#: includes/class-snn-woo-admin.php:386
 msgid "Quantity left"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:385
+#: includes/class-snn-woo-admin.php:391
 msgid "On sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:385
+#: includes/class-snn-woo-admin.php:391
 msgid "Not on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:391
+#: includes/class-snn-woo-admin.php:397
 msgid "Stop selling"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:391
+#: includes/class-snn-woo-admin.php:397
 msgid "Put on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:393
+#: includes/class-snn-woo-admin.php:399
 msgid "Edit"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:405
+#: includes/class-snn-woo-admin.php:411
 msgid "Add a ticket type"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:405
+#: includes/class-snn-woo-admin.php:411
 msgid "For example General admission, VIP or Student. For options such as sizes or dates, make a variable product in WooCommerce and tick \"Ticket\"."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:406
+#: includes/class-snn-woo-admin.php:412
 msgid "General admission"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:408
+#: includes/class-snn-woo-admin.php:414
 #, php-format
 msgid "Price (%s)"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:409
+#: includes/class-snn-woo-admin.php:415
 msgid "How many"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:410
+#: includes/class-snn-woo-admin.php:416
 msgid "Admits"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:412
+#: includes/class-snn-woo-admin.php:418
 msgid "Buyers can pass their extra tickets on with a link"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:412
+#: includes/class-snn-woo-admin.php:418
 msgid "(untick for tickets that must stay with the buyer)"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:413
+#: includes/class-snn-woo-admin.php:419
 msgid "Ask for each guest's name and answers when buying"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:413
+#: includes/class-snn-woo-admin.php:419
 msgid "(otherwise the buyer gets the first ticket and passes the others on with a link)"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:414
+#: includes/class-snn-woo-admin.php:420
 msgid "Add and put on sale"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:421
+#: includes/class-snn-woo-admin.php:427
 msgid "Guests"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:421
+#: includes/class-snn-woo-admin.php:427
 msgid "Someone buying several tickets gets the first one, and a link for each of the others to send to their guests. Each guest fills in their own name and gets their own ticket."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:423
+#: includes/class-snn-woo-admin.php:429
 msgid "Tickets need a name to get in"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:423
+#: includes/class-snn-woo-admin.php:429
 msgid "Off: a ticket nobody has claimed still works at the door, for the buyer. On: the scanner refuses it until its guest fills in their name."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:425
+#: includes/class-snn-woo-admin.php:431
 #, php-format
 msgid "%d ticket has no name yet"
 msgid_plural "%d tickets have no name yet"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:435
+#: includes/class-snn-woo-admin.php:441
 #, php-format
 msgid "The whole event has %1$d spots, shared by the shop and the sign-up form. %2$d are taken."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:436
+#: includes/class-snn-woo-admin.php:442
 msgid "The event has no overall spot limit. Each ticket type can still have its own quantity."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:437
+#: includes/class-snn-woo-admin.php:443
 msgid "Change on the Sign-up form tab"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:438
+#: includes/class-snn-woo-admin.php:444
 #, php-format
 msgid "%d spot is held by an order waiting for payment."
 msgid_plural "%d spots are held by orders waiting for payment."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:440
+#: includes/class-snn-woo-admin.php:446
 msgid "Free sign-ups are open too, so people can also get a ticket without paying."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:440
+#: includes/class-snn-woo-admin.php:446
 msgid "Close sign-ups"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:471
+#: includes/class-snn-woo-admin.php:477
 msgid "Give the ticket type a name and a price."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:488
+#: includes/class-snn-woo-admin.php:494
 #, php-format
 msgid "\"%s\" is on sale."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:522
+#: includes/class-snn-woo-admin.php:528
 #, php-format
 msgid "%d without a name"
 msgid_plural "%d without a name"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo-admin.php:523
+#: includes/class-snn-woo-admin.php:529
 #, php-format
 msgid "waiting %s"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:529
+#: includes/class-snn-woo-admin.php:535
 msgid "All tickets"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:530
+#: includes/class-snn-woo-admin.php:536
 msgid "Tickets without a name"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:551
+#: includes/class-snn-woo-admin.php:557
 msgid "Email the buyer their tickets again"
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:567
+#: includes/class-snn-woo-admin.php:573
 msgid "Tickets email sent to the buyer again."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:567
+#: includes/class-snn-woo-admin.php:573
 msgid "No tickets email to send: the buyer has no tickets of their own left in this order."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:574
+#: includes/class-snn-woo-admin.php:580
 msgid "That ticket type no longer exists."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:579
+#: includes/class-snn-woo-admin.php:585
 msgid "Stopped selling. Tickets already sold still work."
 msgstr ""
 
-#: includes/class-snn-woo-admin.php:583
+#: includes/class-snn-woo-admin.php:589
 msgid "Back on sale."
 msgstr ""
 
-#: includes/class-snn-woo.php:367
+#: includes/class-snn-woo.php:427
 #, php-format
 msgid "Ticket %1$d: %2$s"
 msgstr ""
 
-#: includes/class-snn-woo.php:381
+#: includes/class-snn-woo.php:442
+msgid "The gift email address does not look right."
+msgstr ""
+
+#: includes/class-snn-woo.php:451
 msgid "This event is no longer available."
 msgstr ""
 
-#: includes/class-snn-woo.php:394
+#: includes/class-snn-woo.php:464
 #, php-format
 msgid "Please add the attendee details for %s on its page."
 msgstr ""
 
-#: includes/class-snn-woo.php:410
+#: includes/class-snn-woo.php:480
 #, php-format
 msgid "Only %1$d spot is left for %2$s."
 msgid_plural "Only %1$d spots are left for %2$s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo.php:411
+#: includes/class-snn-woo.php:481
 #, php-format
 msgid "%s is fully booked."
 msgstr ""
 
-#: includes/class-snn-woo.php:430
-#: includes/class-snn-woo.php:488
+#: includes/class-snn-woo.php:505
+#: includes/class-snn-woo.php:567
 msgid "Attendees"
 msgstr ""
 
-#: includes/class-snn-woo.php:458
+#: includes/class-snn-woo.php:537
 #, php-format
 msgid "%s needs a name for each ticket. Remove it and add it again from its page."
 msgstr ""
 
-#: includes/class-snn-woo.php:465
+#: includes/class-snn-woo.php:544
 msgid "An event in your cart is no longer available."
 msgstr ""
 
-#: includes/class-snn-woo.php:693
+#: includes/class-snn-woo.php:779
 #, php-format
 msgid "Paid, order #%s"
 msgstr ""
 
-#: includes/class-snn-woo.php:700
+#: includes/class-snn-woo.php:796
 #, php-format
 msgid "%1$d ticket issued for %2$s."
 msgid_plural "%1$d tickets issued for %2$s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-snn-woo.php:843
+#: includes/class-snn-woo.php:929
+msgid "This ticket cannot be passed on."
+msgstr ""
+
+#: includes/class-snn-woo.php:960
 msgid "That did not work. Please try again."
 msgstr ""
 
-#: includes/class-snn-woo.php:847
+#: includes/class-snn-woo.php:964
 msgid "That ticket is not in this order."
 msgstr ""
 
