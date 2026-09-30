@@ -44,6 +44,9 @@ class SNN_T_Woo {
     const ORDER_BUYER_TICKET = '_snn_buyer_ticket';
     const ORDER_UNNAMED      = '_snn_unnamed';
 
+    /** Order meta: [event id => tickets over the limit] when this order's tickets overbooked an event. */
+    const ORDER_OVERSOLD     = '_snn_oversold';
+
     const MANAGE_NONCE = 'snn_manage_';
 
     /** Attendee details checked in add-to-cart validation, used when the item is added. */
@@ -694,6 +697,7 @@ JS
                 $made = array_merge($made, self::sync_item($order, $item, $list_id, $units * $per, (int)$item->get_quantity() * $per));
             }
             if ($made) self::send_order_emails($order, $made);
+            self::check_oversold($order, $made);
             self::refresh_unnamed($order);
             if (!$order->has_status(['pending', 'on-hold', 'checkout-draft'])) self::clear_holds($order);
         } finally {
@@ -796,6 +800,77 @@ JS
         $order->add_order_note(sprintf(_n('%1$d ticket issued for %2$s.', '%1$d tickets issued for %2$s.', $made, 'snn-tickets'),
             $made, SNN_T_Events::get($list_id)->name));
         return $ids;
+    }
+
+    /* ------------------------------------------------------------------
+     * Overbooking
+     * ---------------------------------------------------------------- */
+
+    /**
+     * Tickets an event has beyond its spot limit, or 0. Only active tickets
+     * count: people waiting for approval and unpaid orders are not in yet.
+     */
+    public static function over_limit($list_id) {
+        global $wpdb;
+        $max = SNN_T_Events::spot_limit($list_id);
+        if ($max <= 0) return 0;
+        $active = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND status = 'active'", (int)$list_id));
+        return max(0, $active - $max);
+    }
+
+    /** @return array [event id => tickets over] the order is flagged for */
+    public static function oversold($order) {
+        $v = $order->get_meta(self::ORDER_OVERSOLD);
+        return is_array($v) ? array_map('intval', $v) : [];
+    }
+
+    /**
+     * A paid order can arrive after its spots were resold: a late payment
+     * on an order whose hold ran out, or two buyers at the same moment. The
+     * buyer has paid, so the tickets are issued; the order that went over
+     * is flagged for the shop to sort out, and the flag goes once the event
+     * fits again.
+     *
+     * @param int[] $made tickets issued just now
+     */
+    private static function check_oversold($order, $made) {
+        $flag = self::oversold($order);
+        $new_in = [];
+        foreach ($made as $id) {
+            $t = SNN_T_Tickets::get($id);
+            if ($t) $new_in[(int)$t->list_id] = true;
+        }
+        $lists = array_keys($flag + $new_in);
+        if (!$lists) return;
+
+        $next = [];
+        foreach ($lists as $list_id) {
+            $over = self::over_limit($list_id);
+            if (!$over) continue;
+            if (!isset($flag[$list_id])) {
+                $event = SNN_T_Events::get($list_id);
+                $max   = SNN_T_Events::spot_limit($list_id);
+                $order->add_order_note(sprintf(
+                    __('Overbooked: %1$s now has %2$d tickets for %3$d spots. This order was paid after its spots were taken, so its tickets were issued anyway. Refund it, or make room for the extra guests.', 'snn-tickets'),
+                    $event ? $event->name : '#' . $list_id, $max + $over, $max));
+                do_action('snn_tickets_oversold', $order, (int)$list_id, $over);
+            }
+            $next[$list_id] = $over;
+        }
+        if ($next === $flag) return;
+        if ($next) $order->update_meta_data(self::ORDER_OVERSOLD, $next);
+        else $order->delete_meta_data(self::ORDER_OVERSOLD);
+        $order->save_meta_data();
+    }
+
+    /** Orders flagged as overbooking an event. */
+    public static function oversold_orders($list_id) {
+        $out = [];
+        foreach ((array)wc_get_orders(['limit' => -1, 'meta_query' => [['key' => self::ORDER_OVERSOLD, 'compare' => 'EXISTS']]]) as $o) {
+            if (isset(self::oversold($o)[(int)$list_id])) $out[] = $o;
+        }
+        return $out;
     }
 
     /** The buyer's own ticket for an event, if the order already gave them one. */

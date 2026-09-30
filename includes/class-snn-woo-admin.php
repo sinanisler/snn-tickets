@@ -317,6 +317,13 @@ class SNN_T_Woo_Admin {
         if (!$tickets) {
             echo '<small style="color:#646970">' . esc_html__('Tickets are issued when the order is paid.', 'snn-tickets') . '</small>';
         }
+        $order = $item->get_order();
+        if ($order && isset(SNN_T_Woo::oversold($order)[$list_id])) {
+            $over = SNN_T_Woo::over_limit($list_id);
+            echo '<p style="margin:0 0 6px;color:#b32d2e;font-weight:600">' . esc_html(sprintf(
+                _n('Overbooked: the event is %d ticket over its limit. See the order notes.', 'Overbooked: the event is %d tickets over its limit. See the order notes.', $over, 'snn-tickets'),
+                $over)) . '</p>';
+        }
         foreach ($tickets as $t) {
             $off = $t->status !== 'active';
             echo '<a href="' . esc_url(SNN_T_Admin::event_admin_url((int)$t->list_id, ['person' => 't' . (int)$t->id])) . '" style="display:inline-block;margin:0 6px 4px 0;padding:2px 8px;border-radius:10px;background:' . ($off ? '#f0f0f1' : '#edf7ed') . ';text-decoration:' . ($off ? 'line-through' : 'none') . ';font-family:monospace">'
@@ -438,6 +445,14 @@ class SNN_T_Woo_Admin {
             </div></div>
         </form>
 
+        <?php $over = SNN_T_Woo::over_limit($event->id); if ($over): ?>
+            <div class="snn-hint bad"><p><b><?php echo esc_html(sprintf(_n('Overbooked by %d ticket.', 'Overbooked by %d tickets.', $over, 'snn-tickets'), $over)); ?></b>
+                <?php esc_html_e('An order was paid after its spots were taken, so its tickets were issued anyway. Refund it, or make room for the extra guests.', 'snn-tickets'); ?>
+                <?php foreach (SNN_T_Woo::oversold_orders($event->id) as $o): ?>
+                    <a href="<?php echo esc_url($o->get_edit_order_url()); ?>"><?php echo esc_html(sprintf(__('Order #%s', 'snn-tickets'), $o->get_order_number())); ?></a>
+                <?php endforeach; ?></p></div>
+        <?php endif; ?>
+
         <div class="snn-card">
             <div class="snn-set"><div><h3><?php esc_html_e('Spots', 'snn-tickets'); ?></h3></div><div class="body">
                 <p style="margin:0"><?php
@@ -527,6 +542,7 @@ class SNN_T_Woo_Admin {
         if (!$active) { echo '<span style="color:#a7aaad">–</span>'; return; }
         $open = count(array_filter($active, ['SNN_T_Claims', 'is_open']));
         echo (int)count($active);
+        if (SNN_T_Woo::oversold($order)) echo '<br><small style="color:#b32d2e;font-weight:600">' . esc_html__('Overbooked', 'snn-tickets') . '</small>';
         if ($open) {
             $since = $order->get_date_paid() ?: $order->get_date_created();
             echo '<br><small style="color:#8a5a00;font-weight:600">' . esc_html(sprintf(_n('%d without a name', '%d without a name', $open, 'snn-tickets'), $open)) . '</small>';
@@ -535,22 +551,29 @@ class SNN_T_Woo_Admin {
     }
 
     public static function orders_filter() {
-        $on = !empty($_GET['snn_unnamed']);
+        $on = sanitize_key($_GET['snn_unnamed'] ?? '');
         echo '<select name="snn_unnamed"><option value="">' . esc_html__('All tickets', 'snn-tickets') . '</option>'
-            . '<option value="1"' . selected($on, true, false) . '>' . esc_html__('Tickets without a name', 'snn-tickets') . '</option></select>';
+            . '<option value="1"' . selected($on, '1', false) . '>' . esc_html__('Tickets without a name', 'snn-tickets') . '</option>'
+            . '<option value="over"' . selected($on, 'over', false) . '>' . esc_html__('Overbooked', 'snn-tickets') . '</option></select>';
+    }
+
+    /** The order meta the orders filter looks for, or ''. */
+    private static function filter_key() {
+        $on = sanitize_key($_GET['snn_unnamed'] ?? '');
+        return $on === 'over' ? SNN_T_Woo::ORDER_OVERSOLD : ($on !== '' ? SNN_T_Woo::ORDER_UNNAMED : '');
     }
 
     public static function orders_filter_hpos($args) {
-        if (!empty($_GET['snn_unnamed'])) {
-            $args['meta_query'] = array_merge((array)($args['meta_query'] ?? []), [['key' => SNN_T_Woo::ORDER_UNNAMED, 'compare' => 'EXISTS']]);
+        if ($key = self::filter_key()) {
+            $args['meta_query'] = array_merge((array)($args['meta_query'] ?? []), [['key' => $key, 'compare' => 'EXISTS']]);
         }
         return $args;
     }
 
     public static function orders_filter_legacy($vars) {
         global $typenow;
-        if ($typenow === 'shop_order' && !empty($_GET['snn_unnamed'])) {
-            $vars['meta_query'] = array_merge((array)($vars['meta_query'] ?? []), [['key' => SNN_T_Woo::ORDER_UNNAMED, 'compare' => 'EXISTS']]);
+        if ($typenow === 'shop_order' && ($key = self::filter_key())) {
+            $vars['meta_query'] = array_merge((array)($vars['meta_query'] ?? []), [['key' => $key, 'compare' => 'EXISTS']]);
         }
         return $vars;
     }

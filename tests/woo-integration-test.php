@@ -432,8 +432,24 @@ $oc = t_checkout('late@example.test');
 $oc->payment_complete();
 // the abandoned order is paid after all: oversold?
 $old = t_reload($oa); $old->payment_complete();
-$active = (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND status = 'active'", $ev_c));
-echo "  note: paying an expired hold late gives the event $active active tickets for 3 spots (WooCommerce stock behaves the same way)\n";
+t_check(count(t_tickets($oa->get_id(), 'active')) === 2, 'a late payment still gets its tickets (the buyer has paid)');
+t_check(SNN_T_Woo::over_limit($ev_c) === 1, 'the event is 1 over its limit', 'over ' . SNN_T_Woo::over_limit($ev_c));
+t_check((SNN_T_Woo::oversold(t_reload($oa))[$ev_c] ?? 0) === 1, 'the late order is flagged as overbooking the event');
+t_check(!SNN_T_Woo::oversold(t_reload($oc)) && !SNN_T_Woo::oversold(t_reload($ob)), 'orders paid in time are not flagged');
+$notes = wc_get_order_notes(['order_id' => $oa->get_id()]);
+t_check((bool)array_filter($notes, function ($n) { return strpos($n->content, 'Overbooked') === 0; }), 'the late order gets an "Overbooked" note');
+t_check(count(SNN_T_Woo::oversold_orders($ev_c)) === 1, 'the event lists the one flagged order');
+$filtered = wc_get_orders(['limit' => -1, 'return' => 'ids', 'meta_query' => [['key' => SNN_T_Woo::ORDER_OVERSOLD, 'compare' => 'EXISTS']]]);
+t_check($filtered === [$oa->get_id()], 'the orders list filter finds it');
+$fired = 0; add_action('snn_tickets_oversold', function () use (&$fired) { $fired++; });
+SNN_T_Woo::sync_order($oa->get_id());
+t_check($fired === 0 && count(wc_get_order_notes(['order_id' => $oa->get_id()])) === count($notes), 'resync does not flag or note it again');
+ob_start(); SNN_T_Woo_Admin::orders_column_value('snn_tickets', t_reload($oa)); $col = ob_get_clean();
+t_check(strpos($col, 'Overbooked') !== false, 'orders list column shows "Overbooked"');
+$la = t_item($oa, $ps);
+wc_create_refund(['order_id' => $oa->get_id(), 'amount' => 10, 'line_items' => [$la->get_id() => ['qty' => 1, 'refund_total' => 10]]]);
+t_check(SNN_T_Woo::over_limit($ev_c) === 0, 'refunding the extra ticket brings the event back to its limit');
+t_check(!SNN_T_Woo::oversold(t_reload($oa)), 'and the flag clears');
 // cart check at checkout after spots disappear
 t_fresh_cart();
 $ev_r = t_event('Race', 1);
