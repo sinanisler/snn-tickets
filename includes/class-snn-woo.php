@@ -40,7 +40,7 @@ class SNN_T_Woo {
     /** Order meta: spots an unpaid order holds, per event. */
     const HOLD_PREFIX = '_snn_hold_';
 
-    /** Order meta: the buyer's own ticket, and how many still wait for a name. */
+    /** Order meta: the buyer's own ticket per event, and how many still wait for a name. */
     const ORDER_BUYER_TICKET = '_snn_buyer_ticket';
     const ORDER_UNNAMED      = '_snn_unnamed';
 
@@ -748,9 +748,9 @@ JS
             if (is_array($a)) {
                 $name  = ($a['name'] ?? '') !== '' ? $a['name'] : $buyer['name'];
                 $email = ($a['email'] ?? '') !== '' ? $a['email'] : $buyer['email'];
-            } elseif (!$gift && (!self::buyer_ticket($order) || !$pass)) {
+            } elseif (!$gift && (!self::buyer_ticket($order, $list_id) || !$pass)) {
                 // A ticket type that cannot be passed on stays with the buyer.
-                $name = $buyer['name']; $email = $buyer['email']; $mine = !self::buyer_ticket($order);
+                $name = $buyer['name']; $email = $buyer['email']; $mine = !self::buyer_ticket($order, $list_id);
             } else {
                 $name = ''; $email = $buyer['email']; $open = true;
             }
@@ -771,7 +771,7 @@ JS
             $made++;
             $ids[] = $ticket_id;
             if ($open) SNN_T_Claims::open($ticket_id);
-            if ($mine) { $order->update_meta_data(self::ORDER_BUYER_TICKET, $ticket_id); $order->save_meta_data(); }
+            if ($mine) self::set_buyer_ticket($order, $list_id, $ticket_id);
             if ($sid) {
                 global $wpdb;
                 $wpdb->update(SNN_T_DB::submissions(), [
@@ -798,10 +798,26 @@ JS
         return $ids;
     }
 
-    /** The buyer's own ticket, if the order already gave them one. */
-    private static function buyer_ticket($order) {
-        $id = (int)$order->get_meta(self::ORDER_BUYER_TICKET);
+    /** The buyer's own ticket for an event, if the order already gave them one. */
+    private static function buyer_ticket($order, $list_id) {
+        $map = self::buyer_tickets($order);
+        $id  = (int)($map[(int)$list_id] ?? 0);
         return $id && SNN_T_Tickets::get($id) ? $id : 0;
+    }
+
+    /** [event id => ticket id]. Older orders kept a single ticket id. */
+    private static function buyer_tickets($order) {
+        $v = $order->get_meta(self::ORDER_BUYER_TICKET);
+        if (is_array($v)) return array_map('intval', $v);
+        $t = (int)$v ? SNN_T_Tickets::get((int)$v) : null;
+        return $t ? [(int)$t->list_id => (int)$t->id] : [];
+    }
+
+    private static function set_buyer_ticket($order, $list_id, $ticket_id) {
+        $map = self::buyer_tickets($order);
+        $map[(int)$list_id] = (int)$ticket_id;
+        $order->update_meta_data(self::ORDER_BUYER_TICKET, $map);
+        $order->save_meta_data();
     }
 
     public static function buyer_email($order) {
@@ -1049,10 +1065,26 @@ JS
         }
     }
 
-    /** A trashed or deleted order's tickets stop working at the door. */
+    /**
+     * A trashed or deleted order's tickets stop working at the door. They
+     * are noted as the order's own cancellations, so restoring the order
+     * from the trash brings them back.
+     */
     public static function cancel_order($order_id) {
+        $order = wc_get_order($order_id);
+        $off   = [];
         foreach (self::order_tickets($order_id) as $t) {
-            if ($t->status === 'active') SNN_T_Tickets::set_status((int)$t->id, 'revoked');
+            if ($t->status !== 'active') continue;
+            SNN_T_Tickets::set_status((int)$t->id, 'revoked');
+            $off[(int)$t->order_item_id][] = (int)$t->id;
+        }
+        if (!$order) return;
+        foreach ($off as $item_id => $ids) {
+            $item = $order->get_item($item_id);
+            if (!$item) continue;
+            $auto = array_map('intval', (array)$item->get_meta(self::ITEM_AUTO_OFF));
+            $item->update_meta_data(self::ITEM_AUTO_OFF, array_values(array_unique(array_merge($auto, $ids))));
+            $item->save_meta_data();
         }
     }
 
