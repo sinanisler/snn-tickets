@@ -16,7 +16,11 @@ class SNN_T_Mailer {
     const BATCH_SIZE_OPTION = 'snn_tickets_mailer_batch_size';
     const CRON_HOOK         = 'snn_tickets_process_queue';
     const QR_CID            = 'snn-ticket-qr';
-    const MAX_ATTEMPTS      = 3;
+    const MAX_ATTEMPTS      = 4;
+    /** Seconds to wait before the 2nd, 3rd and 4th try. */
+    const RETRY_DELAYS      = [60, 600, 3600];
+    /** A row still 'sending' after this many seconds belongs to a worker that died. */
+    const STALE_AFTER       = 600;
 
     /** State for the message currently being handed to PHPMailer. */
     private static $inline_qr_path = null;
@@ -560,6 +564,16 @@ class SNN_T_Mailer {
         $limit = self::batch_size();
         $now   = current_time('mysql');
 
+        // Recover rows whose worker died mid-send (timeout, fatal error).
+        // scheduled_at holds the claim time while a row is 'sending'.
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$queue}
+             SET status = IF(attempts >= %d, 'failed', 'pending'), last_error = %s
+             WHERE status = 'sending' AND scheduled_at < %s",
+            self::MAX_ATTEMPTS, 'Sending was interrupted before it finished',
+            date('Y-m-d H:i:s', current_time('timestamp') - self::STALE_AFTER)
+        ));
+
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$queue}
              WHERE status = 'pending' AND scheduled_at <= %s AND attempts < %d
@@ -572,9 +586,9 @@ class SNN_T_Mailer {
         foreach ($rows as $row) {
             // Claim it. If another worker got there first, skip.
             $claimed = $wpdb->query($wpdb->prepare(
-                "UPDATE {$queue} SET status = 'sending', attempts = attempts + 1
+                "UPDATE {$queue} SET status = 'sending', attempts = attempts + 1, scheduled_at = %s
                  WHERE id = %d AND status = 'pending'",
-                $row->id
+                current_time('mysql'), $row->id
             ));
             if (!$claimed) continue;
 
@@ -589,10 +603,14 @@ class SNN_T_Mailer {
                 $sent++;
             } else {
                 $attempts = (int)$row->attempts + 1;
+                // Back off, so a short mail-server outage does not burn every try.
+                $delays = self::RETRY_DELAYS;
+                $delay  = $delays[min($attempts, count($delays)) - 1];
                 $wpdb->update($queue, [
-                    'status'     => $attempts >= self::MAX_ATTEMPTS ? 'failed' : 'pending',
-                    'last_error' => is_string($result) ? $result : 'Unknown send error',
-                ], ['id' => $row->id], ['%s', '%s'], ['%d']);
+                    'status'       => $attempts >= self::MAX_ATTEMPTS ? 'failed' : 'pending',
+                    'last_error'   => is_string($result) ? $result : 'Unknown send error',
+                    'scheduled_at' => date('Y-m-d H:i:s', current_time('timestamp') + $delay),
+                ], ['id' => $row->id], ['%s', '%s', '%s'], ['%d']);
                 $failed++;
             }
         }
@@ -825,8 +843,13 @@ class SNN_T_Mailer {
     public static function retry_failed($id = 0) {
         global $wpdb;
         $queue = SNN_T_DB::queue();
-        $sql = "UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL WHERE status IN ('failed','sending')";
-        if ($id) $sql = $wpdb->prepare($sql . ' AND id = %d', (int)$id);
+        // The bulk retry leaves 'sending' rows alone: one may be going out
+        // right now, and stale ones are recovered by process_queue().
+        $sql = $wpdb->prepare(
+            "UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL, scheduled_at = %s WHERE status ",
+            current_time('mysql')
+        );
+        $sql .= $id ? $wpdb->prepare("IN ('failed','sending') AND id = %d", (int)$id) : "= 'failed'";
         return (int)$wpdb->query($sql);
     }
 
