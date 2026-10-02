@@ -994,9 +994,11 @@ class SNN_T_Mailer {
     public static function retry_failed($id = 0) {
         global $wpdb;
         $queue = SNN_T_DB::queue();
-        // A retry by hand goes now, not after the automatic back-off.
-        $sql = $wpdb->prepare("UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL, scheduled_at = %s WHERE status IN ('failed','sending')", current_time('mysql'));
-        if ($id) $sql .= $wpdb->prepare(' AND id = %d', (int)$id);
+        // A retry by hand goes now, not after the automatic back-off. The
+        // bulk retry leaves 'sending' rows alone: one may be going out right
+        // now, and stuck ones are rescued by housekeeping().
+        $sql = $wpdb->prepare("UPDATE {$queue} SET status = 'pending', attempts = 0, last_error = NULL, scheduled_at = %s WHERE status ", current_time('mysql'));
+        $sql .= $id ? $wpdb->prepare("IN ('failed','sending') AND id = %d", (int)$id) : "= 'failed'";
         $n = (int)$wpdb->query($sql);
         if ($n) self::send_soon();
         return $n;
