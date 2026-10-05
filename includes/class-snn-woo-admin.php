@@ -182,26 +182,33 @@ class SNN_T_Woo_Admin {
                         <span class="description"><?php esc_html_e('For the whole event, every ticket type together.', 'snn-tickets'); ?></span>
                     </p>
                     <?php
+                    woocommerce_wp_checkbox([
+                        'id'          => 'snn_multi',
+                        'label'       => __('Group ticket', 'snn-tickets'),
+                        'value'       => $per > 1 ? 'yes' : 'no',
+                        'description' => __('One purchase covers several people, such as a couples ticket or a family pass. Each person gets their own ticket.', 'snn-tickets'),
+                    ]);
                     woocommerce_wp_text_input([
                         'id'                => SNN_T_Woo::META_PER,
-                        'label'             => __('People per purchase', 'snn-tickets'),
+                        'label'             => __('People per ticket', 'snn-tickets'),
                         'type'              => 'number',
                         'value'             => $per,
+                        'wrapper_class'     => 'snn-multi-row',
                         'custom_attributes' => ['min' => 1, 'max' => 50, 'step' => 1],
-                        'description'       => __('2 for a couples ticket, 4 for a family pass. Each person gets their own ticket.', 'snn-tickets'),
+                        'description'       => __('2 for a couples ticket, 4 for a family pass.', 'snn-tickets'),
                     ]);
                     woocommerce_wp_checkbox([
                         'id'          => SNN_T_Woo::META_LIMIT,
                         'label'       => __('Limit per order', 'snn-tickets'),
                         'value'       => $limit ? 'yes' : 'no',
-                        'description' => __('Set the fewest and the most a buyer can take in one order. Untick to let them buy as many as they like.', 'snn-tickets'),
+                        'description' => __('Limit how many of this ticket one buyer can add to the cart. Untick for no limit.', 'snn-tickets'),
                     ]);
                     ?>
                     <p class="form-field snn-limit-row" <?php echo $limit ? '' : 'hidden'; ?>>
-                        <label for="snn_min_qty"><?php esc_html_e('Fewest / most', 'snn-tickets'); ?></label>
+                        <label for="snn_min_qty"><?php esc_html_e('Min / max in cart', 'snn-tickets'); ?></label>
                         <input type="number" min="1" id="snn_min_qty" name="<?php echo esc_attr(SNN_T_Woo::META_MIN); ?>" value="<?php echo esc_attr($lo); ?>" style="width:80px;margin-right:8px" aria-label="<?php esc_attr_e('Fewest per order', 'snn-tickets'); ?>">
                         <input type="number" min="0" id="snn_max_qty" name="<?php echo esc_attr(SNN_T_Woo::META_MAX); ?>" value="<?php echo $hi ? esc_attr($hi) : ''; ?>" placeholder="<?php esc_attr_e('No maximum', 'snn-tickets'); ?>" style="width:110px" aria-label="<?php esc_attr_e('Most per order', 'snn-tickets'); ?>">
-                        <span class="description"><?php esc_html_e('Counts units of this product, not people. A couples ticket counts as 1.', 'snn-tickets'); ?></span>
+                        <span class="description"><?php esc_html_e('Counts tickets bought, not people. For example, max 1 stops a buyer taking 2 of this ticket.', 'snn-tickets'); ?></span>
                     </p>
                     <p class="form-field">
                         <label for="snn_sale_from_date"><?php esc_html_e('Sales open', 'snn-tickets'); ?></label>
@@ -272,6 +279,10 @@ class SNN_T_Woo_Admin {
                 $('.<?php echo esc_js(SNN_T_Woo::META_PASS); ?>_field').prop('hidden', ask);
                 $('.<?php echo esc_js(SNN_T_Woo::META_GIFT); ?>_field').prop('hidden', ask || !pass.is(':checked')).css('padding-left', '24px');
             }
+            var multi = $('#snn_multi');
+            function multiRow(){ $('.snn-multi-row').prop('hidden', !multi.is(':checked')); }
+            multi.on('change', multiRow);
+            multiRow();
             $('#<?php echo esc_js(SNN_T_Woo::META_LIMIT); ?>').on('change', function(){ panel.find('.snn-limit-row').prop('hidden', !this.checked); });
             $('#<?php echo esc_js(SNN_T_Woo::META_ASK); ?>, #<?php echo esc_js(SNN_T_Woo::META_PASS); ?>').on('change', deps);
             deps();
@@ -330,7 +341,9 @@ class SNN_T_Woo_Admin {
         }
 
         if (isset($_POST[SNN_T_Woo::META_PER])) {
-            $product->update_meta_data(SNN_T_Woo::META_PER, max(1, min(50, absint(wp_unslash($_POST[SNN_T_Woo::META_PER])))));
+            // Unticked means one person per ticket, whatever the hidden number says.
+            $per = isset($_POST['snn_multi']) ? max(1, min(50, absint(wp_unslash($_POST[SNN_T_Woo::META_PER])))) : 1;
+            $product->update_meta_data(SNN_T_Woo::META_PER, $per);
         }
         $product->update_meta_data(SNN_T_Woo::META_ASK, isset($_POST[SNN_T_Woo::META_ASK]) ? 'yes' : 'no');
         // Only the Tickets tab posts this box, so a save from elsewhere keeps the setting.
