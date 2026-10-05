@@ -2,7 +2,7 @@
 /*
     Plugin Name: SNN Tickets
     Description: Event tickets with server-side QR codes: a guided event setup, sign-up forms with automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner.
-    Version: 0.29
+    Version: 0.30
     Requires PHP: 8.1
     Author: sinanisler
     Author URI: https://sinanisler.com/
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
 define('SNN_TICKETS_FILE', __FILE__);
 define('SNN_TICKETS_DIR', plugin_dir_path(__FILE__));
 define('SNN_TICKETS_URL', plugin_dir_url(__FILE__));
-define('SNN_TICKETS_VERSION', '0.29');
+define('SNN_TICKETS_VERSION', '0.30');
 
 foreach ([
     'db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms', 'submissions',
