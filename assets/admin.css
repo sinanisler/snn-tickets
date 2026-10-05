@@ -50,6 +50,7 @@
 .snn-field small{color:#646970;font-size:12.5px;font-weight:400}
 .snn-field input[type=text],.snn-field input[type=email],.snn-field input[type=url],.snn-field input[type=number],.snn-field input[type=date],.snn-field input[type=time],.snn-field input[type=password],.snn-field select,.snn-field textarea,.snn-input{width:100%;max-width:none}
 .snn-check{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.snn-check[hidden]{display:none}
 .snn-check input{margin:2px 0 0!important}
 .snn-switch{display:inline-flex;gap:10px;align-items:center;cursor:pointer;position:relative}
 .snn-switch input{position:absolute;opacity:0;pointer-events:none}
