@@ -183,16 +183,22 @@ class SNN_T_Woo_Admin {
                         'description'       => __('2 for a couples ticket, 4 for a family pass. Each person gets their own ticket.', 'snn-tickets'),
                     ]);
                     woocommerce_wp_checkbox([
+                        'id'          => SNN_T_Woo::META_ASK,
+                        'label'       => __('Guest details', 'snn-tickets'),
+                        'value'       => $ask ? 'yes' : 'no',
+                        'description' => __("Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name.", 'snn-tickets'),
+                    ]);
+                    woocommerce_wp_checkbox([
                         'id'          => SNN_T_Woo::META_PASS,
                         'label'       => __('Passing on', 'snn-tickets'),
                         'value'       => (!$p || SNN_T_Woo::passes($p)) ? 'yes' : 'no',
                         'description' => __('Buyers can pass their extra tickets on with a link. Untick for tickets that must stay with the buyer, such as named VIP tickets: every ticket is then made out to the buyer.', 'snn-tickets'),
                     ]);
                     woocommerce_wp_checkbox([
-                        'id'          => SNN_T_Woo::META_ASK,
-                        'label'       => __('Guest details', 'snn-tickets'),
-                        'value'       => $ask ? 'yes' : 'no',
-                        'description' => __("Ask each guest's name and email (and the event's sign-up questions) when buying. Otherwise the buyer gets the first ticket and passes the others on with a link; each guest fills in their own name.", 'snn-tickets'),
+                        'id'          => SNN_T_Woo::META_GIFT,
+                        'label'       => __('Gift option', 'snn-tickets'),
+                        'value'       => ($p && SNN_T_Woo::asks_gift($p)) ? 'yes' : 'no',
+                        'description' => __('Show "Who are these tickets for?" on the product page, so buyers can choose "for me" or "a gift".', 'snn-tickets'),
                     ]);
                     ?>
                 </details>
@@ -225,6 +231,15 @@ class SNN_T_Woo_Admin {
                 if (e) panel.find('[data-snn-link]').attr('href', e.url);
                 nudge();
             }
+            // Passing on needs no guest details; the gift option needs passing on.
+            function deps(){
+                var ask = $('#<?php echo esc_js(SNN_T_Woo::META_ASK); ?>').is(':checked');
+                var pass = $('#<?php echo esc_js(SNN_T_Woo::META_PASS); ?>');
+                $('.<?php echo esc_js(SNN_T_Woo::META_PASS); ?>_field').prop('hidden', ask);
+                $('.<?php echo esc_js(SNN_T_Woo::META_GIFT); ?>_field').prop('hidden', ask || !pass.is(':checked')).css('padding-left', '24px');
+            }
+            $('#<?php echo esc_js(SNN_T_Woo::META_ASK); ?>, #<?php echo esc_js(SNN_T_Woo::META_PASS); ?>').on('change', deps);
+            deps();
             function nudge(){ panel.find('[data-snn-nodate]').prop('hidden', $('#snn_ev_date').val() !== ''); }
             $('#snn_ev_date').on('input change', nudge);
             box.on('change', function(){
@@ -284,7 +299,10 @@ class SNN_T_Woo_Admin {
         }
         $product->update_meta_data(SNN_T_Woo::META_ASK, isset($_POST[SNN_T_Woo::META_ASK]) ? 'yes' : 'no');
         // Only the Tickets tab posts this box, so a save from elsewhere keeps the setting.
-        if (isset($_POST['snn_ev'])) $product->update_meta_data(SNN_T_Woo::META_PASS, isset($_POST[SNN_T_Woo::META_PASS]) ? 'yes' : 'no');
+        if (isset($_POST['snn_ev'])) {
+            $product->update_meta_data(SNN_T_Woo::META_PASS, isset($_POST[SNN_T_Woo::META_PASS]) ? 'yes' : 'no');
+            $product->update_meta_data(SNN_T_Woo::META_GIFT, isset($_POST[SNN_T_Woo::META_GIFT]) ? 'yes' : 'no');
+        }
         // Tickets never ship.
         if ($on && $product->is_type('simple')) $product->set_virtual(true);
     }
@@ -427,6 +445,7 @@ class SNN_T_Woo_Admin {
                     <label class="snn-field"><span><?php esc_html_e('Admits', 'snn-tickets'); ?></span><input type="number" min="1" max="50" name="per" value="1"></label>
                 </div>
                 <label class="snn-check"><input type="checkbox" name="pass" value="1" checked> <span><?php esc_html_e('Buyers can pass their extra tickets on with a link', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(untick for tickets that must stay with the buyer)', 'snn-tickets'); ?></span></span></label>
+                <label class="snn-check"><input type="checkbox" name="gift" value="1"> <span><?php esc_html_e('Ask buyers "Who are these tickets for?"', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(for me or a gift)', 'snn-tickets'); ?></span></span></label>
                 <label class="snn-check"><input type="checkbox" name="ask" value="1"> <span><?php esc_html_e('Ask for each guest\'s name and answers when buying', 'snn-tickets'); ?> <span class="snn-muted snn-small"><?php esc_html_e('(otherwise the buyer gets the first ticket and passes the others on with a link)', 'snn-tickets'); ?></span></span></label>
                 <div><button class="button button-primary"><?php esc_html_e('Add and put on sale', 'snn-tickets'); ?></button></div>
             </div></div>
@@ -508,6 +527,7 @@ class SNN_T_Woo_Admin {
         $p->update_meta_data(SNN_T_Woo::META_PER, max(1, min(50, (int)($in['per'] ?? 1))));
         $p->update_meta_data(SNN_T_Woo::META_ASK, !empty($in['ask']) ? 'yes' : 'no');
         $p->update_meta_data(SNN_T_Woo::META_PASS, !empty($in['pass']) ? 'yes' : 'no');
+        $p->update_meta_data(SNN_T_Woo::META_GIFT, !empty($in['gift']) ? 'yes' : 'no');
         $p->save();
 
         self::back($id, sprintf(__('"%s" is on sale.', 'snn-tickets'), $tier));

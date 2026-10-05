@@ -25,6 +25,7 @@ class SNN_T_Woo {
     const META_PER   = '_snn_per_unit';   // tickets per unit bought
     const META_ASK   = '_snn_attendees';  // 'yes' to ask attendee details
     const META_PASS  = '_snn_transfer';   // 'no' when buyers may not pass tickets on
+    const META_GIFT  = '_snn_gift_ask';   // 'yes' to ask "for me or a gift?" on the product page
 
     /** Order item meta. */
     const ITEM_ATTENDEES = '_snn_attendees';
@@ -156,6 +157,12 @@ class SNN_T_Woo {
     public static function passes($product) {
         $p = self::base_product($product);
         return !$p || $p->get_meta(self::META_PASS) !== 'no';
+    }
+
+    /** Does the product page ask "who are these tickets for?" Off unless switched on. */
+    public static function asks_gift($product) {
+        $p = self::base_product($product);
+        return $p && $p->get_meta(self::META_GIFT) === 'yes';
     }
 
     public static function asks($product) {
@@ -346,7 +353,7 @@ JS
      */
     public static function gift_choice() {
         global $product;
-        if (!$product || !self::is_ticket($product) || self::asks($product) || !self::passes($product)) return;
+        if (!$product || !self::is_ticket($product) || !self::asks_gift($product) || self::asks($product) || !self::passes($product)) return;
         $gift  = isset($_POST['snn_for']) && $_POST['snn_for'] === 'gift';
         $email = isset($_POST['snn_gift_email']) ? sanitize_email(wp_unslash($_POST['snn_gift_email'])) : '';
         echo '<fieldset class="snn-gift" data-snn-gift><legend>' . esc_html(SNN_T_Texts::get('for_question')) . '</legend>';
@@ -439,7 +446,7 @@ JS
         self::$gift = null;
         if (!$passed || !$product || !self::is_ticket($product)) return $passed;
 
-        if (isset($_POST['snn_for']) && $_POST['snn_for'] === 'gift' && self::passes($product) && !self::asks($product)) {
+        if (isset($_POST['snn_for']) && $_POST['snn_for'] === 'gift' && self::asks_gift($product) && self::passes($product) && !self::asks($product)) {
             $to = trim((string)wp_unslash($_POST['snn_gift_email'] ?? ''));
             if ($to !== '' && !is_email(sanitize_email($to))) {
                 wc_add_notice(__('The gift email address does not look right.', 'snn-tickets'), 'error');

@@ -45,6 +45,7 @@ function t_meta($p, $event, $opts) {
     $p->update_meta_data(SNN_T_Woo::META_EVENT, $event);
     $p->update_meta_data(SNN_T_Woo::META_PER, $opts['per'] ?? 1);
     $p->update_meta_data(SNN_T_Woo::META_ASK, !empty($opts['ask']) ? 'yes' : 'no');
+    $p->update_meta_data(SNN_T_Woo::META_GIFT, !empty($opts['gift']) ? 'yes' : 'no');
     $p->update_meta_data(SNN_T_Woo::META_PASS, isset($opts['pass']) && !$opts['pass'] ? 'no' : 'yes');
 }
 
@@ -338,7 +339,11 @@ t_check(!t_queue_to('payer@example.test'), 'the payer (not attending) is not sen
 
 /* ---------------------------------------------------------------- */
 t_section('6. Gifts');
-$pg = t_product('Gala Gift', $ev);
+$pg = t_product('Gala Gift', $ev, ['gift' => true]);
+$pd = t_product('Gala NoGift', $ev);
+t_fresh_cart();
+t_add($pd, 1, ['snn_for' => 'gift', 'snn_gift_email' => 'x@example.test']);
+t_check(empty(array_values(WC()->cart->get_cart())[0]['snn_gift']), 'gift choice ignored while the gift option is off (default)');
 t_fresh_cart();
 t_check(t_add($pg, 1, ['snn_for' => 'gift', 'snn_gift_email' => 'not-an-email']) === false, 'gift with a bad email is rejected');
 t_errors();
@@ -369,7 +374,7 @@ t_check(count($gt) === 1 && $gt[0]->holder === SNN_T_Claims::OPEN, 'gift without
 
 /* ---------------------------------------------------------------- */
 t_section('7. Tickets that cannot be passed on');
-$pn = t_product('Gala Personal', $ev, ['pass' => false]);
+$pn = t_product('Gala Personal', $ev, ['pass' => false, 'gift' => true]);
 t_fresh_cart();
 t_add($pn, 1, ['snn_for' => 'gift', 'snn_gift_email' => 'x@example.test']);
 t_check(empty(array_values(WC()->cart->get_cart())[0]['snn_gift']), 'gift choice ignored for a non-transferable ticket');
