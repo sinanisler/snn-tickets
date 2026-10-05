@@ -92,6 +92,8 @@ class SNN_T_Texts {
                     'buy'             => [__('Event page: Buy button', 'snn-tickets'), __('Buy', 'snn-tickets'), ''],
                     'choose'          => [__('Event page: Choose button', 'snn-tickets'), __('Choose', 'snn-tickets'), ''],
                     'sold_out'        => [__('Event page: sold out', 'snn-tickets'), __('Sold out', 'snn-tickets'), ''],
+                    'sale_soon'       => [__('Ticket sales not open yet', 'snn-tickets'), __('Ticket sales open on {date}.', 'snn-tickets'), '{date}'],
+                    'sale_over'       => [__('Ticket sales ended', 'snn-tickets'), __('Ticket sales have ended.', 'snn-tickets'), ''],
                 ],
             ],
         ];

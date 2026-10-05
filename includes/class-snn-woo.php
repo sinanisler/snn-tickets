@@ -26,6 +26,11 @@ class SNN_T_Woo {
     const META_ASK   = '_snn_attendees';  // 'yes' to ask attendee details
     const META_PASS  = '_snn_transfer';   // 'no' when buyers may not pass tickets on
     const META_GIFT  = '_snn_gift_ask';   // 'yes' to ask "for me or a gift?" on the product page
+    const META_LIMIT = '_snn_limit_on';   // 'yes' to limit how many a buyer can take per order
+    const META_MIN   = '_snn_min_qty';    // fewest per order (units of the product)
+    const META_MAX   = '_snn_max_qty';    // most per order, 0 for no maximum
+    const META_FROM  = '_snn_sale_from';  // sales open at this site-time 'Y-m-d H:i:s', '' for now
+    const META_TO    = '_snn_sale_to';    // sales close at this site-time 'Y-m-d H:i:s', '' for never
 
     /** Order item meta. */
     const ITEM_ATTENDEES = '_snn_attendees';
@@ -87,6 +92,9 @@ class SNN_T_Woo {
         add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'gift_choice'], 5);
         add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'attendee_fields']);
         add_filter('woocommerce_quantity_input_args', [__CLASS__, 'quantity_args'], 10, 2);
+        add_filter('woocommerce_store_api_product_quantity_minimum', [__CLASS__, 'block_quantity_min'], 10, 3);
+        add_filter('woocommerce_is_purchasable', [__CLASS__, 'sale_purchasable'], 10, 2);
+        add_filter('woocommerce_product_is_in_stock', [__CLASS__, 'event_in_stock'], 10, 2);
         add_filter('woocommerce_store_api_product_quantity_maximum', [__CLASS__, 'block_quantity_max'], 10, 3);
         add_filter('woocommerce_product_supports', [__CLASS__, 'no_ajax_add'], 10, 3);
         add_filter('woocommerce_product_add_to_cart_url', [__CLASS__, 'loop_url'], 10, 2);
@@ -168,6 +176,67 @@ class SNN_T_Woo {
     public static function asks($product) {
         $p = self::base_product($product);
         return $p && $p->get_meta(self::META_ASK) === 'yes';
+    }
+
+    /** [min, max] units per order; max 0 means no maximum. Unlimited unless switched on. */
+    public static function order_limits($product) {
+        $p = self::base_product($product);
+        if (!$p || $p->get_meta(self::META_LIMIT) !== 'yes') return [1, 0];
+        $min = max(1, (int)$p->get_meta(self::META_MIN));
+        $max = max(0, (int)$p->get_meta(self::META_MAX));
+        return [$min, $max > 0 ? max($min, $max) : 0];
+    }
+
+    /** Units of this product (all its variations) already in the cart, leaving out one cart line. */
+    public static function units_in_cart($product, $except_key = '') {
+        $base = self::base_product($product);
+        if (!$base || !function_exists('WC') || !WC()->cart) return 0;
+        $n = 0;
+        foreach (WC()->cart->get_cart() as $key => $item) {
+            if ($key === $except_key || empty($item['data'])) continue;
+            $b = self::base_product($item['data']);
+            if ($b && $b->get_id() === $base->get_id()) $n += (int)$item['quantity'];
+        }
+        return $n;
+    }
+
+    /** Timestamp of a stored site-time date, 0 when empty. */
+    private static function stamp($str) {
+        $str = trim((string)$str);
+        if ($str === '') return 0;
+        try { return (new DateTime($str, wp_timezone()))->getTimestamp(); } catch (Exception $e) { return 0; }
+    }
+
+    /** ['open'|'soon'|'over', opening timestamp]: 'soon' is not started yet, 'over' has ended. */
+    public static function sale_state($product) {
+        $p = self::base_product($product);
+        if (!$p) return ['open', 0];
+        $from = self::stamp($p->get_meta(self::META_FROM));
+        $to   = self::stamp($p->get_meta(self::META_TO));
+        $now  = time();
+        if ($from && $now < $from) return ['soon', $from];
+        if ($to && $now >= $to) return ['over', 0];
+        return ['open', 0];
+    }
+
+    /** Why sales are closed right now, or '' while they are open. */
+    public static function sale_message($product) {
+        list($state, $from) = self::sale_state($product);
+        if ($state === 'soon') return SNN_T_Texts::get('sale_soon', ['date' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), $from)]);
+        if ($state === 'over') return SNN_T_Texts::get('sale_over');
+        return '';
+    }
+
+    /** No buying outside the sale window. */
+    public static function sale_purchasable($ok, $product) {
+        if ($ok && $product && self::is_ticket($product) && self::sale_state($product)[0] !== 'open') return false;
+        return $ok;
+    }
+
+    /** A full event shows its tickets as out of stock. */
+    public static function event_in_stock($in, $product) {
+        if ($in && $product && self::is_ticket($product) && self::spots_left(self::event_id($product)) === 0) return false;
+        return $in;
     }
 
     /** Ticket products of an event, drafts included. */
@@ -286,6 +355,8 @@ class SNN_T_Woo {
         echo '<div class="snn-product-event">';
         if ($when !== '')  echo '<p class="snn-product-when"><strong>' . esc_html(SNN_T_Texts::get('when')) . ':</strong> ' . esc_html($when) . '</p>';
         if ($where !== '') echo '<p class="snn-product-where"><strong>' . esc_html(SNN_T_Texts::get('where')) . ':</strong> ' . esc_html($where) . '</p>';
+        $msg = self::sale_message($product);
+        if ($msg !== '') echo '<p class="snn-product-sale" style="font-weight:600">' . esc_html($msg) . '</p>';
         if ($left === 0) {
             echo '<p class="snn-product-full" style="font-weight:600">' . esc_html($form ? $form->settings['full_message'] : __('Sorry, this event is fully booked.', 'snn-tickets')) . '</p>';
         } elseif ($left !== null && $form && !empty($form->settings['show_remaining'])) {
@@ -379,21 +450,38 @@ JS
     /** The quantity box stops at the spots that are left. */
     public static function quantity_args($args, $product) {
         if (!$product || !self::is_ticket($product)) return $args;
+        list($lo, $cap) = self::order_limits($product);
         $left = self::spots_left(self::event_id($product));
-        if ($left === null) return $args;
-        $max = max(1, (int)floor($left / self::per_unit($product)));
-        $args['max_value'] = !empty($args['max_value']) && (int)$args['max_value'] > 0 ? min((int)$args['max_value'], $max) : $max;
+        if ($left !== null) {
+            $max = max(1, (int)floor($left / self::per_unit($product)));
+            $cap = $cap > 0 ? min($cap, $max) : $max;
+        }
+        if ($cap > 0) $args['max_value'] = !empty($args['max_value']) && (int)$args['max_value'] > 0 ? min((int)$args['max_value'], $cap) : $cap;
+        if ($lo > 1) {
+            $args['min_value'] = $lo;
+            if (empty($args['input_value']) || (int)$args['input_value'] < $lo) $args['input_value'] = $lo;
+        }
         return $args;
     }
 
     public static function block_quantity_max($value, $product, $cart_item = null) {
         if (!$product || !self::is_ticket($product)) return $value;
+        $hi = self::order_limits($product)[1];
+        if ($hi > 0) {
+            $other = self::units_in_cart($product, $cart_item['key'] ?? '');
+            $value = min((int)$value > 0 ? (int)$value : PHP_INT_MAX, max(1, $hi - $other));
+        }
         $left = self::spots_left(self::event_id($product));
         if ($left === null) return $value;
         // Room for what this line already holds, plus what is still free.
         $mine = $cart_item ? (int)$cart_item['quantity'] * self::per_unit($product) : 0;
         $max  = max(1, (int)floor(($left - self::in_cart(self::event_id($product)) + $mine) / self::per_unit($product)));
         return min((int)$value, $max);
+    }
+
+    public static function block_quantity_min($value, $product, $cart_item = null) {
+        if (!$product || !self::is_ticket($product)) return $value;
+        return max((int)$value, self::order_limits($product)[0]);
     }
 
     private static function attendee_block($form, $i, $old) {
@@ -462,6 +550,18 @@ JS
             return false;
         }
 
+        $closed = self::sale_message($product);
+        if ($closed !== '') {
+            wc_add_notice($closed, 'error');
+            return false;
+        }
+        list($lo, $hi) = self::order_limits($product);
+        $total = (int)$qty + self::units_in_cart($product);
+        if ($total < $lo || ($hi > 0 && $total > $hi)) {
+            wc_add_notice(self::limit_message($product, $lo, $hi), 'error');
+            return false;
+        }
+
         $need = (int)$qty * self::per_unit($product);
         $left = self::spots_left($list_id);
         if ($left !== null && $need + self::in_cart($list_id) > $left) {
@@ -483,6 +583,13 @@ JS
             self::$attendees = $attendees;
         }
         return $passed;
+    }
+
+    private static function limit_message($product, $lo, $hi) {
+        $name = self::base_product($product)->get_name();
+        if ($hi > 0 && $lo > 1) return sprintf(__('%1$s: you can buy %2$d to %3$d per order.', 'snn-tickets'), $name, $lo, $hi);
+        if ($hi > 0) return sprintf(__('%1$s: you can buy up to %2$d per order.', 'snn-tickets'), $name, $hi);
+        return sprintf(__('%1$s: you need to buy at least %2$d.', 'snn-tickets'), $name, $lo);
     }
 
     private static function left_message($event, $left) {
@@ -541,6 +648,14 @@ JS
             if (empty($item['data']) || !self::is_ticket($item['data'])) continue;
             $list_id = self::event_id($item['data']);
             $events[$list_id] = true;
+            $closed = self::sale_message($item['data']);
+            if ($closed !== '') {
+                wc_add_notice(sprintf('%s: %s', $item['data']->get_name(), $closed), 'error');
+            } else {
+                list($lo, $hi) = self::order_limits($item['data']);
+                $units = self::units_in_cart($item['data']);
+                if ($units < $lo || ($hi > 0 && $units > $hi)) wc_add_notice(self::limit_message($item['data'], $lo, $hi), 'error');
+            }
             if (self::asks($item['data'])) {
                 $need = (int)$item['quantity'] * self::per_unit($item['data']);
                 if (count((array)($item['snn_attendees'] ?? [])) < $need) {
@@ -1229,9 +1344,10 @@ JS
         $out .= '<ul class="snn-tiers">';
         foreach ($products as $p) {
             $buyable = $left !== 0 && $p->is_purchasable() && $p->is_in_stock();
+            $closed  = self::sale_message($p);
             if (!$buyable) {
-                $button = '<span class="snn-tier-out">' . esc_html(SNN_T_Texts::get('sold_out')) . '</span>';
-            } elseif ($p->is_type('simple') && !self::asks($p)) {
+                $button = '<span class="snn-tier-out">' . esc_html($closed !== '' ? $closed : SNN_T_Texts::get('sold_out')) . '</span>';
+            } elseif ($p->is_type('simple') && !self::asks($p) && self::order_limits($p)[0] <= 1) {
                 $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url(add_query_arg('add-to-cart', $p->get_id(), wc_get_cart_url())) . '">' . esc_html(SNN_T_Texts::get('buy')) . '</a>';
             } else {
                 $button = '<a class="snn-tier-buy wp-element-button" href="' . esc_url($p->get_permalink()) . '">' . esc_html(SNN_T_Texts::get('choose')) . '</a>';

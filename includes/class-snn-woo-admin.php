@@ -121,6 +121,14 @@ class SNN_T_Woo_Admin {
         $pick   = $linked ? (string)$linked->id : 'new';
         $per    = $p ? max(1, (int)$p->get_meta(SNN_T_Woo::META_PER)) : 1;
         $ask    = $p && $p->get_meta(SNN_T_Woo::META_ASK) === 'yes';
+        $limit  = $p && $p->get_meta(SNN_T_Woo::META_LIMIT) === 'yes';
+        list($lo, $hi) = $p ? SNN_T_Woo::order_limits($p) : [1, 0];
+        $split  = function ($key) use ($p) {
+            $v = $p ? trim((string)$p->get_meta($key)) : '';
+            return $v === '' ? ['', ''] : [substr($v, 0, 10), substr($v, 11, 5)];
+        };
+        $from   = $split(SNN_T_Woo::META_FROM);
+        $to     = $split(SNN_T_Woo::META_TO);
         $labels = ['up' => __('Upcoming', 'snn-tickets'), 'none' => __('No date yet', 'snn-tickets'), 'past' => __('Past', 'snn-tickets')];
         ?>
         <div id="snn_tickets_data" class="panel woocommerce_options_panel hidden">
@@ -183,6 +191,32 @@ class SNN_T_Woo_Admin {
                         'description'       => __('2 for a couples ticket, 4 for a family pass. Each person gets their own ticket.', 'snn-tickets'),
                     ]);
                     woocommerce_wp_checkbox([
+                        'id'          => SNN_T_Woo::META_LIMIT,
+                        'label'       => __('Limit per order', 'snn-tickets'),
+                        'value'       => $limit ? 'yes' : 'no',
+                        'description' => __('Set the fewest and the most a buyer can take in one order. Untick to let them buy as many as they like.', 'snn-tickets'),
+                    ]);
+                    ?>
+                    <p class="form-field snn-limit-row" <?php echo $limit ? '' : 'hidden'; ?>>
+                        <label for="snn_min_qty"><?php esc_html_e('Fewest / most', 'snn-tickets'); ?></label>
+                        <input type="number" min="1" id="snn_min_qty" name="<?php echo esc_attr(SNN_T_Woo::META_MIN); ?>" value="<?php echo esc_attr($lo); ?>" style="width:80px;margin-right:8px" aria-label="<?php esc_attr_e('Fewest per order', 'snn-tickets'); ?>">
+                        <input type="number" min="0" id="snn_max_qty" name="<?php echo esc_attr(SNN_T_Woo::META_MAX); ?>" value="<?php echo $hi ? esc_attr($hi) : ''; ?>" placeholder="<?php esc_attr_e('No maximum', 'snn-tickets'); ?>" style="width:110px" aria-label="<?php esc_attr_e('Most per order', 'snn-tickets'); ?>">
+                        <span class="description"><?php esc_html_e('Counts units of this product, not people. A couples ticket counts as 1.', 'snn-tickets'); ?></span>
+                    </p>
+                    <p class="form-field">
+                        <label for="snn_sale_from_date"><?php esc_html_e('Sales open', 'snn-tickets'); ?></label>
+                        <input type="date" id="snn_sale_from_date" name="snn_sale[from_date]" value="<?php echo esc_attr($from[0]); ?>" style="width:auto;margin-right:8px" aria-label="<?php esc_attr_e('Sales open date', 'snn-tickets'); ?>">
+                        <input type="time" name="snn_sale[from_time]" value="<?php echo esc_attr($from[1]); ?>" style="width:auto" aria-label="<?php esc_attr_e('Sales open time', 'snn-tickets'); ?>">
+                        <span class="description"><?php esc_html_e('Optional. Until then the ticket cannot be bought. Empty: on sale as soon as it is published.', 'snn-tickets'); ?></span>
+                    </p>
+                    <p class="form-field">
+                        <label for="snn_sale_to_date"><?php esc_html_e('Sales close', 'snn-tickets'); ?></label>
+                        <input type="date" id="snn_sale_to_date" name="snn_sale[to_date]" value="<?php echo esc_attr($to[0]); ?>" style="width:auto;margin-right:8px" aria-label="<?php esc_attr_e('Sales close date', 'snn-tickets'); ?>">
+                        <input type="time" name="snn_sale[to_time]" value="<?php echo esc_attr($to[1]); ?>" style="width:auto" aria-label="<?php esc_attr_e('Sales close time', 'snn-tickets'); ?>">
+                        <span class="description"><?php esc_html_e('Optional. After this the ticket cannot be bought, whatever the event date. Empty: sales stay open.', 'snn-tickets'); ?></span>
+                    </p>
+                    <?php
+                    woocommerce_wp_checkbox([
                         'id'          => SNN_T_Woo::META_ASK,
                         'label'       => __('Guest details', 'snn-tickets'),
                         'value'       => $ask ? 'yes' : 'no',
@@ -238,6 +272,7 @@ class SNN_T_Woo_Admin {
                 $('.<?php echo esc_js(SNN_T_Woo::META_PASS); ?>_field').prop('hidden', ask);
                 $('.<?php echo esc_js(SNN_T_Woo::META_GIFT); ?>_field').prop('hidden', ask || !pass.is(':checked')).css('padding-left', '24px');
             }
+            $('#<?php echo esc_js(SNN_T_Woo::META_LIMIT); ?>').on('change', function(){ panel.find('.snn-limit-row').prop('hidden', !this.checked); });
             $('#<?php echo esc_js(SNN_T_Woo::META_ASK); ?>, #<?php echo esc_js(SNN_T_Woo::META_PASS); ?>').on('change', deps);
             deps();
             function nudge(){ panel.find('[data-snn-nodate]').prop('hidden', $('#snn_ev_date').val() !== ''); }
@@ -300,11 +335,28 @@ class SNN_T_Woo_Admin {
         $product->update_meta_data(SNN_T_Woo::META_ASK, isset($_POST[SNN_T_Woo::META_ASK]) ? 'yes' : 'no');
         // Only the Tickets tab posts this box, so a save from elsewhere keeps the setting.
         if (isset($_POST['snn_ev'])) {
+            $limit = isset($_POST[SNN_T_Woo::META_LIMIT]);
+            $min   = max(1, absint(wp_unslash($_POST[SNN_T_Woo::META_MIN] ?? 1)));
+            $max   = absint(wp_unslash($_POST[SNN_T_Woo::META_MAX] ?? 0));
+            $product->update_meta_data(SNN_T_Woo::META_LIMIT, $limit ? 'yes' : 'no');
+            $product->update_meta_data(SNN_T_Woo::META_MIN, $min);
+            $product->update_meta_data(SNN_T_Woo::META_MAX, $max > 0 ? max($min, $max) : 0);
+            $sale = isset($_POST['snn_sale']) && is_array($_POST['snn_sale']) ? wp_unslash($_POST['snn_sale']) : [];
+            $product->update_meta_data(SNN_T_Woo::META_FROM, self::sale_stamp($sale['from_date'] ?? '', $sale['from_time'] ?? '', '00:00:00'));
+            $product->update_meta_data(SNN_T_Woo::META_TO, self::sale_stamp($sale['to_date'] ?? '', $sale['to_time'] ?? '', '23:59:59'));
             $product->update_meta_data(SNN_T_Woo::META_PASS, isset($_POST[SNN_T_Woo::META_PASS]) ? 'yes' : 'no');
             $product->update_meta_data(SNN_T_Woo::META_GIFT, isset($_POST[SNN_T_Woo::META_GIFT]) ? 'yes' : 'no');
         }
         // Tickets never ship.
         if ($on && $product->is_type('simple')) $product->set_virtual(true);
+    }
+
+    /** A posted date and time as a site-time 'Y-m-d H:i:s', '' when no date was given. */
+    private static function sale_stamp($date, $time, $default_time) {
+        $date = sanitize_text_field((string)$date);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) return '';
+        $time = sanitize_text_field((string)$time);
+        return $date . ' ' . (preg_match('/^\d{2}:\d{2}$/', $time) ? $time . ':00' : $default_time);
     }
 
     /** Set the event-wide spot limit, which lives with its sign-up form. */

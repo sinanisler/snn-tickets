@@ -45,6 +45,11 @@ function t_meta($p, $event, $opts) {
     $p->update_meta_data(SNN_T_Woo::META_EVENT, $event);
     $p->update_meta_data(SNN_T_Woo::META_PER, $opts['per'] ?? 1);
     $p->update_meta_data(SNN_T_Woo::META_ASK, !empty($opts['ask']) ? 'yes' : 'no');
+    $p->update_meta_data(SNN_T_Woo::META_LIMIT, isset($opts['min']) || isset($opts['max']) ? 'yes' : 'no');
+    $p->update_meta_data(SNN_T_Woo::META_MIN, $opts['min'] ?? 1);
+    $p->update_meta_data(SNN_T_Woo::META_MAX, $opts['max'] ?? 0);
+    $p->update_meta_data(SNN_T_Woo::META_FROM, $opts['from'] ?? '');
+    $p->update_meta_data(SNN_T_Woo::META_TO, $opts['to'] ?? '');
     $p->update_meta_data(SNN_T_Woo::META_GIFT, !empty($opts['gift']) ? 'yes' : 'no');
     $p->update_meta_data(SNN_T_Woo::META_PASS, isset($opts['pass']) && !$opts['pass'] ? 'no' : 'yes');
 }
@@ -584,6 +589,40 @@ t_add($pdm, 1);
 SNN_T_Events::delete($ev_d);
 t_check(!wc_get_product($pdm)->is_purchasable(), 'a deleted event\'s product can no longer be bought (WooCommerce drops it from carts)');
 t_check(wc_get_product($pdm)->get_status() === 'draft', 'the deleted event\'s products are unpublished');
+
+/* ---------------------------------------------------------------- */
+t_section('12b. Per-order limits, sale window, full event');
+$evl = t_event('Limits', 5);
+$pl = t_product('Limits Capped', $evl, ['min' => 2, 'max' => 3]);
+t_fresh_cart();
+t_check(t_add($pl, 1) === false, 'below the minimum is refused');
+t_errors();
+t_check(t_add($pl, 2) !== false, 'the minimum is accepted');
+t_check(t_add($pl, 2) === false, 'going over the maximum across add-to-carts is refused');
+t_errors();
+$pu = t_product('Limits Free', $evl);
+t_fresh_cart();
+t_check(t_add($pu, 4) !== false, 'no limit set: any quantity is accepted');
+$tz = wp_timezone();
+$future = (new DateTime('+2 days', $tz))->format('Y-m-d H:i:s');
+$past   = (new DateTime('-2 days', $tz))->format('Y-m-d H:i:s');
+$ps = t_product('Limits Soon', $evl, ['from' => $future]);
+$pe = t_product('Limits Ended', $evl, ['to' => $past]);
+$po = t_product('Limits Window', $evl, ['from' => $past, 'to' => $future]);
+t_fresh_cart();
+t_check(!wc_get_product($ps)->is_purchasable() && t_add($ps, 1) === false, 'sales not open yet: cannot be bought');
+t_errors();
+t_check(!wc_get_product($pe)->is_purchasable() && t_add($pe, 1) === false, 'sales ended: cannot be bought');
+t_errors();
+t_check(wc_get_product($po)->is_purchasable() && t_add($po, 1) !== false, 'inside the window: can be bought');
+$evf = t_event('Full', 1);
+$pf = t_product('Full Seat', $evf);
+t_check(wc_get_product($pf)->is_in_stock(), 'event with room: in stock');
+t_fresh_cart();
+t_add($pf, 1);
+$o = t_checkout('full@example.test', 'Fay', 'Full');
+$o->payment_complete();
+t_check(!wc_get_product($pf)->is_in_stock(), 'full event: its ticket reports out of stock');
 
 /* ---------------------------------------------------------------- */
 t_section('13. Buyer manage page access');
