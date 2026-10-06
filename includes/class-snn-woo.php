@@ -1021,6 +1021,12 @@ JS
         return strtolower((string)$order->get_billing_email());
     }
 
+    /** The buyer's full name from an order id, or '' when there is none. */
+    public static function buyer_name($order_id) {
+        $order = $order_id ? wc_get_order($order_id) : null;
+        return $order ? trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()) : '';
+    }
+
     /* ------------------------------------------------------------------
      * Emails: one per person
      * ---------------------------------------------------------------- */

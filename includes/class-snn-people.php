@@ -40,11 +40,13 @@ class SNN_T_People {
                    t.ticket_code AS code, t.source AS source, t.submission_id AS sid, sd.data AS answers,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status = 'failed') AS failed,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')) AS mailed,
-                   '' AS reason, t.order_id AS oid, t.holder AS holder
+                   '' AS reason, t.order_id AS oid, t.holder AS holder,
+                   (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'order' AND q.status IN ('pending','sending','sent')) AS omine,
+                   (SELECT COUNT(*) FROM {$q} q JOIN {$t} o ON o.id = q.ticket_id WHERE o.order_id = t.order_id AND q.role = 'order' AND q.status IN ('pending','sending','sent')) AS oany
             FROM {$t} t LEFT JOIN {$s} sd ON sd.id = t.submission_id
             WHERE t.list_id = %d
             UNION ALL
-            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0, ''
+            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0, '', 0, 0
             FROM {$s} s JOIN {$f} f ON f.id = s.form_id
             WHERE f.list_id = %d AND (s.ticket_id IS NULL OR s.ticket_id = 0) AND s.status IN ('pending','rejected')
         ", (int)$list_id, (int)$list_id);
@@ -102,6 +104,11 @@ class SNN_T_People {
         $r->oid = (int)($r->oid ?? 0);
         $answers = json_decode((string)$r->answers, true);
         $r->answers = is_array($answers) ? $answers : [];
+        // A shop order with several tickets sends one email to the buyer:
+        // their own ticket, and the links of the ones not named yet.
+        $r->omine = (int)($r->omine ?? 0);
+        $r->oany  = (int)($r->oany ?? 0);
+        $r->note  = '';
 
         if ($r->kind === 's') {
             $r->state = $r->st === 'pending' ? 'waiting' : 'declined';
@@ -115,14 +122,23 @@ class SNN_T_People {
             $r->state = 'linksent';
         } elseif (($r->holder ?? '') === 'open') {
             $r->state = 'unnamed';
+            if ($r->oany) $r->note = __('Link emailed to the buyer with their own ticket', 'snn-tickets');
         } elseif ($r->name === '' && $r->email === '') {
             $r->state = 'blank';
-        } elseif ((int)$r->mailed > 0) {
+        } elseif ((int)$r->mailed > 0 || $r->omine) {
             $r->state = 'sent';
+            if ($r->omine) $r->note = __("Sent in one email with the order's other tickets", 'snn-tickets');
         } else {
             $r->state = 'unsent';
         }
         return $r;
+    }
+
+    /** "Guest of Sinan Isler" for a shop ticket still waiting for its name, or ''. */
+    public static function guest_of($p) {
+        if ($p->kind !== 't' || $p->name !== '' || !$p->oid || !in_array((string)($p->holder ?? ''), ['open', 'sent'], true)) return '';
+        $buyer = SNN_T_Woo::active() ? SNN_T_Woo::buyer_name($p->oid) : '';
+        return $buyer !== '' ? sprintf(__('Guest of %s', 'snn-tickets'), $buyer) : '';
     }
 
     /** state => [label, chip class] */
@@ -309,14 +325,18 @@ class SNN_T_People {
      * Emailing everyone
      * ---------------------------------------------------------------- */
 
-    /** How many would get an email: [unsent, all]. */
+    /**
+     * How many would get an email: [unsent, all]. A ticket not named yet is
+     * left out: its buyer is reached through their own ticket. The shop's
+     * "Your tickets" email counts as the buyer's ticket email.
+     */
     public static function send_counts($list_id) {
         global $wpdb;
         $t = SNN_T_DB::tickets(); $q = SNN_T_DB::queue();
         $row = $wpdb->get_row($wpdb->prepare("
             SELECT COUNT(*) AS all_n,
-                   SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')) THEN 1 ELSE 0 END) AS unsent
-            FROM {$t} t WHERE t.list_id = %d AND t.email <> '' AND t.status = 'active'", (int)$list_id));
+                   SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role IN ('ticket','order') AND q.status IN ('pending','sending','sent')) THEN 1 ELSE 0 END) AS unsent
+            FROM {$t} t WHERE t.list_id = %d AND t.email <> '' AND t.status = 'active' AND t.holder = ''", (int)$list_id));
         return ['unsent' => (int)($row->unsent ?? 0), 'all' => (int)($row->all_n ?? 0)];
     }
 
@@ -324,13 +344,13 @@ class SNN_T_People {
     public static function email_everyone($list_id, $who = 'unsent', $template = '') {
         global $wpdb;
         $tickets = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND email <> '' AND status = 'active'", (int)$list_id));
+            "SELECT * FROM " . SNN_T_DB::tickets() . " WHERE list_id = %d AND email <> '' AND status = 'active' AND holder = ''", (int)$list_id));
         $q = SNN_T_DB::queue();
         $n = 0;
         foreach ((array)$tickets as $ticket) {
             if ($who === 'unsent') {
                 $already = (int)$wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$q} WHERE ticket_id = %d AND role = 'ticket' AND status IN ('pending','sending','sent')", (int)$ticket->id));
+                    "SELECT COUNT(*) FROM {$q} WHERE ticket_id = %d AND role IN ('ticket','order') AND status IN ('pending','sending','sent')", (int)$ticket->id));
                 if ($already) continue;
             }
             if (!is_wp_error(SNN_T_Mailer::queue_ticket($ticket, $template))) $n++;

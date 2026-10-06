@@ -258,12 +258,14 @@ class SNN_T_Events_Admin {
                             else esc_html_e('Nobody yet. Share the sign-up link, or add people yourself.', 'snn-tickets'); ?></td></tr>
                     <?php endif; ?>
                     <?php foreach ($rows as $p):
-                        $open = add_query_arg(['person' => $p->key, 'filter' => $filter, 's' => $search, 'paged' => $paged], $base); ?>
+                        $open  = add_query_arg(['person' => $p->key, 'filter' => $filter, 's' => $search, 'paged' => $paged], $base);
+                        $guest = SNN_T_People::guest_of($p); ?>
                         <tr class="<?php echo $p->state === 'waiting' ? 'waiting' : ''; ?>">
                             <td class="cb"><input type="checkbox" name="ids[]" value="<?php echo esc_attr($p->key); ?>" aria-label="<?php esc_attr_e('Select', 'snn-tickets'); ?>"></td>
-                            <td><div class="who"><a href="<?php echo esc_url($open); ?>"><?php echo esc_html($p->name !== '' ? $p->name : ($p->email !== '' ? $p->email : __('No name yet', 'snn-tickets'))); ?></a>
+                            <td><div class="who"><a href="<?php echo esc_url($open); ?>"><?php echo esc_html($p->name !== '' ? $p->name : ($guest !== '' ? $guest : ($p->email !== '' ? $p->email : __('No name yet', 'snn-tickets')))); ?></a>
                                 <span><?php echo esc_html($p->email !== '' ? $p->email : ($p->code !== '' ? $p->code : '')); ?></span>
                                 <?php if ($p->oid && SNN_T_Woo::active()): ?><span><?php echo SNN_T_Woo_Admin::order_link($p->oid); // escaped inside ?></span><?php endif; ?>
+                                <?php if ($p->note !== ''): ?><span><?php echo esc_html($p->note); ?></span><?php endif; ?>
                                 <?php if ($p->state === 'waiting' && $why): ?><span style="color:#8a5a00"><?php echo esc_html(sprintf(__('Why waiting: %s', 'snn-tickets'), $why)); ?></span><?php endif; ?></div></td>
                             <td><?php echo SNN_T_Admin::state_chip($p->state); ?></td>
                             <td><?php if ($p->vc > 0): ?>
@@ -429,7 +431,7 @@ class SNN_T_Events_Admin {
         <div class="snn-scrim" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Person', 'snn-tickets'); ?>" onclick="if(event.target===this)location.href=<?php echo esc_attr(wp_json_encode($close)); ?>">
             <div class="snn-drawer">
                 <div class="snn-drawer-h">
-                    <div style="flex:1;min-width:0"><h2><?php echo esc_html($p->name !== '' ? $p->name : __('No name yet', 'snn-tickets')); ?></h2><span class="snn-muted snn-small"><?php echo esc_html($p->email); ?></span></div>
+                    <div style="flex:1;min-width:0"><h2><?php echo esc_html($p->name !== '' ? $p->name : (SNN_T_People::guest_of($p) ?: __('No name yet', 'snn-tickets'))); ?></h2><span class="snn-muted snn-small"><?php echo esc_html($p->email); ?></span></div>
                     <?php echo SNN_T_Admin::state_chip($p->state); ?>
                     <a class="snn-x" href="<?php echo esc_url($close); ?>" aria-label="<?php esc_attr_e('Close', 'snn-tickets'); ?>">×</a>
                 </div>
@@ -462,6 +464,7 @@ class SNN_T_Events_Admin {
                         <div class="snn-hint"><p><b><?php echo $ticket->holder === SNN_T_Claims::SENT
                             ? esc_html(sprintf(__('Link sent to %s; they have not filled in their name yet.', 'snn-tickets'), $ticket->claim_email))
                             : esc_html__('This ticket has no name yet. The buyer can pass it on with this link:', 'snn-tickets'); ?></b></p>
+                            <?php if ($p->note !== ''): ?><p class="snn-small"><?php echo esc_html($p->note); ?>.</p><?php endif; ?>
                             <p class="snn-row"><span class="snn-mono snn-small" style="word-break:break-all"><?php echo esc_html(SNN_T_Claims::url($ticket)); ?></span> <?php echo SNN_T_Admin::copy_button(SNN_T_Claims::url($ticket), __('Copy link', 'snn-tickets')); ?></p>
                             <?php if ($ticket->holder === SNN_T_Claims::SENT): ?>
                                 <div class="snn-row"><?php echo $action('linkresend', __('Send the link again', 'snn-tickets')); ?>
