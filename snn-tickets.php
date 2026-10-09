@@ -1,6 +1,6 @@
 <?php
 /*
-    Plugin Name: SNN Tickets
+    Plugin Name: Events & Tickets
     Description: Event tickets with server-side QR codes: a guided event setup, sign-up forms with automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner.
     Version: 0.31
     Requires PHP: 8.1
@@ -102,10 +102,10 @@ class SNN_Tickets_Plugin {
         $waiting = SNN_T_Submissions::counts()['pending'];
         $badge   = $waiting ? ' <span class="awaiting-mod"><span class="pending-count">' . (int)$waiting . '</span></span>' : '';
 
-        add_menu_page(__('Tickets', 'snn-tickets'), __('Tickets', 'snn-tickets') . $badge, $cap, 'snn-tickets',
+        add_menu_page(__('Events & Tickets', 'snn-tickets'), __('Events & Tickets', 'snn-tickets') . $badge, $cap, 'snn-tickets',
             ['SNN_T_Dashboard', 'render'], 'dashicons-tickets-alt', 26);
 
-        add_submenu_page('snn-tickets', __('Tickets', 'snn-tickets'), __('Home', 'snn-tickets'), $cap, 'snn-tickets', ['SNN_T_Dashboard', 'render']);
+        add_submenu_page('snn-tickets', __('Events & Tickets', 'snn-tickets'), __('Home', 'snn-tickets'), $cap, 'snn-tickets', ['SNN_T_Dashboard', 'render']);
         add_submenu_page('snn-tickets', __('Events', 'snn-tickets'), __('Events', 'snn-tickets') . $badge, $cap, 'snn-tickets-events', ['SNN_T_Events_Admin', 'render_page']);
         add_submenu_page('snn-tickets', __('Add New Event', 'snn-tickets'), __('Add New Event', 'snn-tickets'), $cap, 'snn-tickets-new', ['SNN_T_Wizard', 'render']);
         $failed = SNN_T_Mailer::queue_counts()['failed'];
