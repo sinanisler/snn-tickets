@@ -39,10 +39,11 @@ class SNN_T_People {
                    t.validate_count AS vc, t.last_validated AS lv, t.created_at AS created,
                    t.ticket_code AS code, t.source AS source, t.submission_id AS sid, sd.data AS answers,
                    (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status = 'failed') AS failed,
-                   (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent')) AS mailed,
+                   (t.emailed = 'ticket' OR EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'ticket' AND q.status IN ('pending','sending','sent'))) AS mailed,
                    '' AS reason, t.order_id AS oid, t.holder AS holder,
-                   (SELECT COUNT(*) FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'order' AND q.status IN ('pending','sending','sent')) AS omine,
-                   (SELECT COUNT(*) FROM {$q} q JOIN {$t} o ON o.id = q.ticket_id WHERE o.order_id = t.order_id AND q.role = 'order' AND q.status IN ('pending','sending','sent')) AS oany
+                   (t.emailed = 'order' OR EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'order' AND q.status IN ('pending','sending','sent'))) AS omine,
+                   (t.order_id > 0 AND (EXISTS (SELECT 1 FROM {$t} o WHERE o.order_id = t.order_id AND o.emailed = 'order')
+                     OR EXISTS (SELECT 1 FROM {$q} q JOIN {$t} o ON o.id = q.ticket_id WHERE o.order_id = t.order_id AND q.role = 'order' AND q.status IN ('pending','sending','sent')))) AS oany
             FROM {$t} t LEFT JOIN {$s} sd ON sd.id = t.submission_id
             WHERE t.list_id = %d
             UNION ALL
@@ -335,7 +336,7 @@ class SNN_T_People {
         $t = SNN_T_DB::tickets(); $q = SNN_T_DB::queue();
         $row = $wpdb->get_row($wpdb->prepare("
             SELECT COUNT(*) AS all_n,
-                   SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role IN ('ticket','order') AND q.status IN ('pending','sending','sent')) THEN 1 ELSE 0 END) AS unsent
+                   SUM(CASE WHEN t.emailed = '' AND NOT EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role IN ('ticket','order') AND q.status IN ('pending','sending','sent')) THEN 1 ELSE 0 END) AS unsent
             FROM {$t} t WHERE t.list_id = %d AND t.email <> '' AND t.status = 'active' AND t.holder = ''", (int)$list_id));
         return ['unsent' => (int)($row->unsent ?? 0), 'all' => (int)($row->all_n ?? 0)];
     }
@@ -349,6 +350,7 @@ class SNN_T_People {
         $n = 0;
         foreach ((array)$tickets as $ticket) {
             if ($who === 'unsent') {
+                if ((string)($ticket->emailed ?? '') !== '') continue;
                 $already = (int)$wpdb->get_var($wpdb->prepare(
                     "SELECT COUNT(*) FROM {$q} WHERE ticket_id = %d AND role IN ('ticket','order') AND status IN ('pending','sending','sent')", (int)$ticket->id));
                 if ($already) continue;

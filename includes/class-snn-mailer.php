@@ -650,6 +650,19 @@ class SNN_T_Mailer {
         }
     }
 
+    /**
+     * Remember on the ticket that its email went out: the log forgets
+     * (90 days, or cleared by hand), the ticket should not.
+     */
+    public static function mark_emailed($row) {
+        global $wpdb;
+        if (empty($row->ticket_id) || !in_array($row->role, ['ticket', 'order'], true)) return;
+        $wpdb->update(SNN_T_DB::tickets(), [
+            'emailed'    => $row->role,
+            'emailed_at' => current_time('mysql'),
+        ], ['id' => (int)$row->ticket_id], ['%s', '%s'], ['%d']);
+    }
+
     public static function batch_size() {
         $size = (int)get_option(self::BATCH_SIZE_OPTION, 10);
         return max(1, min(200, $size));
@@ -700,6 +713,7 @@ class SNN_T_Mailer {
                     'sent_at'    => current_time('mysql'),
                     'last_error' => null,
                 ], ['id' => $row->id], ['%s', '%s', '%s'], ['%d']);
+                self::mark_emailed($row);
                 $sent++;
             } else {
                 $attempts = (int)$row->attempts + 1;

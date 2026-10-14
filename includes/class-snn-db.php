@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '7';
+    const DB_VERSION        = '8';
 
     public static function lists() {
         global $wpdb;
@@ -87,6 +87,8 @@ class SNN_T_DB {
             claim_key VARCHAR(64) DEFAULT '' NOT NULL,
             claim_email VARCHAR(255) DEFAULT '' NOT NULL,
             claimed_key VARCHAR(64) DEFAULT '' NOT NULL,
+            emailed VARCHAR(10) DEFAULT '' NOT NULL,
+            emailed_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY ticket_code (ticket_code),
@@ -169,7 +171,27 @@ class SNN_T_DB {
         if ($from !== self::DB_VERSION) {
             self::install();
             if ($from !== '' && version_compare($from, '4', '<')) self::migrate_to_4();
+            if ($from !== '' && version_compare($from, '8', '<')) self::migrate_to_8();
         }
+    }
+
+    /**
+     * Version 8 keeps "this ticket was emailed" on the ticket itself, so
+     * clearing the email log no longer turns sent tickets back into unsent
+     * ones. Filled once from whatever the log still holds.
+     */
+    public static function migrate_to_8() {
+        global $wpdb;
+        $tickets = self::tickets();
+        $queue   = self::queue();
+        $wpdb->query("
+            UPDATE {$tickets} t
+            JOIN (SELECT q.ticket_id, q.role, q.sent_at FROM {$queue} q
+                  JOIN (SELECT ticket_id, MAX(id) AS mid FROM {$queue}
+                        WHERE status = 'sent' AND role IN ('ticket','order') AND ticket_id IS NOT NULL
+                        GROUP BY ticket_id) m ON m.mid = q.id) x ON x.ticket_id = t.id
+            SET t.emailed = x.role, t.emailed_at = x.sent_at
+            WHERE t.emailed = ''");
     }
 
     /**
