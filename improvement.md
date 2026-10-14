@@ -1,4 +1,4 @@
-# SNN Tickets: improvement report vs Ticket Tailor
+# SNN Tickets: improvement report vs Ticket Tailor 
 
 **For:** you, deciding what SNN Tickets should build next.
 **Date:** 9 Oct 2026. **Our code:** `main` at 9075d16, clean tree when I started.
