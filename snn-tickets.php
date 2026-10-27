@@ -4,8 +4,8 @@
     Description: Event tickets with server-side QR codes: a guided event setup, sign-up forms with automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner.
     Version: 0.32
     Requires PHP: 8.1
-    Author: sinanisler
-    Author URI: https://sinanisler.com/
+    Author: snn
+    Author URI: https://snn.is/
     Text Domain: snn-tickets
     Domain Path: /languages
 */
