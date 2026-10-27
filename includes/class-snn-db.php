@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '8';
+    const DB_VERSION        = '9';
 
     public static function lists() {
         global $wpdb;
@@ -128,11 +128,13 @@ class SNN_T_DB {
             created_at DATETIME NOT NULL,
             decided_at DATETIME NULL,
             decided_by BIGINT UNSIGNED NULL,
+            placement_code VARCHAR(32) NULL DEFAULT NULL,
             PRIMARY KEY (id),
             KEY form_id (form_id),
             KEY status (status),
             KEY email (email),
-            KEY ticket_id (ticket_id)
+            KEY ticket_id (ticket_id),
+            UNIQUE KEY placement_code (placement_code)
         ) {$charset_collate};");
 
         dbDelta("CREATE TABLE {$queue} (

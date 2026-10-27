@@ -92,9 +92,13 @@ class SNN_T_Forms {
             'full_message'          => __('Sorry, this event is fully booked.', 'snn-tickets'),
             'duplicate_message'     => __("You've already signed up with this email address.", 'snn-tickets'),
             'error_message'         => __('Something went wrong. Please try again.', 'snn-tickets'),
+            'code_invalid_message'  => __('This link is not valid. Please check it, or ask for a new one.', 'snn-tickets'),
+            'code_used_message'     => __('This link has already been used to sign up.', 'snn-tickets'),
             'redirect_url'          => '',
             'accent_color'          => '',
             'show_remaining'        => 0,
+            // Needs the Sell Placement plugin: sign-ups must carry a code from its link.
+            'require_placement_code' => 0,
         ];
     }
 
@@ -279,7 +283,7 @@ class SNN_T_Forms {
         $out['notify_email'] = ($notify && is_email($notify)) ? $notify : '';
 
         foreach (['submit_label', 'success_message', 'pending_message', 'full_message',
-                  'duplicate_message', 'error_message'] as $k) {
+                  'duplicate_message', 'error_message', 'code_invalid_message', 'code_used_message'] as $k) {
             $val = sanitize_text_field($s[$k] ?? '');
             $out[$k] = $val !== '' ? $val : $d[$k];
         }
@@ -290,6 +294,7 @@ class SNN_T_Forms {
         $accent = trim((string)($s['accent_color'] ?? ''));
         $out['accent_color']   = preg_match('/^#[0-9a-fA-F]{6}$/', $accent) ? strtolower($accent) : '';
         $out['show_remaining'] = !empty($s['show_remaining']) ? 1 : 0;
+        $out['require_placement_code'] = !empty($s['require_placement_code']) ? 1 : 0;
 
         return $out;
     }
@@ -414,6 +419,8 @@ class SNN_T_Forms {
             'full'      => ['warn', $form->settings['full_message']],
             'duplicate' => ['warn', $form->settings['duplicate_message']],
             'error'     => ['err',  $form->settings['error_message']],
+            'code_invalid' => ['err', $form->settings['code_invalid_message']],
+            'code_used'    => ['err', $form->settings['code_used_message']],
         ];
     }
 
@@ -452,6 +459,22 @@ class SNN_T_Forms {
             return;
         }
 
+        // The code comes from the link (?code=...). Without a usable one there is no form.
+        $code = '';
+        if (!empty($form->settings['require_placement_code'])) {
+            $code  = SNN_T_Placements::normalise(isset($_GET['code']) ? wp_unslash($_GET['code']) : '');
+            $state = SNN_T_Placements::check($code);
+            if ($state !== 'ok') {
+                // A refused sign-up comes back with its message already shown above.
+                if (!in_array($result, ['code_invalid', 'code_used'], true)) {
+                    $text = $state === 'used' ? $form->settings['code_used_message'] : $form->settings['code_invalid_message'];
+                    echo '<div class="snn-form-notice snn-err" role="status">' . esc_html($text) . '</div>';
+                }
+                echo '</div>';
+                return;
+            }
+        }
+
         if (!empty($form->settings['show_remaining']) && (int)$form->settings['max_tickets'] > 0) {
             $left = max(0, (int)$form->settings['max_tickets'] - self::issued_count($form));
             echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d spot left', '%d spots left', $left, 'snn-tickets'), $left)) . '</p>';
@@ -473,6 +496,7 @@ class SNN_T_Forms {
         echo '<input type="hidden" name="form_id" value="' . (int)$form->id . '">';
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
         echo '<input type="hidden" name="snn_t" value="' . esc_attr(time()) . '">';
+        if ($code !== '') echo '<input type="hidden" name="snn_placement_code" value="' . esc_attr($code) . '">';
         wp_nonce_field(self::NONCE, 'snn_nonce');
 
         // Honeypot: a real person never fills this in.
@@ -773,6 +797,16 @@ class SNN_T_Forms {
             self::bounce($redirect, $form_id, 'full');
         }
 
+        // Placement code: checked again here, the hidden field is only a convenience.
+        $placement_code = '';
+        if (!empty($form->settings['require_placement_code'])) {
+            $placement_code = SNN_T_Placements::normalise(isset($_POST['snn_placement_code']) ? wp_unslash($_POST['snn_placement_code']) : '');
+            $state = SNN_T_Placements::check($placement_code);
+            if ($state !== 'ok') {
+                self::bounce($redirect, $form_id, $state === 'used' ? 'code_used' : 'code_invalid');
+            }
+        }
+
         // One registration per email address
         if ($form->settings['one_per_email'] && $email) {
             global $wpdb;
@@ -795,10 +829,13 @@ class SNN_T_Forms {
             'email'   => $email,
             'data'    => $data,
             'ip'      => SNN_T_Tickets::client_ip(),
+            'placement_code' => $placement_code,
         ]);
 
         if (!$submission_id) {
-            self::bounce($redirect, $form_id, 'error');
+            // The unique key refuses a second sign-up with the same code made at the same moment.
+            $used = $placement_code !== '' && SNN_T_Placements::used($placement_code);
+            self::bounce($redirect, $form_id, $used ? 'code_used' : 'error');
         }
 
         if ($decision === 'approved') {

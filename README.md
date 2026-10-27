@@ -44,6 +44,7 @@ Every event is live as soon as it's created:
 - Question types: short and long answer, dropdown, pick one, pick several, "I agree" box, email, phone, number, date, hidden value
 - Name and email are fixed questions, so tickets always reach someone; every other answer becomes an email chip
 - One ticket per email, spot limit (people waiting hold a spot), "spots left", closed/full message
+- **Sell Placement codes** (needs the Sell Placement plugin active): the link carries `?code=SP3K7Q9`; only codes that exist there and are not cancelled or suspended can sign up, and each code works once. The sign-up keeps the code, shown in the person's History
 - Submits in the background with errors under each field; works without JavaScript
 - Spam protection: honeypot, minimum fill time, per-IP throttle
 

@@ -522,6 +522,12 @@ class SNN_T_Events_Admin {
                             $created = $sub ? $sub->created_at : $p->created;
                             $order_link = $p->oid && SNN_T_Woo::active() ? SNN_T_Woo_Admin::order_link($p->oid) : ''; ?>
                             <li><b><?php echo esc_html($sources[$p->source] ?? __('Added', 'snn-tickets')); ?></b><?php if ($order_link !== ''): ?> · <?php echo $order_link; // escaped inside ?><?php endif; ?><time><?php echo SNN_T_Admin::when($created); ?></time></li>
+                            <?php if ($sub && $sub->placement_code):
+                                $spl_url  = SNN_T_Placements::admin_url($sub->placement_code);
+                                $spl_code = esc_html($sub->placement_code);
+                                if ($spl_url !== '') $spl_code = '<a href="' . esc_url($spl_url) . '" target="_blank" rel="noopener">' . $spl_code . '</a>'; ?>
+                                <li><b><?php echo sprintf(esc_html__('Signed up with placement code %s', 'snn-tickets'), $spl_code); // escaped above ?></b></li>
+                            <?php endif; ?>
                             <?php if ($sub && $sub->status === 'pending'): ?>
                                 <li class="warn"><b><?php esc_html_e('Waiting for your approval', 'snn-tickets'); ?></b><?php $w = self::why_waiting($form); if ($w): ?> · <?php echo esc_html($w); ?><?php endif; ?></li>
                             <?php elseif ($sub && $sub->decided_at): ?>
@@ -596,6 +602,11 @@ class SNN_T_Events_Admin {
                             </div>
                             <label class="snn-check"><input type="checkbox" data-setting="one_per_email" <?php checked(!empty($s['one_per_email'])); ?>> <span><?php esc_html_e('One ticket per email address', 'snn-tickets'); ?></span></label>
                             <label class="snn-check"><input type="checkbox" data-setting="show_remaining" <?php checked(!empty($s['show_remaining'])); ?>> <span><?php esc_html_e('Show "spots left" above the form', 'snn-tickets'); ?></span></label>
+                            <?php $spl = SNN_T_Placements::available(); ?>
+                            <label class="snn-check"><input type="checkbox" data-setting="require_placement_code" <?php checked(!empty($s['require_placement_code'])); ?> <?php disabled(!$spl && empty($s['require_placement_code'])); ?>> <span><?php esc_html_e('Only people with a Sell Placement code can sign up', 'snn-tickets'); ?></span></label>
+                            <p class="snn-muted snn-small" style="margin:-6px 0 0"><?php echo esc_html($spl
+                                ? __('The code is read from the link (…?code=SP3K7Q9). It must exist in Sell Placement, and each code signs up once. Sign-ups keep the code in their History.', 'snn-tickets')
+                                : __('Needs the Sell Placement plugin, active on this site. Until it is, a form with this on lets nobody sign up.', 'snn-tickets')); ?></p>
                             <label class="snn-switch"><input type="checkbox" name="open" value="1" <?php checked(!$form || $form->status === 'active'); ?>><i></i><?php esc_html_e('Open for sign-ups', 'snn-tickets'); ?></label>
                             <p class="snn-muted snn-small" style="margin:-6px 0 0"><?php esc_html_e('Turn off to close the form without deleting anything. Visitors then see the "full or closed" message.', 'snn-tickets'); ?></p>
                         </div>
@@ -609,6 +620,8 @@ class SNN_T_Events_Admin {
                                     'full_message'      => __('When the event is full or closed', 'snn-tickets'),
                                     'duplicate_message' => __('When the email is already signed up', 'snn-tickets'),
                                     'error_message'     => __('When something goes wrong', 'snn-tickets'),
+                                    'code_invalid_message' => __('When the placement code is not valid', 'snn-tickets'),
+                                    'code_used_message'    => __('When the placement code has already been used', 'snn-tickets'),
                                 ] as $k => $l): ?>
                                     <label class="snn-field"><span><?php echo esc_html($l); ?></span><input type="text" value="<?php echo esc_attr($s[$k]); ?>" data-setting="<?php echo esc_attr($k); ?>"></label>
                                 <?php endforeach; ?>

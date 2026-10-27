@@ -382,6 +382,44 @@ $kept = SNN_T_Texts::save(['buy' => 'Buy', 'sold_out' => 'Gone!', 'nonsense' => 
 check($kept === ['sold_out' => 'Gone!'], 'only changed, known texts are stored');
 check(SNN_T_Texts::get('missing_key') === 'missing_key', 'unknown key shows itself');
 
+/* ================= placement codes ================= */
+section('Placement codes');
+
+// Stand-in for Sell Placement's lookup: the codes it knows, with a status each.
+$GLOBALS['spl_codes'] = ['SP3K7Q9' => 'awaiting', 'SPCANC1' => 'cancelled', 'SPHOLD2' => 'suspended'];
+function spl_get_by_code($code) {
+    return isset($GLOBALS['spl_codes'][$code]) ? (object)['id' => 7, 'code' => $code, 'status' => $GLOBALS['spl_codes'][$code]] : null;
+}
+function admin_url($path = '') { return 'https://tickets.example/wp-admin/' . $path; }
+
+check(SNN_T_Placements::available(), 'the stand-in makes Sell Placement look installed');
+check(SNN_T_Placements::normalise(' sp3k7q9 ') === 'SP3K7Q9', 'a typed code is trimmed and upper-cased');
+check(SNN_T_Placements::normalise('SP-3K7 Q9!') === 'SP3K7Q9', 'stray punctuation and spaces are dropped');
+check(SNN_T_Placements::normalise(str_repeat('A', 40)) === str_repeat('A', 32), 'a code is cut to the column width');
+
+$GLOBALS['wpdb']->rows = [];
+check(SNN_T_Placements::check('') === 'missing', 'no code is missing');
+check(SNN_T_Placements::check('NOPE123') === 'invalid', 'an unknown code is invalid');
+check(SNN_T_Placements::check('SPCANC1') === 'invalid', 'a cancelled placement is invalid');
+check(SNN_T_Placements::check('SPHOLD2') === 'invalid', 'a suspended placement is invalid');
+check(SNN_T_Placements::check('sp3k7q9') === 'ok', 'a known, unused code is ok');
+
+$GLOBALS['wpdb']->rows = ['var' => '12'];
+check(SNN_T_Placements::check('SP3K7Q9') === 'used', 'a code that already signed up is used');
+check(SNN_T_Placements::used('SP3K7Q9') === true, 'used() reports a code that signed up');
+check(SNN_T_Placements::used('') === false, 'an empty code is never used');
+check(SNN_T_Placements::admin_url('sp3k7q9') === 'https://tickets.example/wp-admin/admin.php?page=spl-approvals&placement=7',
+      'a known code links to its Sell Placement page');
+check(SNN_T_Placements::admin_url('NOPE123') === '', 'an unknown code has no link');
+check(SNN_T_Placements::admin_url('') === '', 'an empty code has no link');
+$GLOBALS['wpdb']->rows = [];
+
+$gated = SNN_T_Forms::sanitize_settings(['require_placement_code' => 'yes', 'code_used_message' => '  Used already  ']);
+check($gated['require_placement_code'] === 1, 'the placement-code switch normalises to 1');
+check($gated['code_used_message'] === 'Used already', 'the used-code message is kept, trimmed');
+check(SNN_T_Forms::default_settings()['require_placement_code'] === 0, 'placement codes are off by default');
+check(SNN_T_Forms::default_settings()['code_invalid_message'] !== '', 'the invalid-code message has a default');
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

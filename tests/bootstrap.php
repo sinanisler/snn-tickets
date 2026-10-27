@@ -134,6 +134,6 @@ function current_user_can_stub() { return false; }
 
 /* ================= load the plugin classes ================= */
 
-foreach (['db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms'] as $c) {
+foreach (['db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'placements', 'forms'] as $c) {
     require_once __DIR__ . '/../includes/class-snn-' . $c . '.php';
 }

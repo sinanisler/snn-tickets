@@ -24,7 +24,9 @@ class SNN_T_Submissions {
             'data'       => wp_json_encode($args['data'] ?? []),
             'ip'         => sanitize_text_field($args['ip'] ?? ''),
             'created_at' => current_time('mysql'),
-        ], ['%d', '%s', '%s', '%s', '%s', '%s', '%s']);
+            // NULL when no code was used, so the unique key only covers real codes.
+            'placement_code' => !empty($args['placement_code']) ? (string)$args['placement_code'] : null,
+        ], ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s']);
 
         return $ok ? (int)$wpdb->insert_id : 0;
     }

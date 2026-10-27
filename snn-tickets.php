@@ -18,7 +18,7 @@ define('SNN_TICKETS_URL', plugin_dir_url(__FILE__));
 define('SNN_TICKETS_VERSION', '0.34');
 
 foreach ([
-    'db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'forms', 'submissions',
+    'db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'placements', 'forms', 'submissions',
     'people', 'router', 'scanner', 'admin', 'dashboard', 'events-admin', 'wizard', 'settings', 'woo', 'woo-admin',
 ] as $class) {
     require_once SNN_TICKETS_DIR . 'includes/class-snn-' . $class . '.php';
