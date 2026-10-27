@@ -1,5 +1,5 @@
 <?php
-/*
+/* 
     Plugin Name: Events & Tickets
     Description: Event tickets with server-side QR codes: a guided event setup, sign-up forms with automatic or rule-based approval, designed emails with PDF, Apple Wallet and Google Wallet tickets, and a mobile door scanner.
     Version: 0.33
