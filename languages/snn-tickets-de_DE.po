@@ -3331,3 +3331,40 @@ msgstr "Einstellungen"
 
 msgid "Home"
 msgstr "Start"
+
+msgid "This link is not valid. Please check it, or ask for a new one."
+msgstr "Dieser Link ist nicht gültig. Bitte prüfen Sie ihn oder fordern Sie einen neuen an."
+
+msgid "All invites for this link have been used."
+msgstr "Alle Einladungen für diesen Link sind bereits verwendet."
+
+#, php-format
+msgid "%d ticket left"
+msgid_plural "%d tickets left"
+msgstr[0] "Noch %d Ticket frei"
+msgstr[1] "Noch %d Tickets frei"
+
+#, php-format
+msgid "Signed up with placement code %s"
+msgstr "Angemeldet mit Platzierungscode %s"
+
+msgid "Only people with a Sell Placement code can sign up"
+msgstr "Nur Personen mit einem Sell-Placement-Code können sich anmelden"
+
+msgid "The code is read from the link (…?code=SP3K7Q9). It must exist in Sell Placement. Each sign-up with the code uses one of its invites. Sign-ups keep the code in their History."
+msgstr "Der Code wird aus dem Link gelesen (…?code=SP3K7Q9). Er muss in Sell Placement vorhanden sein. Jede Anmeldung mit dem Code verbraucht eine seiner Einladungen. Anmeldungen behalten den Code im Verlauf."
+
+msgid "Needs the Sell Placement plugin, active on this site. Until it is, a form with this on lets nobody sign up."
+msgstr "Benötigt das Plugin Sell Placement, aktiv auf dieser Website. Solange es nicht aktiv ist, lässt ein Formular mit dieser Option niemanden sich anmelden."
+
+msgid "Invites per code"
+msgstr "Einladungen pro Code"
+
+msgid "How many people one placement code can sign up. The link shows how many are left."
+msgstr "Wie viele Personen sich mit einem Platzierungscode anmelden können. Der Link zeigt, wie viele noch frei sind."
+
+msgid "When the placement code is not valid"
+msgstr "Wenn der Platzierungscode nicht gültig ist"
+
+msgid "When all invites for the placement code are used"
+msgstr "Wenn alle Einladungen für den Platzierungscode verwendet sind"

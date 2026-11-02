@@ -398,26 +398,54 @@ check(SNN_T_Placements::normalise('SP-3K7 Q9!') === 'SP3K7Q9', 'stray punctuatio
 check(SNN_T_Placements::normalise(str_repeat('A', 40)) === str_repeat('A', 32), 'a code is cut to the column width');
 
 $GLOBALS['wpdb']->rows = [];
-check(SNN_T_Placements::check('') === 'missing', 'no code is missing');
-check(SNN_T_Placements::check('NOPE123') === 'invalid', 'an unknown code is invalid');
-check(SNN_T_Placements::check('SPCANC1') === 'invalid', 'a cancelled placement is invalid');
-check(SNN_T_Placements::check('SPHOLD2') === 'invalid', 'a suspended placement is invalid');
-check(SNN_T_Placements::check('sp3k7q9') === 'ok', 'a known, unused code is ok');
+check(SNN_T_Placements::check('', 2) === 'missing', 'no code is missing');
+check(SNN_T_Placements::check('NOPE123', 2) === 'invalid', 'an unknown code is invalid');
+check(SNN_T_Placements::check('SPCANC1', 2) === 'invalid', 'a cancelled placement is invalid');
+check(SNN_T_Placements::check('SPHOLD2', 2) === 'invalid', 'a suspended placement is invalid');
+check(SNN_T_Placements::check('sp3k7q9', 2) === 'ok', 'a known code with no sign-ups is ok');
+check(SNN_T_Placements::left('SP3K7Q9', 2) === 2, 'a fresh code has both invites left');
+check(SNN_T_Placements::left('', 2) === 2 && SNN_T_Placements::taken('') === 0, 'an empty code holds nothing');
 
-$GLOBALS['wpdb']->rows = ['var' => '12'];
-check(SNN_T_Placements::check('SP3K7Q9') === 'used', 'a code that already signed up is used');
-check(SNN_T_Placements::used('SP3K7Q9') === true, 'used() reports a code that signed up');
-check(SNN_T_Placements::used('') === false, 'an empty code is never used');
+$GLOBALS['wpdb']->rows = ['var' => '1'];
+check(SNN_T_Placements::check('SP3K7Q9', 2) === 'ok', 'a code with one invite used still has one');
+check(SNN_T_Placements::left('SP3K7Q9', 2) === 1, 'one sign-up leaves one invite');
+check(SNN_T_Placements::slot_taken('SP3K7Q9', 1) === true, 'a slot a sign-up holds is taken');
+check(SNN_T_Placements::slot_taken('', 1) === false, 'an empty code holds no slot');
+
+$GLOBALS['wpdb']->rows = ['var' => '2'];
+check(SNN_T_Placements::check('SP3K7Q9', 2) === 'used', 'a code with both invites used is used');
+check(SNN_T_Placements::check('SP3K7Q9', 3) === 'ok', 'raising the invites gives the code one back');
+check(SNN_T_Placements::check('SPCANC1', 2) === 'invalid', 'a cancelled placement stays invalid, even with invites left');
+
+$GLOBALS['wpdb']->rows = ['var' => '5'];
+check(SNN_T_Placements::left('SP3K7Q9', 2) === 0, 'more sign-ups than invites never goes below zero');
+$GLOBALS['wpdb']->rows = [];
 check(SNN_T_Placements::admin_url('sp3k7q9') === 'https://tickets.example/wp-admin/admin.php?page=spl-approvals&placement=7',
       'a known code links to its Sell Placement page');
 check(SNN_T_Placements::admin_url('NOPE123') === '', 'an unknown code has no link');
 check(SNN_T_Placements::admin_url('') === '', 'an empty code has no link');
 $GLOBALS['wpdb']->rows = [];
 
-$gated = SNN_T_Forms::sanitize_settings(['require_placement_code' => 'yes', 'code_used_message' => '  Used already  ']);
+$gated = SNN_T_Forms::sanitize_settings(['require_placement_code' => 'yes', 'invites_used_message' => '  All used  ', 'invites_per_code' => '3']);
 check($gated['require_placement_code'] === 1, 'the placement-code switch normalises to 1');
-check($gated['code_used_message'] === 'Used already', 'the used-code message is kept, trimmed');
+check($gated['invites_used_message'] === 'All used', 'the all-used message is kept, trimmed');
+check($gated['invites_per_code'] === 3, 'the invites per code are kept as a number');
+check(SNN_T_Forms::sanitize_settings(['invites_per_code' => '99'])['invites_per_code'] === 10, 'invites per code is capped at ten');
+check(SNN_T_Forms::sanitize_settings(['invites_per_code' => '0'])['invites_per_code'] === 1, 'invites per code is at least one');
+check(SNN_T_Forms::sanitize_settings([])['invites_per_code'] === 2, 'invites per code defaults to two');
+check(SNN_T_Forms::sanitize_settings(['invites_per_code' => ''])['invites_per_code'] === 2, 'an empty invites field means the default');
 check(SNN_T_Forms::default_settings()['require_placement_code'] === 0, 'placement codes are off by default');
+check(SNN_T_Forms::default_settings()['invites_per_code'] === 2, 'a code gives two invites by default');
+check(SNN_T_Forms::default_settings()['invites_used_message'] !== '', 'the all-used message has a default');
+
+// A sign-up with a code holds its invite; one without holds none.
+$GLOBALS['wpdb']->inserted = [];
+SNN_T_Submissions::create(['form_id' => 1, 'placement_code' => 'SP3K7Q9', 'placement_slot' => 2]);
+$held = end($GLOBALS['wpdb']->inserted)[1];
+check($held['placement_code'] === 'SP3K7Q9' && $held['placement_slot'] === 2, 'a code sign-up keeps its invite slot');
+SNN_T_Submissions::create(['form_id' => 1]);
+$plain = end($GLOBALS['wpdb']->inserted)[1];
+check($plain['placement_code'] === null && $plain['placement_slot'] === null, 'a sign-up without a code holds no slot');
 check(SNN_T_Forms::default_settings()['code_invalid_message'] !== '', 'the invalid-code message has a default');
 
 /* ================= results ================= */

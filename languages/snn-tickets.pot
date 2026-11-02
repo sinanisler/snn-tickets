@@ -4795,3 +4795,51 @@ msgstr ""
 #: snn-tickets.php:108
 msgid "Home"
 msgstr ""
+
+#: includes/class-snn-forms.php:95
+msgid "This link is not valid. Please check it, or ask for a new one."
+msgstr ""
+
+#: includes/class-snn-forms.php:96
+msgid "All invites for this link have been used."
+msgstr ""
+
+#: includes/class-snn-forms.php:485
+#, php-format
+msgid "%d ticket left"
+msgid_plural "%d tickets left"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-snn-events-admin.php:529
+#, php-format
+msgid "Signed up with placement code %s"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:606
+msgid "Only people with a Sell Placement code can sign up"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:608
+msgid "The code is read from the link (…?code=SP3K7Q9). It must exist in Sell Placement. Each sign-up with the code uses one of its invites. Sign-ups keep the code in their History."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:609
+msgid "Needs the Sell Placement plugin, active on this site. Until it is, a form with this on lets nobody sign up."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:611
+msgid "Invites per code"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:612
+msgid "How many people one placement code can sign up. The link shows how many are left."
+msgstr ""
+
+#: includes/class-snn-events-admin.php:627
+msgid "When the placement code is not valid"
+msgstr ""
+
+#: includes/class-snn-events-admin.php:628
+msgid "When all invites for the placement code are used"
+msgstr ""

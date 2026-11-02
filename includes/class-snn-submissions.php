@@ -26,7 +26,9 @@ class SNN_T_Submissions {
             'created_at' => current_time('mysql'),
             // NULL when no code was used, so the unique key only covers real codes.
             'placement_code' => !empty($args['placement_code']) ? (string)$args['placement_code'] : null,
-        ], ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s']);
+            // The invite this sign-up holds. NULL when it holds none (no code, or declined).
+            'placement_slot' => !empty($args['placement_slot']) ? (int)$args['placement_slot'] : null,
+        ], ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']);
 
         return $ok ? (int)$wpdb->insert_id : 0;
     }
@@ -96,12 +98,14 @@ class SNN_T_Submissions {
 
         $form = SNN_T_Forms::get($submission->form_id);
 
+        // A declined sign-up gives its invite back to the code.
         $wpdb->update(SNN_T_DB::submissions(), [
             'status'          => 'rejected',
+            'placement_slot'  => null,
             'decided_at'      => current_time('mysql'),
             'decided_by'      => $user_id ?: get_current_user_id(),
             'decision_reason' => sanitize_text_field($reason),
-        ], ['id' => (int)$id], ['%s', '%s', '%d', '%s'], ['%d']);
+        ], ['id' => (int)$id], ['%s', '%d', '%s', '%d', '%s'], ['%d']);
 
         if ($form && $submission->email) {
             SNN_T_Mailer::send_event_email('rejection', (int)$form->list_id, [

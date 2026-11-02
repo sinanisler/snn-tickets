@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '9';
+    const DB_VERSION        = '10';
 
     public static function lists() {
         global $wpdb;
@@ -129,12 +129,13 @@ class SNN_T_DB {
             decided_at DATETIME NULL,
             decided_by BIGINT UNSIGNED NULL,
             placement_code VARCHAR(32) NULL DEFAULT NULL,
+            placement_slot TINYINT UNSIGNED NULL DEFAULT NULL,
             PRIMARY KEY (id),
             KEY form_id (form_id),
             KEY status (status),
             KEY email (email),
             KEY ticket_id (ticket_id),
-            UNIQUE KEY placement_code (placement_code)
+            UNIQUE KEY code_slot (placement_code, placement_slot)
         ) {$charset_collate};");
 
         dbDelta("CREATE TABLE {$queue} (
@@ -174,7 +175,27 @@ class SNN_T_DB {
             self::install();
             if ($from !== '' && version_compare($from, '4', '<')) self::migrate_to_4();
             if ($from !== '' && version_compare($from, '8', '<')) self::migrate_to_8();
+            if ($from !== '' && version_compare($from, '10', '<')) self::migrate_to_10();
         }
+    }
+
+    /**
+     * Version 10: a placement code now has invite slots, so one code can
+     * sign up more than once. The old unique key on the code alone would
+     * refuse the second sign-up. Sign-ups made before this hold slot 1, unless
+     * they were declined, which frees their slot.
+     */
+    public static function migrate_to_10() {
+        global $wpdb;
+        $subs = self::submissions();
+
+        $old = $wpdb->get_results($wpdb->prepare("SHOW INDEX FROM {$subs} WHERE Key_name = %s", 'placement_code'));
+        if ($old) $wpdb->query("ALTER TABLE {$subs} DROP INDEX placement_code");
+
+        $wpdb->query("
+            UPDATE {$subs}
+            SET placement_slot = 1
+            WHERE placement_code IS NOT NULL AND placement_slot IS NULL AND status <> 'rejected'");
     }
 
     /**

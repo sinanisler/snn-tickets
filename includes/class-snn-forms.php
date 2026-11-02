@@ -93,12 +93,14 @@ class SNN_T_Forms {
             'duplicate_message'     => __("You've already signed up with this email address.", 'snn-tickets'),
             'error_message'         => __('Something went wrong. Please try again.', 'snn-tickets'),
             'code_invalid_message'  => __('This link is not valid. Please check it, or ask for a new one.', 'snn-tickets'),
-            'code_used_message'     => __('This link has already been used to sign up.', 'snn-tickets'),
+            'invites_used_message'  => __('All invites for this link have been used.', 'snn-tickets'),
             'redirect_url'          => '',
             'accent_color'          => '',
             'show_remaining'        => 0,
             // Needs the Sell Placement plugin: sign-ups must carry a code from its link.
             'require_placement_code' => 0,
+            // How many sign-ups one code allows. Each sign-up uses one invite.
+            'invites_per_code'       => 2,
         ];
     }
 
@@ -283,7 +285,7 @@ class SNN_T_Forms {
         $out['notify_email'] = ($notify && is_email($notify)) ? $notify : '';
 
         foreach (['submit_label', 'success_message', 'pending_message', 'full_message',
-                  'duplicate_message', 'error_message', 'code_invalid_message', 'code_used_message'] as $k) {
+                  'duplicate_message', 'error_message', 'code_invalid_message', 'invites_used_message'] as $k) {
             $val = sanitize_text_field($s[$k] ?? '');
             $out[$k] = $val !== '' ? $val : $d[$k];
         }
@@ -295,6 +297,9 @@ class SNN_T_Forms {
         $out['accent_color']   = preg_match('/^#[0-9a-fA-F]{6}$/', $accent) ? strtolower($accent) : '';
         $out['show_remaining'] = !empty($s['show_remaining']) ? 1 : 0;
         $out['require_placement_code'] = !empty($s['require_placement_code']) ? 1 : 0;
+        // An empty count means the default; anything else is kept between 1 and 10.
+        $invites = isset($s['invites_per_code']) && $s['invites_per_code'] !== '' ? (int)$s['invites_per_code'] : $d['invites_per_code'];
+        $out['invites_per_code'] = max(1, min(10, $invites));
 
         return $out;
     }
@@ -420,7 +425,7 @@ class SNN_T_Forms {
             'duplicate' => ['warn', $form->settings['duplicate_message']],
             'error'     => ['err',  $form->settings['error_message']],
             'code_invalid' => ['err', $form->settings['code_invalid_message']],
-            'code_used'    => ['err', $form->settings['code_used_message']],
+            'code_used'    => ['err', $form->settings['invites_used_message']],
         ];
     }
 
@@ -462,12 +467,13 @@ class SNN_T_Forms {
         // The code comes from the link (?code=...). Without a usable one there is no form.
         $code = '';
         if (!empty($form->settings['require_placement_code'])) {
-            $code  = SNN_T_Placements::normalise(isset($_GET['code']) ? wp_unslash($_GET['code']) : '');
-            $state = SNN_T_Placements::check($code);
+            $invites = (int)$form->settings['invites_per_code'];
+            $code    = SNN_T_Placements::normalise(isset($_GET['code']) ? wp_unslash($_GET['code']) : '');
+            $state   = SNN_T_Placements::check($code, $invites);
             if ($state !== 'ok') {
                 // A refused sign-up comes back with its message already shown above.
                 if (!in_array($result, ['code_invalid', 'code_used'], true)) {
-                    $text = $state === 'used' ? $form->settings['code_used_message'] : $form->settings['code_invalid_message'];
+                    $text = $state === 'used' ? $form->settings['invites_used_message'] : $form->settings['code_invalid_message'];
                     echo '<div class="snn-form-notice snn-err" role="status">' . esc_html($text) . '</div>';
                 }
                 echo '</div>';
@@ -475,7 +481,11 @@ class SNN_T_Forms {
             }
         }
 
-        if (!empty($form->settings['show_remaining']) && (int)$form->settings['max_tickets'] > 0) {
+        // With a code, its invites replace the event's spot count.
+        if ($code !== '') {
+            $left = SNN_T_Placements::left($code, $invites);
+            echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d ticket left', '%d tickets left', $left, 'snn-tickets'), $left)) . '</p>';
+        } elseif (!empty($form->settings['show_remaining']) && (int)$form->settings['max_tickets'] > 0) {
             $left = max(0, (int)$form->settings['max_tickets'] - self::issued_count($form));
             echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d spot left', '%d spots left', $left, 'snn-tickets'), $left)) . '</p>';
         }
@@ -801,7 +811,7 @@ class SNN_T_Forms {
         $placement_code = '';
         if (!empty($form->settings['require_placement_code'])) {
             $placement_code = SNN_T_Placements::normalise(isset($_POST['snn_placement_code']) ? wp_unslash($_POST['snn_placement_code']) : '');
-            $state = SNN_T_Placements::check($placement_code);
+            $state = SNN_T_Placements::check($placement_code, (int)$form->settings['invites_per_code']);
             if ($state !== 'ok') {
                 self::bounce($redirect, $form_id, $state === 'used' ? 'code_used' : 'code_invalid');
             }
@@ -822,19 +832,29 @@ class SNN_T_Forms {
 
         $decision = self::decide($form, $data);
 
-        $submission_id = SNN_T_Submissions::create([
-            'form_id' => (int)$form->id,
-            'status'  => $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending'),
-            'name'    => $name,
-            'email'   => $email,
-            'data'    => $data,
-            'ip'      => SNN_T_Tickets::client_ip(),
-            'placement_code' => $placement_code,
-        ]);
+        // A code's sign-up claims one of its invites: the insert takes a slot, and the unique
+        // key refuses a slot someone else holds, so the next one is tried. A declined sign-up
+        // holds no invite.
+        $invites = (int)$form->settings['invites_per_code'];
+        $slots   = $placement_code !== '' && $decision !== 'rejected' ? range(1, $invites) : [null];
+
+        $submission_id = 0;
+        foreach ($slots as $slot) {
+            $submission_id = SNN_T_Submissions::create([
+                'form_id' => (int)$form->id,
+                'status'  => $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending'),
+                'name'    => $name,
+                'email'   => $email,
+                'data'    => $data,
+                'ip'      => SNN_T_Tickets::client_ip(),
+                'placement_code' => $placement_code,
+                'placement_slot' => $slot,
+            ]);
+            if ($submission_id || $slot === null || !SNN_T_Placements::slot_taken($placement_code, $slot)) break;
+        }
 
         if (!$submission_id) {
-            // The unique key refuses a second sign-up with the same code made at the same moment.
-            $used = $placement_code !== '' && SNN_T_Placements::used($placement_code);
+            $used = $placement_code !== '' && SNN_T_Placements::left($placement_code, $invites) === 0;
             self::bounce($redirect, $form_id, $used ? 'code_used' : 'error');
         }
 

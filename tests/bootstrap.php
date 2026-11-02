@@ -104,7 +104,8 @@ class SNN_Test_WPDB {
     public function get_var($sql) { return $this->rows['var'] ?? null; }
     public function get_row($sql) { return $this->rows['row'] ?? null; }
     public function get_results($sql) { return $this->rows['results'] ?? []; }
-    public function insert($t, $d, $f = null) { $this->insert_id++; return 1; }
+    public $inserted = [];
+    public function insert($t, $d, $f = null) { $this->inserted[] = [$t, $d]; $this->insert_id++; return 1; }
     public function update() { return 1; }
     public function delete() { return 1; }
     public $queries = [];
@@ -134,6 +135,6 @@ function current_user_can_stub() { return false; }
 
 /* ================= load the plugin classes ================= */
 
-foreach (['db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'placements', 'forms'] as $c) {
+foreach (['db', 'texts', 'qr', 'tickets', 'claims', 'events', 'design', 'pdf', 'wallet', 'files', 'mailer', 'placements', 'forms', 'submissions'] as $c) {
     require_once __DIR__ . '/../includes/class-snn-' . $c . '.php';
 }
