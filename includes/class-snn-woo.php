@@ -241,17 +241,28 @@ class SNN_T_Woo {
 
     /** Ticket products of an event, drafts included. */
     public static function products_for($list_id, $published_only = false) {
-        return wc_get_products([
-            'limit'      => -1,
-            'status'     => $published_only ? ['publish'] : ['publish', 'draft', 'pending', 'private'],
-            'type'       => ['simple', 'variable'],
-            'orderby'    => 'menu_order',
-            'order'      => 'ASC',
-            'meta_query' => [
+        if ((int)$list_id <= 0) return [];
+        // wc_get_products() silently drops meta_query, which listed every product.
+        $ids = get_posts([
+            'post_type'      => 'product',
+            'post_status'    => $published_only ? ['publish'] : ['publish', 'draft', 'pending', 'private'],
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'orderby'        => 'menu_order',
+            'order'          => 'ASC',
+            'no_found_rows'  => true,
+            'meta_query'     => [
                 ['key' => self::META_EVENT, 'value' => (int)$list_id],
                 ['key' => self::META_ON, 'value' => 'yes'],
             ],
         ]);
+        $out = [];
+        foreach ($ids as $id) {
+            $p = wc_get_product($id);
+            // Belt and braces: only a ticket of this very event is ever listed.
+            if ($p && $p->is_type(['simple', 'variable']) && self::is_ticket($p) && self::event_id($p) === (int)$list_id) $out[] = $p;
+        }
+        return $out;
     }
 
     /** The questions asked for each attendee: the event's sign-up form. */
