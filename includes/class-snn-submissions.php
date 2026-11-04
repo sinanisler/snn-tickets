@@ -16,6 +16,11 @@ class SNN_T_Submissions {
     public static function create($args) {
         global $wpdb;
 
+        // Two sign-ups can reach the same invite at the same moment, and the unique key refuses
+        // the second. The caller then tries the next invite. On a site with WP_DEBUG on, WordPress
+        // would print that refusal into the page, before the redirect or the AJAX reply, so the
+        // insert runs with errors held back and any other failure is logged instead.
+        $quiet = $wpdb->suppress_errors(true);
         $ok = $wpdb->insert(SNN_T_DB::submissions(), [
             'form_id'    => (int)$args['form_id'],
             'status'     => sanitize_key($args['status'] ?? 'pending'),
@@ -29,6 +34,11 @@ class SNN_T_Submissions {
             // The invite this sign-up holds. NULL when it holds none (no code, or declined).
             'placement_slot' => !empty($args['placement_slot']) ? (int)$args['placement_slot'] : null,
         ], ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']);
+        $wpdb->suppress_errors($quiet);
+
+        if (!$ok && stripos((string)$wpdb->last_error, 'Duplicate entry') === false) {
+            error_log('SNN Tickets: a sign-up could not be saved: ' . $wpdb->last_error);
+        }
 
         return $ok ? (int)$wpdb->insert_id : 0;
     }

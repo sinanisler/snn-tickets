@@ -448,6 +448,29 @@ $plain = end($GLOBALS['wpdb']->inserted)[1];
 check($plain['placement_code'] === null && $plain['placement_slot'] === null, 'a sign-up without a code holds no slot');
 check(SNN_T_Forms::default_settings()['code_invalid_message'] !== '', 'the invalid-code message has a default');
 
+// Two sign-ups with one code: the second one's insert is refused by the unique key.
+// With WP_DEBUG on, WordPress would print that refusal into the page; it must not.
+section('Invite claims');
+$GLOBALS['wpdb']->inserted = [];
+$GLOBALS['wpdb']->show_errors = true;
+ob_start();
+$first_id = SNN_T_Submissions::create(['form_id' => 1, 'placement_code' => 'SPTEST1', 'placement_slot' => 1]);
+$first_out = ob_get_clean();
+check($first_id > 0 && $first_out === '', 'a first sign-up with a code saves quietly');
+
+ob_start();
+$refused_id = SNN_T_Submissions::create(['form_id' => 1, 'placement_code' => 'SPTEST1', 'placement_slot' => 1]);
+$refused_out = ob_get_clean();
+check($refused_id === 0, 'a sign-up for an invite already held is refused');
+check($refused_out === '', 'the refused insert prints no database error into the page');
+check($GLOBALS['wpdb']->suppress_errors === false, 'error display is restored after the insert');
+
+ob_start();
+$second_id = SNN_T_Submissions::create(['form_id' => 1, 'placement_code' => 'SPTEST1', 'placement_slot' => 2]);
+$second_out = ob_get_clean();
+check($second_id > 0 && $second_out === '', 'the next free invite still saves quietly');
+$GLOBALS['wpdb']->show_errors = false;
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

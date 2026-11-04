@@ -105,7 +105,25 @@ class SNN_Test_WPDB {
     public function get_row($sql) { return $this->rows['row'] ?? null; }
     public function get_results($sql) { return $this->rows['results'] ?? []; }
     public $inserted = [];
-    public function insert($t, $d, $f = null) { $this->inserted[] = [$t, $d]; $this->insert_id++; return 1; }
+    public $last_error = '';
+    public $show_errors = false;
+    public $suppress_errors = false;
+    public function suppress_errors($s = true) { $old = $this->suppress_errors; $this->suppress_errors = (bool)$s; return $old; }
+    /** Like MySQL: a placement code and slot pair can be held once; a refusal prints unless errors are held back. */
+    public function insert($t, $d, $f = null) {
+        $code = $d['placement_code'] ?? null;
+        $slot = $d['placement_slot'] ?? null;
+        if ($code !== null && $slot !== null) {
+            foreach ($this->inserted as [$tt, $dd]) {
+                if (($dd['placement_code'] ?? null) === $code && ($dd['placement_slot'] ?? null) === $slot) {
+                    $this->last_error = "Duplicate entry '$code-$slot' for key 'code_slot'";
+                    if ($this->show_errors && !$this->suppress_errors) echo '<div id="error">WordPress database error</div>';
+                    return false;
+                }
+            }
+        }
+        $this->inserted[] = [$t, $d]; $this->insert_id++; return 1;
+    }
     public function update() { return 1; }
     public function delete() { return 1; }
     public $queries = [];

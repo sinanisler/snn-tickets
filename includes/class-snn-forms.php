@@ -840,6 +840,9 @@ class SNN_T_Forms {
 
         $submission_id = 0;
         foreach ($slots as $slot) {
+            // An invite someone already holds is skipped, so the database is not asked to refuse it.
+            if ($slot !== null && SNN_T_Placements::slot_taken($placement_code, $slot)) continue;
+
             $submission_id = SNN_T_Submissions::create([
                 'form_id' => (int)$form->id,
                 'status'  => $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending'),
