@@ -602,8 +602,9 @@ class SNN_T_Forms {
         if ($field['type'] === 'divider') {
             $color  = preg_match('/^#[0-9a-f]{6}$/', (string)($field['color'] ?? '')) ? $field['color'] : '#c3c4c7';
             $height = max(1, min(20, (int)($field['height'] ?? 1)));
+            // A plain separator element rather than an <hr>, which many themes restyle or hide.
             echo '<div class="snn-field-divider" data-key="' . esc_attr($field['key']) . '">'
-               . '<hr class="snn-divider" style="border:0;border-top:' . $height . 'px solid ' . esc_attr($color) . '"></div>';
+               . '<div class="snn-divider" role="separator" style="height:0;border:0;border-top:' . $height . 'px solid ' . esc_attr($color) . '"></div></div>';
             return;
         }
 
@@ -692,19 +693,19 @@ class SNN_T_Forms {
         ?>
         <style>
         .snn-ticket-form-wrap{max-width:560px;--snn-accent:#111}
-        .snn-ticket-form .snn-field{margin-bottom:16px}
-        .snn-ticket-form label,.snn-ticket-form .snn-label{display:block;font-weight:600;margin-bottom:6px}
+        .snn-ticket-form .snn-field{margin-bottom:10px}
+        .snn-ticket-form label,.snn-ticket-form .snn-label{display:block;font-weight:600;line-height:1.3;margin-bottom:4px}
         .snn-ticket-form .snn-fieldset{border:0;padding:0;margin:0}
         .snn-ticket-form .snn-fieldset legend{padding:0}
         .snn-ticket-form input[type=text],.snn-ticket-form input[type=email],
         .snn-ticket-form input[type=tel],.snn-ticket-form input[type=number],
         .snn-ticket-form input[type=date],.snn-ticket-form textarea,
-        .snn-ticket-form select{width:100%;padding:10px 12px;border:1px solid #c3c4c7;border-radius:6px;
+        .snn-ticket-form select{width:100%;padding:8px 10px;border:1px solid #c3c4c7;border-radius:6px;
             font:inherit;background:#fff;color:inherit;box-sizing:border-box}
         .snn-ticket-form input:focus,.snn-ticket-form textarea:focus,.snn-ticket-form select:focus{outline:2px solid var(--snn-accent);outline-offset:1px;border-color:var(--snn-accent)}
         .snn-ticket-form textarea{resize:vertical}
         .snn-ticket-form .snn-choices{display:block}
-        .snn-ticket-form .snn-choice{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:0 0 6px}
+        .snn-ticket-form .snn-choice{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:0 0 4px}
         .snn-ticket-form .snn-choice input{margin:.25em 0 0;accent-color:var(--snn-accent)}
         .snn-ticket-form .snn-req{color:#b3261e}
         .snn-ticket-form .snn-has-error input,.snn-ticket-form .snn-has-error textarea,.snn-ticket-form .snn-has-error select{border-color:#b3261e}
@@ -713,8 +714,8 @@ class SNN_T_Forms {
         .snn-ticket-form .snn-form-submit button{padding:12px 24px;border:0;border-radius:6px;
             background:var(--snn-accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
         .snn-ticket-form .snn-form-submit button:hover{filter:brightness(1.15)}
-        .snn-ticket-form .snn-field-divider{margin:22px 0}
-        .snn-ticket-form .snn-divider{width:100%;margin:0}
+        .snn-ticket-form .snn-field-divider{margin:10px 0}
+        .snn-ticket-form .snn-divider{width:100%;height:0;margin:0}
         .snn-ticket-form .snn-locked{background:#f6f7f7;color:#50575e}
         .snn-ticket-form .snn-locked-note{display:block;font-size:.85em;color:#50575e;margin-top:4px}
         .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}

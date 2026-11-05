@@ -161,6 +161,11 @@ a.snn-kpi:hover{border-color:#2271b1;color:#1d2327}
 .snn-qh .ord{display:flex;flex-direction:column}
 .snn-qh .ord button{border:0;background:none;color:#8c8f94;cursor:pointer;line-height:1;padding:1px 4px;font-size:10px}
 .snn-qh .ord button:hover{color:#2271b1}
+.snn-qh .snn-grip{cursor:grab;color:#8c8f94;font-size:18px;line-height:1;padding:0 2px;user-select:none}
+.snn-qh .snn-grip:hover{color:#2271b1}
+.snn-qc.snn-dragging{opacity:.5}
+.snn-qc.snn-drop-before{border-top:3px solid #2271b1}
+.snn-qc.snn-drop-after{border-bottom:3px solid #2271b1}
 .snn-qh .lbl{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .snn-qh .t{font-size:12.5px;color:#646970;white-space:nowrap}
 .snn-qb{border-top:1px solid #dcdcde;padding:12px;display:flex;flex-direction:column;gap:12px;background:#fcfcfc}

@@ -341,10 +341,32 @@
         + '<button type="button" class="button button-small button-link-delete" data-del="' + i + '">' + esc(t('remove', 'Remove')) + '</button></div></div>';
     }
 
+    // Moves a question to another place. The question that is open stays open.
+    function moveField(from, to) {
+      if (from === to || from < 0 || to < 0 || from >= fields.length || to >= fields.length) return;
+      var item = fields.splice(from, 1)[0];
+      fields.splice(to, 0, item);
+      if (open === from) open = to;
+      else if (from < open && open <= to) open = open - 1;
+      else if (to <= open && open < from) open = open + 1;
+      renderQuestions(); changed();
+    }
+
+    // Drag and drop state: the question being dragged, and the place it would land (before index dropAt).
+    var dragFrom = null, dropAt = null;
+    function clearMarks() {
+      $$('.snn-qc', listEl).forEach(function (c) { c.classList.remove('snn-drop-before', 'snn-drop-after'); });
+    }
+    function endDrag() {
+      dragFrom = null; dropAt = null;
+      $$('.snn-qc', listEl).forEach(function (c) { c.classList.remove('snn-drop-before', 'snn-drop-after', 'snn-dragging'); });
+    }
+
     function renderQuestions() {
       if (!listEl) return;
       listEl.innerHTML = fields.map(function (f, i) {
         var head = '<div class="snn-qh" data-q="' + i + '">'
+          + '<span class="snn-grip" draggable="true" data-grip="' + i + '" title="' + esc(t('dragHelp', 'Drag to move, or use the arrows')) + '" aria-hidden="true">⠿</span>'
           + '<span class="ord"><button type="button" data-up="' + i + '" aria-label="' + esc(t('moveUp', 'Move up')) + '">▲</button><button type="button" data-down="' + i + '" aria-label="' + esc(t('moveDown', 'Move down')) + '">▼</button></span>'
           + '<span class="lbl">' + esc(isDivider(f) ? t('dividerLabel', 'Line across the form') : isHtml(f) ? t('htmlLabel', 'HTML block') : (plain(f.label) || t('untitled', 'Untitled question'))) + (f.required ? ' <span class="snn-req">*</span>' : '') + '</span>'
           + (locked(f) ? '<span class="snn-chip info">🔒 ' + esc(f.map_to === 'name' ? t('ticketName', 'Name on the ticket') : t('ticketGoes', 'Ticket goes to this mail')) + '</span>' : '<span class="t">' + esc(TYPES[f.type] || f.type) + '</span>')
@@ -391,10 +413,7 @@
         if (mv) {
           e.stopPropagation();
           var up = mv.hasAttribute('data-up'), i = +mv.getAttribute(up ? 'data-up' : 'data-down'), j = up ? i - 1 : i + 1;
-          if (j < 0 || j >= fields.length) return;
-          var tmp = fields[i]; fields[i] = fields[j]; fields[j] = tmp;
-          open = open === i ? j : (open === j ? i : open);
-          renderQuestions(); changed(); return;
+          moveField(i, j); return;
         }
         var del = e.target.closest('[data-del]');
         if (del) {
@@ -412,6 +431,38 @@
         var h = e.target.closest('[data-q]');
         if (h) { var n = +h.getAttribute('data-q'); open = open === n ? -1 : n; renderQuestions(); }
       });
+      // Only the grip starts a drag, so text in the boxes can still be selected.
+      listEl.addEventListener('dragstart', function (e) {
+        var g = e.target.closest && e.target.closest('[data-grip]');
+        if (!g) return;
+        dragFrom = +g.getAttribute('data-grip'); dropAt = null;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(dragFrom));
+        var card = g.closest('.snn-qc');
+        if (card) { e.dataTransfer.setDragImage(card, 20, 20); card.classList.add('snn-dragging'); }
+      });
+      listEl.addEventListener('dragover', function (e) {
+        if (dragFrom === null) return;
+        var card = e.target.closest('.snn-qc'), head = card && card.querySelector('.snn-qh[data-q]');
+        if (!head) return;
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        var r = card.getBoundingClientRect(), at = +head.getAttribute('data-q');
+        var after = e.clientY > r.top + r.height / 2;
+        if (after) at += 1;
+        clearMarks();
+        // Dropped back in its own place, nothing moves and nothing is marked.
+        dropAt = (at === dragFrom || at === dragFrom + 1) ? null : at;
+        if (dropAt !== null) card.classList.add(after ? 'snn-drop-after' : 'snn-drop-before');
+      });
+      listEl.addEventListener('drop', function (e) {
+        if (dragFrom === null) return;
+        e.preventDefault();
+        var from = dragFrom, at = dropAt;
+        endDrag();
+        if (at !== null) moveField(from, at > from ? at - 1 : at);
+      });
+      listEl.addEventListener('dragend', endDrag);
+
       var onEdit = function (e) {
         var el = e.target.closest('[data-k]'); if (!el) return;
         var card = el.closest('[data-i]'); if (!card) return;
