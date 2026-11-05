@@ -68,6 +68,19 @@ class SNN_T_Placements {
         return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE placement_code = %s AND placement_slot IS NOT NULL", $code));
     }
 
+    /**
+     * The sign-ups that hold an invite for this code, oldest first, with the name and address
+     * each was signed up with.
+     */
+    public static function held($code) {
+        global $wpdb;
+        $code = self::normalise($code);
+        if ($code === '') return [];
+        $table = SNN_T_DB::submissions();
+        $rows  = $wpdb->get_results($wpdb->prepare("SELECT name, email FROM {$table} WHERE placement_code = %s AND placement_slot IS NOT NULL ORDER BY id ASC", $code));
+        return array_values((array)$rows);
+    }
+
     /** Is invite $slot already held by a sign-up with this code? */
     public static function slot_taken($code, $slot) {
         global $wpdb;

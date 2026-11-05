@@ -925,7 +925,7 @@ class SNN_T_Mailer {
         $form = $list_id ? SNN_T_Forms::for_list($list_id) : null;
         if ($form) {
             foreach ($form->fields as $f) {
-                if (in_array($f['map_to'], ['name', 'email'], true) || $f['type'] === 'divider') continue;
+                if (in_array($f['map_to'], ['name', 'email'], true) || in_array($f['type'], ['divider', 'html'], true)) continue;
                 $out[$f['key']] = !empty($f['options']) ? $f['options'][0] : ($f['default'] !== '' ? $f['default'] : $f['label']);
             }
         }

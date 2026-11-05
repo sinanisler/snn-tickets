@@ -613,10 +613,11 @@ $div = SNN_T_Forms::sanitize_fields([
 ]);
 check(count($div) === 2, 'a divider needs no label, and an unlabelled question is still dropped');
 check($div[0]['type'] === 'divider' && $div[0]['key'] === 'divider', 'a divider gets the key "divider"');
-check($div[0]['color'] === '#ff0000' && $div[0]['height'] === 4 && $div[0]['style'] === 'dashed', 'colour, height and style are kept, colour in lower case');
+check($div[0]['color'] === '#ff0000' && $div[0]['height'] === 4, 'colour and height are kept, colour in lower case');
+check(!array_key_exists('style', $div[0]), 'a divider has no style setting: it is a plain line');
 check($div[0]['required'] === 0, 'a divider is never required');
 check($div[1]['key'] === 'divider_2', 'a second divider gets its own key');
-check($div[1]['color'] === '#c3c4c7' && $div[1]['height'] === 20 && $div[1]['style'] === 'solid', 'a bad colour and style fall back, a height is capped at 20');
+check($div[1]['color'] === '#c3c4c7' && $div[1]['height'] === 20, 'a bad colour falls back, a height is capped at 20');
 
 $addr = SNN_T_Forms::sanitize_fields([
     ['key' => 'mail',  'label' => 'Mail',   'type' => 'email', 'map_to' => 'email', 'required' => 0],
@@ -664,11 +665,122 @@ check(SNN_T_Forms::taken_addresses($people_form, ['email' => 'new@x.test']) === 
 ob_start();
 SNN_T_Forms::render_field(['key' => 'line', 'type' => 'divider', 'label' => '', 'placeholder' => '', 'required' => 0, 'options' => [], 'map_to' => '', 'color' => '#ff0000', 'height' => 4, 'style' => 'dashed'], null, '');
 $line_html = ob_get_clean();
-check(strpos($line_html, 'border-top:4px dashed #ff0000') !== false, 'a divider draws a line with its height, style and colour');
+check(strpos($line_html, 'border-top:4px solid #ff0000') !== false, 'a divider draws a line with its height and colour');
 check(strpos($line_html, 'name=') === false, 'a divider has no answer field');
 ob_start();
 SNN_T_Forms::render_field(['key' => 'line', 'type' => 'divider', 'label' => '', 'placeholder' => '', 'required' => 0, 'options' => [], 'map_to' => '', 'color' => 'javascript:x', 'height' => 1, 'style' => 'solid'], null, '');
 check(strpos(ob_get_clean(), 'border-top:1px solid #c3c4c7') !== false, 'a divider with a bad colour uses the default colour');
+
+/* ================= codes that already have people on them ================= */
+section('Codes with people already on them');
+
+// The WordPress calls the sign-up form makes when it is drawn.
+if (!function_exists('apply_filters')) { function apply_filters($tag, $value) { return $value; } }
+if (!function_exists('remove_query_arg')) { function remove_query_arg($key, $url = '') { return $url; } }
+if (!function_exists('is_ssl')) { function is_ssl() { return false; } }
+if (!function_exists('checked')) { function checked($a, $b = true, $echo = true) { $r = (string)$a === (string)$b ? " checked='checked'" : ''; if ($echo) echo $r; return $r; } }
+if (!function_exists('selected')) { function selected($a, $b = true, $echo = true) { $r = (string)$a === (string)$b ? " selected='selected'" : ''; if ($echo) echo $r; return $r; } }
+if (!function_exists('wp_nonce_field')) { function wp_nonce_field() { return ''; } }
+if (!function_exists('wp_script_is')) { function wp_script_is() { return false; } }
+if (!function_exists('wp_register_script')) { function wp_register_script() { return true; } }
+if (!function_exists('wp_enqueue_script')) { function wp_enqueue_script() { return true; } }
+if (!function_exists('wp_add_inline_script')) { function wp_add_inline_script() { return true; } }
+
+$seat_form = (object)[
+    'id' => 9, 'list_id' => 3, 'name' => 'Trip', 'status' => 'active',
+    'fields' => SNN_T_Forms::sanitize_fields([
+        ['key' => 'name',       'label' => 'Your name',   'type' => 'text',  'required' => 1, 'map_to' => 'name'],
+        ['key' => 'email',      'label' => 'Your email',  'type' => 'email', 'required' => 1, 'map_to' => 'email'],
+        ['key' => 'guest',      'label' => 'Guest name',  'type' => 'text',  'map_to' => 'name'],
+        ['key' => 'guest_mail', 'label' => 'Guest email', 'type' => 'email', 'map_to' => 'email'],
+    ]),
+    'settings' => array_merge(SNN_T_Forms::default_settings(), ['require_placement_code' => 1, 'invites_per_code' => 2]),
+];
+$ana = (object)['name' => 'Ana', 'email' => 'ana@x.test'];
+$ben = (object)['name' => 'Ben', 'email' => 'ben@x.test'];
+$cy  = (object)['name' => 'Cy',  'email' => 'cy@x.test'];
+
+$GLOBALS['wpdb']->rows = ['results' => []];
+check(SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9') === [], 'nobody on the code: nothing is locked');
+$GLOBALS['wpdb']->rows = ['results' => [$ana]];
+$one = SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9');
+check(count($one) === 1 && $one[0]['name_key'] === 'name' && $one[0]['email_key'] === 'email' && $one[0]['name'] === 'Ana' && $one[0]['email'] === 'ana@x.test',
+      'one person on the code locks the first name and address');
+$GLOBALS['wpdb']->rows = ['results' => [$ana, $ben]];
+check(SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9') === [], 'two people fill both seats, so the next visitor gets a fresh form');
+$GLOBALS['wpdb']->rows = ['results' => [$ana, $ben, $cy]];
+$round2 = SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9');
+check(count($round2) === 1 && $round2[0]['name'] === 'Cy', 'a third person starts a new round and locks the first seat');
+$GLOBALS['wpdb']->rows = ['results' => [$ana]];
+$one_seat = (object)['id' => 10, 'fields' => SNN_T_Forms::sanitize_fields([['key' => 'name', 'label' => 'Name', 'type' => 'text', 'map_to' => 'name']])];
+check(SNN_T_Forms::locked_people($one_seat, 'SP3K7Q9') === [], 'a one-seat form never locks its only seat: the next visitor gets a fresh form');
+check(SNN_T_Forms::locked_people($seat_form, '') === [], 'no code, nothing is locked');
+
+// The form as a visitor sees it: the first seat is taken, the second is open.
+$GLOBALS['wpdb']->rows = ['var' => '1', 'results' => [$ana]];
+$_GET['code'] = 'SP3K7Q9';
+$render = new ReflectionMethod('SNN_T_Forms', 'render_form');
+$render->setAccessible(true);
+ob_start();
+$render->invoke(null, $seat_form);
+$page = ob_get_clean();
+unset($_GET['code']);
+preg_match('/<input[^>]*name="snn_field\[name\]"[^>]*>/', $page, $m_name);
+preg_match('/<input[^>]*name="snn_field\[guest\]"[^>]*>/', $page, $m_guest);
+check(isset($m_name[0]) && strpos($m_name[0], 'value="Ana"') !== false && strpos($m_name[0], 'readonly') !== false,
+      'the person on the code shows read-only in the first seat');
+check(strpos($page, 'name="snn_field[email]"') !== false && preg_match('/<input[^>]*name="snn_field\[email\]"[^>]*readonly/', $page) === 1,
+      'their address shows read-only too');
+check(isset($m_guest[0]) && strpos($m_guest[0], 'readonly') === false && strpos($m_guest[0], 'required') === false,
+      'the open seat is an ordinary, optional field');
+check(substr_count($page, 'Signed up with this code') === 2, 'each locked field says it was signed up with this code');
+check(strpos($page, 'name="snn_locked" value="1"') !== false, 'the form remembers how many people were locked');
+
+// Nobody on the code: a fresh form, nothing locked.
+$GLOBALS['wpdb']->rows = ['var' => '0', 'results' => []];
+$_GET['code'] = 'SP3K7Q9';
+ob_start();
+$render->invoke(null, $seat_form);
+$fresh = ob_get_clean();
+unset($_GET['code']);
+check(strpos($fresh, 'readonly') === false && strpos($fresh, 'name="snn_locked" value="0"') !== false, 'with nobody on the code, the form is fresh');
+
+// Submitting: the seats on the code are skipped, and the open seat is what counts.
+$GLOBALS['wpdb']->rows = [];
+[$sd, $se, $sn, $sm] = SNN_T_Forms::collect($seat_form, ['guest' => 'Ben', 'guest_mail' => 'ben@y.test'], ['name', 'email']);
+check(!isset($se['name']) && !isset($se['email']), 'a seat already on the code is not asked again: no required error');
+check($sd['name'] === '' && $sd['email'] === '' && $sd['guest'] === 'Ben', 'the seat on the code is left empty for this sign-up');
+check($sm === 'ben@y.test', 'the open seat\'s address becomes the sign-up\'s address');
+$skipped_holders = SNN_T_Forms::holders($seat_form, $sd, $sm);
+check($skipped_holders === [['name' => 'Ben', 'email' => 'ben@y.test']], 'only the open seat gets a ticket');
+
+// The "I agree" box keeps its link; other questions stay plain text.
+$agree_form = SNN_T_Forms::sanitize_fields([
+    ['key' => 'agree', 'label' => 'I agree to the <a href="https://x.test/privacy">privacy policy</a>', 'type' => 'consent', 'required' => 1],
+    ['key' => 'note',  'label' => 'Full <b>name</b>', 'type' => 'text'],
+]);
+check(strpos($agree_form[0]['label'], '<a href="https://x.test/privacy">privacy policy</a>') !== false, 'the I-agree text keeps its privacy link');
+check($agree_form[1]['label'] === 'Full name', 'other question text is still plain');
+ob_start();
+SNN_T_Forms::render_field($agree_form[0], null, '');
+$agree_html = ob_get_clean();
+check(strpos($agree_html, '<a href="https://x.test/privacy">privacy policy</a>') !== false, 'the I-agree box prints its link');
+
+// An HTML block: any HTML and CSS, printed as written, asking nothing.
+$block_form = SNN_T_Forms::sanitize_fields([
+    ['type' => 'html', 'html' => '<style>.x{color:red}</style><p>Read our <a href="/privacy">privacy policy</a></p>'],
+]);
+check(count($block_form) === 1 && $block_form[0]['type'] === 'html' && $block_form[0]['key'] === 'html', 'an HTML block needs no label');
+check($block_form[0]['required'] === 0 && strpos($block_form[0]['html'], '<style>.x{color:red}</style>') !== false, 'an HTML block keeps its HTML and CSS as written');
+ob_start();
+SNN_T_Forms::render_field($block_form[0], null, '');
+$block_html = ob_get_clean();
+check(strpos($block_html, '<style>.x{color:red}</style>') !== false && strpos($block_html, 'name=') === false, 'an HTML block is printed as written, with no answer field');
+[$hd, $he, , ] = SNN_T_Forms::collect((object)['fields' => $block_form], []);
+check($hd === [] && $he === [], 'an HTML block has no answer and no error');
+
+$_GET = [];
+$GLOBALS['wpdb']->rows = [];
 
 /* ================= results ================= */
 

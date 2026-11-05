@@ -42,6 +42,8 @@ class SNN_T_Forms {
             'hidden'   => __('Hidden value', 'snn-tickets'),
             // A line that splits the form. It asks nothing, so it has no answer.
             'divider'  => __('Divider', 'snn-tickets'),
+            // Any HTML and CSS, shown as written between the questions. It asks nothing.
+            'html'     => __('HTML block', 'snn-tickets'),
         ];
     }
 
@@ -206,15 +208,19 @@ class SNN_T_Forms {
 
         foreach ((array)$fields as $f) {
             $type  = isset($types[$f['type'] ?? '']) ? $f['type'] : 'text';
-            $label = sanitize_text_field($f['label'] ?? '');
-            // A divider asks nothing, so it needs no label.
-            if ($label === '' && $type !== 'divider') continue;
+            // The "I agree" text may carry a link, such as the privacy policy. Other labels are plain text.
+            $label = $type === 'consent'
+                ? trim(wp_kses_post((string)($f['label'] ?? '')))
+                : sanitize_text_field($f['label'] ?? '');
+            // Dividers and HTML blocks ask nothing, so they need no label.
+            $block = in_array($type, ['divider', 'html'], true);
+            if ($label === '' && !$block) continue;
 
             $key = sanitize_key($f['key'] ?? '');
             if ($key === '') {
                 $key = sanitize_key(sanitize_title($label));
             }
-            if ($key === '') $key = $type === 'divider' ? 'divider' : 'field';
+            if ($key === '') $key = $block ? $type : 'field';
             // Keys address fields in rules and {field:key} tags, so they
             // have to stay unique.
             $base = $key; $n = 2;
@@ -246,7 +252,13 @@ class SNN_T_Forms {
                 $color = strtolower(trim((string)($f['color'] ?? '')));
                 $row['color']  = preg_match('/^#[0-9a-f]{6}$/', $color) ? $color : '#c3c4c7';
                 $row['height'] = max(1, min(20, (int)($f['height'] ?? 1)));
-                $row['style']  = in_array($f['style'] ?? '', ['solid', 'dashed', 'dotted'], true) ? $f['style'] : 'solid';
+            }
+            if ($type === 'html') {
+                $row['required'] = 0;
+                // The admin's HTML and CSS is kept as written. Someone without permission to post
+                // unfiltered HTML gets the usual cleaning.
+                $html = is_string($f['html'] ?? null) ? $f['html'] : '';
+                $row['html'] = current_user_can('unfiltered_html') ? $html : wp_kses_post($html);
             }
             $out[] = $row;
         }
@@ -504,6 +516,9 @@ class SNN_T_Forms {
             }
         }
 
+        // People already on this code are shown first, locked. This visit fills the seats after them.
+        $locked = $code !== '' ? self::locked_people($form, $code) : [];
+
         // With a code, its invites replace the event's spot count.
         if ($code !== '') {
             $left = SNN_T_Placements::left($code, $invites);
@@ -530,6 +545,8 @@ class SNN_T_Forms {
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
         echo '<input type="hidden" name="snn_t" value="' . esc_attr(time()) . '">';
         if ($code !== '') echo '<input type="hidden" name="snn_placement_code" value="' . esc_attr($code) . '">';
+        // How many people the code already had when this form was shown; checked again on submit.
+        echo '<input type="hidden" name="snn_locked" value="' . count($locked) . '">';
         wp_nonce_field(self::NONCE, 'snn_nonce');
 
         // Honeypot: a real person never fills this in.
@@ -537,9 +554,21 @@ class SNN_T_Forms {
            . '<label>Leave this field empty<input type="text" name="snn_website" tabindex="-1" autocomplete="off"></label>'
            . '</div>';
 
+        $lock_values = [];
+        foreach ($locked as $p) {
+            if ($p['name_key'] !== null)  $lock_values[$p['name_key']]  = $p['name'];
+            if ($p['email_key'] !== null) $lock_values[$p['email_key']] = $p['email'];
+        }
+
         // Only the first name and address are the buyer's, so the browser's autofill is left out of the rest.
         $seen = [];
         foreach ($form->fields as $field) {
+            if (array_key_exists($field['key'], $lock_values)) {
+                $field['required'] = 0;
+                $field['locked']   = 1;
+                self::render_field($field, $lock_values[$field['key']], '');
+                continue;
+            }
             $role = $field['map_to'] ?? '';
             if ($role !== '' && isset($seen[$role])) $field['autofill'] = false;
             $seen[$role] = true;
@@ -573,9 +602,14 @@ class SNN_T_Forms {
         if ($field['type'] === 'divider') {
             $color  = preg_match('/^#[0-9a-f]{6}$/', (string)($field['color'] ?? '')) ? $field['color'] : '#c3c4c7';
             $height = max(1, min(20, (int)($field['height'] ?? 1)));
-            $style  = in_array($field['style'] ?? '', ['solid', 'dashed', 'dotted'], true) ? $field['style'] : 'solid';
             echo '<div class="snn-field-divider" data-key="' . esc_attr($field['key']) . '">'
-               . '<hr class="snn-divider" style="border:0;border-top:' . $height . 'px ' . $style . ' ' . esc_attr($color) . '"></div>';
+               . '<hr class="snn-divider" style="border:0;border-top:' . $height . 'px solid ' . esc_attr($color) . '"></div>';
+            return;
+        }
+
+        if ($field['type'] === 'html') {
+            // The admin's own HTML and CSS, as sanitised when the form was saved.
+            echo '<div class="snn-field-html" data-key="' . esc_attr($field['key']) . '">' . ($field['html'] ?? '') . '</div>';
             return;
         }
 
@@ -584,7 +618,9 @@ class SNN_T_Forms {
            . ($required ? ' snn-field-required' : '')
            . ($error !== '' ? ' snn-has-error' : '') . '" data-key="' . esc_attr($field['key']) . '">';
 
-        $label_html = esc_html($field['label']) . ($required ? ' <span class="snn-req" aria-hidden="true">*</span>' : '');
+        // The "I agree" text may carry a link, so it is printed as allowed HTML; other labels are escaped.
+        $label_text = $field['type'] === 'consent' ? wp_kses_post((string)$field['label']) : esc_html($field['label']);
+        $label_html = $label_text . ($required ? ' <span class="snn-req" aria-hidden="true">*</span>' : '');
 
         switch ($field['type']) {
             case 'textarea':
@@ -633,13 +669,16 @@ class SNN_T_Forms {
                 $auto = ['email' => 'email', 'tel' => 'tel'][$field['type']] ?? ($field['map_to'] === 'name' ? 'name' : '');
                 if (isset($field['autofill']) && $field['autofill'] === false) $auto = '';
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
-                echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . '"'
+                // A seat already held on this code shows its person, read-only.
+                $locked = !empty($field['locked']);
+                echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . ($locked ? ' snn-locked' : '') . '"'
                    . ' type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
                    . ' value="' . esc_attr(is_array($value) ? '' : (string)$value) . '"'
                    . ' placeholder="' . esc_attr($field['placeholder']) . '"'
-                   . ($required ? ' required' : '') . $aria
+                   . ($required ? ' required' : '') . ($locked ? ' readonly' : '') . $aria
                    . ($auto ? ' autocomplete="' . $auto . '"' : '')
                    . '>';
+                if ($locked) echo '<span class="snn-locked-note">' . esc_html__('Signed up with this code', 'snn-tickets') . '</span>';
         }
 
         echo '<span class="snn-field-error" id="' . $err_id . '"' . ($error !== '' ? '' : ' hidden') . '>' . esc_html($error) . '</span>';
@@ -676,6 +715,8 @@ class SNN_T_Forms {
         .snn-ticket-form .snn-form-submit button:hover{filter:brightness(1.15)}
         .snn-ticket-form .snn-field-divider{margin:22px 0}
         .snn-ticket-form .snn-divider{width:100%;margin:0}
+        .snn-ticket-form .snn-locked{background:#f6f7f7;color:#50575e}
+        .snn-ticket-form .snn-locked-note{display:block;font-size:.85em;color:#50575e;margin-top:4px}
         .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}
         .snn-hp{position:absolute!important;left:-9999px!important;height:1px;overflow:hidden}
         .snn-form-remaining{font-weight:600;color:var(--snn-accent)}
@@ -836,24 +877,6 @@ class SNN_T_Forms {
             ? wp_unslash($_POST['snn_field'])
             : [];
 
-        list($data, $errors, $name, $email) = self::collect($form, $raw);
-
-        if ($errors) {
-            self::bounce_with_errors($redirect, $form_id, $errors, $data);
-        }
-
-        // Every person who gets a ticket takes a place, so the sign-up needs room for all of them.
-        $holders = self::holders($form, $data, $email);
-        $people  = count($holders);
-
-        // Capacity
-        if (self::is_full($form)) {
-            self::bounce($redirect, $form_id, 'full');
-        }
-        if (!self::has_room($form, $people)) {
-            self::bounce($redirect, $form_id, 'short');
-        }
-
         // Placement code: checked again here, the hidden field is only a convenience.
         $placement_code = '';
         if (!empty($form->settings['require_placement_code'])) {
@@ -862,6 +885,44 @@ class SNN_T_Forms {
             if ($state !== 'ok') {
                 self::bounce($redirect, $form_id, $state === 'used' ? 'code_used' : 'code_invalid');
             }
+        }
+
+        // People already on this code keep their seats: they were shown locked, and are not taken again.
+        $locked = self::locked_people($form, $placement_code);
+        $skip   = [];
+        foreach ($locked as $p) {
+            if ($p['name_key'] !== null)  $skip[] = $p['name_key'];
+            if ($p['email_key'] !== null) $skip[] = $p['email_key'];
+        }
+        // The form showed this many people already on the code. If that has changed, the visitor sees the form again.
+        if ((int)($_POST['snn_locked'] ?? 0) !== count($locked)) {
+            self::bounce($redirect, $form_id, 'error');
+        }
+
+        list($data, $errors, $name, $email) = self::collect($form, $raw, $skip);
+
+        if ($errors) {
+            self::bounce_with_errors($redirect, $form_id, $errors, $data);
+        }
+
+        // Every person who gets a ticket takes a place, so the sign-up needs room for all of them.
+        $holders = self::holders($form, $data, $email);
+        // A visit to a code that already has people on it must name at least one person.
+        if ($skip && !array_filter(array_column($holders, 'name'), 'strlen')) {
+            foreach ($form->fields as $field) {
+                if (($field['map_to'] ?? '') === 'name' && !in_array($field['key'], $skip, true)) {
+                    self::bounce_with_errors($redirect, $form_id, [$field['key'] => __('Please add the name of the person who gets this ticket.', 'snn-tickets')], $data);
+                }
+            }
+        }
+        $people  = count($holders);
+
+        // Capacity
+        if (self::is_full($form)) {
+            self::bounce($redirect, $form_id, 'full');
+        }
+        if (!self::has_room($form, $people)) {
+            self::bounce($redirect, $form_id, 'short');
         }
 
         // One registration per email address: an address already signed up is refused under its own field.
@@ -923,16 +984,22 @@ class SNN_T_Forms {
      *
      * @return array [data, errors keyed by field key, name, email]
      */
-    public static function collect($form, $raw) {
+    public static function collect($form, $raw, $skip = []) {
         $data   = [];
         $errors = [];
         $name   = '';
         $email  = '';
 
         foreach ($form->fields as $field) {
-            if ($field['type'] === 'divider') continue;
+            // Dividers and HTML blocks have no answer.
+            if (in_array($field['type'], ['divider', 'html'], true)) continue;
 
-            $key   = $field['key'];
+            $key = $field['key'];
+            // A seat already held on this code is not asked again: it stays empty for this sign-up.
+            if (in_array($key, $skip, true)) {
+                $data[$key] = '';
+                continue;
+            }
             $value = $raw[$key] ?? ($field['type'] === 'checkbox' ? [] : '');
             $error = '';
 
@@ -1062,6 +1129,41 @@ class SNN_T_Forms {
             }
         }
         return $errors;
+    }
+
+    /**
+     * The people already signed up with this code, shown locked in the form. A sign-up with the
+     * code fills the form's seats in order (a seat is a name and the address beside it), so the
+     * people on the code are the first seats of the current round. Once every seat has been
+     * used, the next visitor gets a fresh form.
+     *
+     * @return array<int, array{name_key: string, email_key: ?string, name: string, email: string}>
+     */
+    public static function locked_people($form, $code) {
+        if (!$form || SNN_T_Placements::normalise($code) === '') return [];
+
+        $names = [];
+        $emails = [];
+        foreach ($form->fields as $field) {
+            if (($field['map_to'] ?? '') === 'name')  $names[]  = $field['key'];
+            if (($field['map_to'] ?? '') === 'email') $emails[] = $field['key'];
+        }
+        $seats = count($names);
+        if ($seats === 0) return [];
+
+        $held  = SNN_T_Placements::held($code);
+        $round = count($held) % $seats;
+
+        $out = [];
+        foreach (array_slice($held, count($held) - $round) as $i => $row) {
+            $out[] = [
+                'name_key'  => $names[$i],
+                'email_key' => $emails[$i] ?? null,
+                'name'      => (string)$row->name,
+                'email'     => (string)$row->email,
+            ];
+        }
+        return $out;
     }
 
     /** Is there a place for $people more tickets? */

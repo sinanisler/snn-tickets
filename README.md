@@ -41,10 +41,10 @@ Every event is live as soon as it's created:
 ## Features
 
 ### Sign-up forms
-- Question types: short and long answer, dropdown, pick one, pick several, "I agree" box, email, phone, number, date, hidden value, and a divider (a coloured line with a height and style that splits the form in two; it asks nothing)
+- Question types: short and long answer, dropdown, pick one, pick several, "I agree" box (its text can carry a link, such as the privacy policy), email, phone, number, date, hidden value, a divider (a coloured line of a set height that splits the form in two), and an HTML block (any HTML and CSS, shown as written; it asks nothing)
 - Name and email are the default ticket questions, so tickets reach someone. Any text or email question can be marked for the ticket too, and a sign-up can have several names, each with its own ticket. The first address is always needed; a second name or address can be optional. The same address cannot be used twice on one sign-up. Every other answer becomes an email chip
 - One ticket per email, spot limit (people waiting hold a spot), "spots left", closed/full message
-- **Sell Placement codes** (needs the Sell Placement plugin active): the link carries `?code=SP3K7Q9`; only codes that exist there and are not cancelled or suspended can sign up, and each code gives a set number of invites (two by default). Each person who signs up uses one, and the link shows how many are left. The sign-up keeps the code, shown in the person's History
+- **Sell Placement codes** (needs the Sell Placement plugin active): the link carries `?code=SP3K7Q9`; only codes that exist there and are not cancelled or suspended can sign up, and each code gives a set number of invites (two by default). Each person who signs up uses one, and the link shows how many are left. The sign-up keeps the code, shown in the person's History. Once someone has signed up with a code, the form shows them locked at the top (name and address, read-only), and the next visitor with the same link fills in the seats after them. Once every seat has been used, the next visitor gets a fresh form. Anyone with the link can see those locked names and addresses
 - Submits in the background with errors under each field; works without JavaScript
 - Spam protection: honeypot, minimum fill time, per-IP throttle
 
