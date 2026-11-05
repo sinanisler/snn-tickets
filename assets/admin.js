@@ -304,7 +304,7 @@
       return '<label class="snn-field"><span>' + esc(t('onTicket', 'On the ticket')) + '</span><select data-k="map_to">'
         + '<option value=""' + (f.map_to ? '' : ' selected') + '>' + esc(t('ticketNone', 'Not on the ticket')) + '</option>'
         + '<option value="name"' + (f.map_to === 'name' ? ' selected' : '') + '>' + esc(t('ticketName', 'Name on the ticket')) + '</option>'
-        + '<option value="email"' + (f.map_to === 'email' ? ' selected' : '') + '>' + esc(t('ticketGoes', 'Ticket goes here')) + '</option></select></label>';
+        + '<option value="email"' + (f.map_to === 'email' ? ' selected' : '') + '>' + esc(t('ticketGoes', 'Ticket goes to this mail')) + '</option></select></label>';
     }
 
     function isDivider(f) { return f.type === 'divider'; }
@@ -347,7 +347,7 @@
         var head = '<div class="snn-qh" data-q="' + i + '">'
           + '<span class="ord"><button type="button" data-up="' + i + '" aria-label="' + esc(t('moveUp', 'Move up')) + '">▲</button><button type="button" data-down="' + i + '" aria-label="' + esc(t('moveDown', 'Move down')) + '">▼</button></span>'
           + '<span class="lbl">' + esc(isDivider(f) ? t('dividerLabel', 'Line across the form') : isHtml(f) ? t('htmlLabel', 'HTML block') : (plain(f.label) || t('untitled', 'Untitled question'))) + (f.required ? ' <span class="snn-req">*</span>' : '') + '</span>'
-          + (locked(f) ? '<span class="snn-chip info">🔒 ' + esc(f.map_to === 'name' ? t('ticketName', 'Name on the ticket') : t('ticketGoes', 'Ticket goes here')) + '</span>' : '<span class="t">' + esc(TYPES[f.type] || f.type) + '</span>')
+          + (locked(f) ? '<span class="snn-chip info">🔒 ' + esc(f.map_to === 'name' ? t('ticketName', 'Name on the ticket') : t('ticketGoes', 'Ticket goes to this mail')) + '</span>' : '<span class="t">' + esc(TYPES[f.type] || f.type) + '</span>')
           + '</div>';
         if (i !== open) return '<div class="snn-qc">' + head + '</div>';
         if (isDivider(f)) return '<div class="snn-qc open" data-i="' + i + '">' + head + dividerBody(f, i) + '</div>';

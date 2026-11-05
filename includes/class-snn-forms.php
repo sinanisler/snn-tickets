@@ -1073,7 +1073,7 @@ class SNN_T_Forms {
     /**
      * The people a sign-up issues tickets for, in form order.
      *
-     * A "Name on the ticket" field with a name in it is one ticket. The "Ticket goes here"
+     * A "Name on the ticket" field with a name in it is one ticket. The "Ticket goes to this mail"
      * field in the same position is that ticket's address. A name without one, or a form
      * without addresses, uses the buyer's address, which is the first one. A form with no
      * names still gets one ticket, as it always has.

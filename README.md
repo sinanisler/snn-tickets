@@ -19,7 +19,7 @@ The **Tickets** menu has five entries. On a WooCommerce site shop managers can u
 Each **event page** has these tabs (Sell tickets only when WooCommerce is active):
 
 - **People**: everyone in one list. Sign-ups waiting for approval, tickets, check-ins, cancelled and declined, with filters, search, bulk actions, and a side panel per person (answers, ticket, history, private note). Add one person, import a spreadsheet, make blank tickets, email everyone, download the list.
-- **Sign-up form**: questions, who gets a ticket (everyone / you approve / rules with a "Try it" tester), spot limit, messages, form colour. One sign-up can issue several tickets: mark each name question "Name on the ticket" and each address "Ticket goes here". Each filled name gets its own ticket, sent to the address in the same position, or to the first address when there is none.
+- **Sign-up form**: questions, who gets a ticket (everyone / you approve / rules with a "Try it" tester), spot limit, messages, form colour. One sign-up can issue several tickets: mark each name question "Name on the ticket" and each address "Ticket goes to this mail". Each filled name gets its own ticket, sent to the address in the same position, or to the first address when there is none.
 - **Sell tickets**: ticket types (WooCommerce products) with price, quantity and how many people each admits; add, reprice, stop and restart sales without leaving the event.
 - **Emails**: the event's own ticket, "we got your request", "sorry, no spot" and notice-to-you emails, already written, with a live preview, test send and a shared template library.
 - **Door**: live check-in count, recent check-ins with undo, and a QR that opens the scanner on a phone.

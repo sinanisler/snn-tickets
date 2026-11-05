@@ -57,7 +57,7 @@ class SNN_T_Admin {
             'subject' => __('Subject', 'snn-tickets'),
             'moveUp' => __('Move up', 'snn-tickets'), 'moveDown' => __('Move down', 'snn-tickets'),
             'untitled' => __('Untitled question', 'snn-tickets'), 'ticketName' => __('Name on the ticket', 'snn-tickets'),
-            'ticketGoes' => __('Ticket goes here', 'snn-tickets'), 'question' => __('Question', 'snn-tickets'),
+            'ticketGoes' => __('Ticket goes to this mail', 'snn-tickets'), 'question' => __('Question', 'snn-tickets'),
             'onTicket' => __('On the ticket', 'snn-tickets'), 'ticketNone' => __('Not on the ticket', 'snn-tickets'),
             'firstAddressHelp' => __('Always needed, so the ticket reaches someone.', 'snn-tickets'),
             'optionalNameHelp' => __('Left empty, no ticket is made for this name.', 'snn-tickets'),
