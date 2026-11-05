@@ -471,6 +471,138 @@ $second_out = ob_get_clean();
 check($second_id > 0 && $second_out === '', 'the next free invite still saves quietly');
 $GLOBALS['wpdb']->show_errors = false;
 
+/* ================= several tickets per sign-up ================= */
+section('Several tickets per sign-up');
+
+// The stand-in database also answers the invite queries from the rows it holds, and
+// removes rows again, so an invite claim can be followed through a sign-up.
+class SNN_Test_Slots_WPDB extends SNN_Test_WPDB {
+    public function get_var($sql) {
+        if (preg_match("/placement_code = '([^']*)' AND placement_slot = (\d+)/", $sql, $m)) {
+            foreach ($this->inserted as [$t, $d]) {
+                if (($d['placement_code'] ?? null) === $m[1] && (int)($d['placement_slot'] ?? 0) === (int)$m[2]) return '1';
+            }
+            return null;
+        }
+        if (preg_match("/placement_code = '([^']*)' AND placement_slot IS NOT NULL/", $sql, $m)) {
+            $n = 0;
+            foreach ($this->inserted as [$t, $d]) {
+                if (($d['placement_code'] ?? null) === $m[1] && ($d['placement_slot'] ?? null) !== null) $n++;
+            }
+            return (string)$n;
+        }
+        return parent::get_var($sql);
+    }
+    public function insert($t, $d, $f = null) {
+        $ok = parent::insert($t, $d, $f);
+        if ($ok) $this->inserted[count($this->inserted) - 1][1]['_id'] = $this->insert_id;
+        return $ok;
+    }
+    public function delete($t = null, $where = [], $f = null) {
+        $this->inserted = array_values(array_filter($this->inserted, function ($row) use ($t, $where) {
+            return !($row[0] === $t && isset($where['id']) && ($row[1]['_id'] ?? null) === (int)$where['id']);
+        }));
+        return 1;
+    }
+}
+
+$saved_wpdb = $GLOBALS['wpdb'];
+$GLOBALS['wpdb'] = new SNN_Test_Slots_WPDB();
+
+$multi_form = (object)[
+    'id' => 7, 'list_id' => 3, 'name' => 'Conference', 'status' => 'active',
+    'fields' => SNN_T_Forms::sanitize_fields([
+        ['key' => 'name',       'label' => 'Your name',   'type' => 'text',   'required' => 1, 'map_to' => 'name'],
+        ['key' => 'email',      'label' => 'Your email',  'type' => 'email',  'required' => 1, 'map_to' => 'email'],
+        ['key' => 'guest',      'label' => 'Guest name',  'type' => 'text',   'map_to' => 'name'],
+        ['key' => 'guest_mail', 'label' => 'Guest email', 'type' => 'email',  'map_to' => 'email'],
+        ['key' => 'diet',       'label' => 'Diet',        'type' => 'select', 'options' => ['Any', 'Vegan']],
+    ]),
+    'settings' => array_merge(SNN_T_Forms::default_settings(), ['invites_per_code' => 2, 'max_tickets' => 0]),
+];
+
+// Roles only make sense on the right kind of answer.
+$roles = SNN_T_Forms::sanitize_fields([
+    ['key' => 'a', 'label' => 'Name',  'type' => 'text',   'map_to' => 'name'],
+    ['key' => 'b', 'label' => 'Size',  'type' => 'select', 'map_to' => 'name', 'options' => ['S']],
+    ['key' => 'c', 'label' => 'Mail',  'type' => 'text',   'map_to' => 'email'],
+    ['key' => 'd', 'label' => 'Guest', 'type' => 'text',   'map_to' => 'name'],
+]);
+check($roles[0]['map_to'] === 'name', 'a text answer can be the name on the ticket');
+check($roles[1]['map_to'] === '', 'a dropdown cannot be the name on the ticket');
+check($roles[2]['map_to'] === '', 'a text answer cannot be the ticket address');
+check($roles[3]['map_to'] === 'name', 'a form can have more than one name on the ticket');
+
+// Each name with a name in it is one ticket; the address beside it goes with it.
+$data = ['name' => 'Ana', 'email' => 'ana@x.test', 'guest' => 'Ben', 'guest_mail' => 'ben@y.test', 'diet' => 'Any'];
+$two  = SNN_T_Forms::holders($multi_form, $data, 'ana@x.test');
+check(count($two) === 2, 'two names make two tickets');
+check($two[0] === ['name' => 'Ana', 'email' => 'ana@x.test'], 'the first name gets the first address');
+check($two[1] === ['name' => 'Ben', 'email' => 'ben@y.test'], 'the second name gets the second address');
+
+$no_addr = SNN_T_Forms::holders($multi_form, array_merge($data, ['guest_mail' => '']), 'ana@x.test');
+check($no_addr[1] === ['name' => 'Ben', 'email' => 'ana@x.test'], 'a name without its own address goes to the buyer');
+
+$blank_guest = SNN_T_Forms::holders($multi_form, array_merge($data, ['guest' => '  ']), 'ana@x.test');
+check(count($blank_guest) === 1 && $blank_guest[0]['name'] === 'Ana', 'an empty optional name makes no ticket');
+
+$no_names = SNN_T_Forms::holders((object)['fields' => [['key' => 'email', 'type' => 'email', 'map_to' => 'email']]], ['email' => 'ana@x.test'], 'ana@x.test');
+check($no_names === [['name' => '', 'email' => 'ana@x.test']], 'a form with no names still gets one ticket, as before');
+
+// Two people, two invites: two records, each with its own invite and its own address.
+$GLOBALS['wpdb']->inserted = [];
+$subs_rows = function () {
+    return array_values(array_map(function ($r) { return $r[1]; },
+        array_filter($GLOBALS['wpdb']->inserted, function ($r) { return $r[0] === SNN_T_DB::submissions(); })));
+};
+$ids = SNN_T_Forms::create_sign_ups($multi_form, 'approved', $two, $data, 'SPMULTI');
+$rows = $subs_rows();
+check(count($ids) === 2 && count($rows) === 2, 'a two-person sign-up saves two records');
+check(($rows[0]['name'] ?? '') === 'Ana' && ($rows[1]['name'] ?? '') === 'Ben', 'each record carries its own name');
+check(($rows[0]['email'] ?? '') === 'ana@x.test' && ($rows[1]['email'] ?? '') === 'ben@y.test', 'each record carries its own address');
+check(($rows[0]['placement_slot'] ?? null) === 1 && ($rows[1]['placement_slot'] ?? null) === 2, 'each person takes its own invite');
+check(($rows[1]['status'] ?? '') === 'approved', 'an approved sign-up approves each of its records');
+check(SNN_T_Placements::left('SPMULTI', 2) === 0, 'both invites of the code are used up');
+
+// Three people, two invites: nobody is saved, and the records already saved are removed.
+$GLOBALS['wpdb']->inserted = [];
+$three = [['name' => 'A', 'email' => 'a@x.test'], ['name' => 'B', 'email' => 'b@x.test'], ['name' => 'C', 'email' => 'c@x.test']];
+check(SNN_T_Forms::create_sign_ups($multi_form, 'pending', $three, $data, 'SPROLL1') === [],
+      'a sign-up with more people than invites saves nothing');
+check(SNN_T_Placements::taken('SPROLL1') === 0, 'records saved before the refusal are removed again');
+check(count($subs_rows()) === 0, 'no stray sign-up rows are left behind');
+
+// A declined sign-up holds no invite, but keeps its code, and nothing is claimed.
+$GLOBALS['wpdb']->inserted = [];
+$declined = SNN_T_Forms::create_sign_ups($multi_form, 'rejected', $two, $data, 'SPNOPE1');
+$rows = $subs_rows();
+check(count($declined) === 2 && ($rows[0]['placement_slot'] ?? null) === null, 'a declined sign-up holds no invite');
+check(SNN_T_Placements::taken('SPNOPE1') === 0, 'a declined sign-up does not count against the code');
+
+// Without a code, each person's record is an ordinary sign-up.
+$GLOBALS['wpdb']->inserted = [];
+$plain = SNN_T_Forms::create_sign_ups($multi_form, 'pending', $two, $data, '');
+$rows = $subs_rows();
+check(count($plain) === 2 && ($rows[1]['status'] ?? '') === 'pending', 'without a code, each person is a pending sign-up');
+check(($rows[1]['placement_code'] ?? null) === null && ($rows[1]['placement_slot'] ?? null) === null, 'without a code, no invite is claimed');
+$GLOBALS['wpdb']->inserted = [];
+
+// The second name and address do not offer the browser's autofill.
+ob_start();
+SNN_T_Forms::render_field(['key' => 'name', 'type' => 'text', 'label' => 'Name', 'placeholder' => '', 'required' => 1, 'options' => [], 'map_to' => 'name'], null, '');
+$first_html = ob_get_clean();
+ob_start();
+SNN_T_Forms::render_field(['key' => 'guest', 'type' => 'text', 'label' => 'Guest', 'placeholder' => '', 'required' => 0, 'options' => [], 'map_to' => 'name', 'autofill' => false], null, '');
+$guest_html = ob_get_clean();
+check(strpos($first_html, 'autocomplete="name"') !== false, 'the buyer\'s name keeps browser autofill');
+check(strpos($guest_html, 'autocomplete') === false, 'a second name does not get browser autofill');
+
+check(SNN_T_Forms::messages($multi_form)['short'][1] === SNN_T_Forms::default_settings()['group_short_message'], 'a sign-up that does not fit has its own message');
+check(SNN_T_Forms::default_settings()['group_short_message'] !== '', 'the not-enough-places message has a default');
+check(SNN_T_Forms::sanitize_settings(['group_short_message' => '  Too many  '])['group_short_message'] === 'Too many', 'the not-enough-places message is kept, trimmed');
+
+$GLOBALS['wpdb'] = $saved_wpdb;
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

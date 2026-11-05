@@ -614,6 +614,7 @@ class SNN_T_Events_Admin {
                                     'pending_message'   => __('After signing up (waiting for approval)', 'snn-tickets'),
                                     'full_message'      => __('When the event is full or closed', 'snn-tickets'),
                                     'duplicate_message' => __('When the email is already signed up', 'snn-tickets'),
+                                    'group_short_message' => __('When there are not enough places for everyone on one sign-up', 'snn-tickets'),
                                     'error_message'     => __('When something goes wrong', 'snn-tickets'),
                                 ] as $k => $l): ?>
                                     <label class="snn-field"><span><?php echo esc_html($l); ?></span><input type="text" value="<?php echo esc_attr($s[$k]); ?>" data-setting="<?php echo esc_attr($k); ?>"></label>
@@ -635,7 +636,7 @@ class SNN_T_Events_Admin {
                                 <?php $spl = SNN_T_Placements::available(); ?>
                                 <label class="snn-check"><input type="checkbox" data-setting="require_placement_code" <?php checked(!empty($s['require_placement_code'])); ?> <?php disabled(!$spl && empty($s['require_placement_code'])); ?>> <span><?php esc_html_e('Only people with a Sell Placement code can sign up', 'snn-tickets'); ?></span></label>
                                 <p class="snn-muted snn-small" style="margin:-6px 0 0"><?php echo esc_html($spl
-                                    ? __('The code is read from the link (…?code=SP3K7Q9). It must exist in Sell Placement. Each sign-up with the code uses one of its invites. Sign-ups keep the code in their History.', 'snn-tickets')
+                                    ? __('The code is read from the link (…?code=SP3K7Q9). It must exist in Sell Placement. Each person who signs up with the code uses one of its invites. Sign-ups keep the code in their History.', 'snn-tickets')
                                     : __('Needs the Sell Placement plugin, active on this site. Until it is, a form with this on lets nobody sign up.', 'snn-tickets')); ?></p>
                                 <div class="snn-row" style="align-items:flex-start">
                                     <label class="snn-field" style="max-width:160px"><span><?php esc_html_e('Invites per code', 'snn-tickets'); ?></span><input type="number" min="1" max="10" value="<?php echo esc_attr($s['invites_per_code']); ?>" data-setting="invites_per_code"></label>

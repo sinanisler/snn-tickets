@@ -299,6 +299,13 @@
       return k;
     }
     function locked(f) { return f.map_to === 'name' || f.map_to === 'email'; }
+    // Any text or email question can be the name or the address on a ticket. Several can.
+    function roleField(f) {
+      return '<label class="snn-field"><span>' + esc(t('onTicket', 'On the ticket')) + '</span><select data-k="map_to">'
+        + '<option value=""' + (f.map_to ? '' : ' selected') + '>' + esc(t('ticketNone', 'Not on the ticket')) + '</option>'
+        + '<option value="name"' + (f.map_to === 'name' ? ' selected' : '') + '>' + esc(t('ticketName', 'Name on the ticket')) + '</option>'
+        + '<option value="email"' + (f.map_to === 'email' ? ' selected' : '') + '>' + esc(t('ticketGoes', 'Ticket goes here')) + '</option></select></label>';
+    }
 
     function renderQuestions() {
       if (!listEl) return;
@@ -310,6 +317,7 @@
           + '</div>';
         if (i !== open) return '<div class="snn-qc">' + head + '</div>';
         var b = '<div class="snn-qb"><label class="snn-field"><span>' + esc(t('question', 'Question')) + '</span><input type="text" data-k="label" value="' + esc(f.label) + '"></label>';
+        if (locked(f) || f.type === 'text' || f.type === 'email') b += roleField(f);
         if (locked(f)) {
           b += '<p class="snn-muted snn-small" style="margin:0">' + esc(f.map_to === 'name' ? t('nameHelp') : t('emailHelp')) + '</p>'
             + '<label class="snn-field"><span>' + esc(t('hint', 'Hint inside the box')) + ' <small>' + esc(t('optional', '(optional)')) + '</small></span><input type="text" data-k="placeholder" value="' + esc(f.placeholder || '') + '"></label>';
@@ -372,6 +380,13 @@
         var f = fields[+card.getAttribute('data-i')], k = el.getAttribute('data-k');
         if (k === 'required') f.required = el.checked ? 1 : 0;
         else if (k === 'options') f.options = el.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        else if (k === 'map_to') {
+          if (e.type !== 'change') return;
+          f.map_to = el.value;
+          // A name is typed as text and an address as an email field.
+          if (f.map_to) f.type = f.map_to === 'name' ? 'text' : 'email';
+          renderQuestions(); changed(); return;
+        }
         else f[k] = el.value;
         if (k === 'label') {
           if (!f._saved && !locked(f)) f.key = uniqueKey(f.label, +card.getAttribute('data-i'));

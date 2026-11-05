@@ -94,12 +94,14 @@ class SNN_T_Forms {
             'error_message'         => __('Something went wrong. Please try again.', 'snn-tickets'),
             'code_invalid_message'  => __('This link is not valid. Please check it, or ask for a new one.', 'snn-tickets'),
             'invites_used_message'  => __('All invites for this link have been used.', 'snn-tickets'),
+            // A sign-up with more people on it than there are places or invites left.
+            'group_short_message'   => __('There are not enough places left for everyone on this sign-up. Try again with fewer people.', 'snn-tickets'),
             'redirect_url'          => '',
             'accent_color'          => '',
             'show_remaining'        => 0,
             // Needs the Sell Placement plugin: sign-ups must carry a code from its link.
             'require_placement_code' => 0,
-            // How many sign-ups one code allows. Each sign-up uses one invite.
+            // How many people one code allows. Each person uses one invite.
             'invites_per_code'       => 2,
         ];
     }
@@ -224,6 +226,8 @@ class SNN_T_Forms {
             }
 
             $map_to = in_array($f['map_to'] ?? '', ['name', 'email'], true) ? $f['map_to'] : '';
+            // A name is typed as text and a ticket address as an email field, so the answer is always the right kind.
+            if (($map_to === 'name' && $type !== 'text') || ($map_to === 'email' && $type !== 'email')) $map_to = '';
 
             $out[] = [
                 'key'         => $key,
@@ -285,7 +289,7 @@ class SNN_T_Forms {
         $out['notify_email'] = ($notify && is_email($notify)) ? $notify : '';
 
         foreach (['submit_label', 'success_message', 'pending_message', 'full_message',
-                  'duplicate_message', 'error_message', 'code_invalid_message', 'invites_used_message'] as $k) {
+                  'duplicate_message', 'error_message', 'code_invalid_message', 'invites_used_message', 'group_short_message'] as $k) {
             $val = sanitize_text_field($s[$k] ?? '');
             $out[$k] = $val !== '' ? $val : $d[$k];
         }
@@ -426,6 +430,7 @@ class SNN_T_Forms {
             'error'     => ['err',  $form->settings['error_message']],
             'code_invalid' => ['err', $form->settings['code_invalid_message']],
             'code_used'    => ['err', $form->settings['invites_used_message']],
+            'short'        => ['err', $form->settings['group_short_message']],
         ];
     }
 
@@ -514,7 +519,12 @@ class SNN_T_Forms {
            . '<label>Leave this field empty<input type="text" name="snn_website" tabindex="-1" autocomplete="off"></label>'
            . '</div>';
 
+        // Only the first name and address are the buyer's, so the browser's autofill is left out of the rest.
+        $seen = [];
         foreach ($form->fields as $field) {
+            $role = $field['map_to'] ?? '';
+            if ($role !== '' && isset($seen[$role])) $field['autofill'] = false;
+            $seen[$role] = true;
             self::render_field($field, $old[$field['key']] ?? null, $errors[$field['key']] ?? '');
         }
 
@@ -594,6 +604,7 @@ class SNN_T_Forms {
 
             default: // text, email, tel, number, date
                 $auto = ['email' => 'email', 'tel' => 'tel'][$field['type']] ?? ($field['map_to'] === 'name' ? 'name' : '');
+                if (isset($field['autofill']) && $field['autofill'] === false) $auto = '';
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
                 echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . '"'
                    . ' type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
@@ -802,9 +813,16 @@ class SNN_T_Forms {
             self::bounce_with_errors($redirect, $form_id, $errors, $data);
         }
 
+        // Every person who gets a ticket takes a place, so the sign-up needs room for all of them.
+        $holders = self::holders($form, $data, $email);
+        $people  = count($holders);
+
         // Capacity
         if (self::is_full($form)) {
             self::bounce($redirect, $form_id, 'full');
+        }
+        if (!self::has_room($form, $people)) {
+            self::bounce($redirect, $form_id, 'short');
         }
 
         // Placement code: checked again here, the hidden field is only a convenience.
@@ -817,66 +835,53 @@ class SNN_T_Forms {
             }
         }
 
-        // One registration per email address
-        if ($form->settings['one_per_email'] && $email) {
-            global $wpdb;
-            $subs = SNN_T_DB::submissions();
-            $dupe = (int)$wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$subs} WHERE form_id = %d AND email = %s AND status IN ('approved','pending')",
-                (int)$form->id, $email
-            ));
-            if ($dupe > 0 || SNN_T_Tickets::count_active_for_email((int)$form->list_id, $email) > 0) {
-                self::bounce($redirect, $form_id, 'duplicate');
+        // One registration per email address: every address that would get a ticket is checked.
+        if ($form->settings['one_per_email']) {
+            foreach (self::ticket_emails($holders) as $address) {
+                if (self::has_signed_up($form, $address)) {
+                    self::bounce($redirect, $form_id, 'duplicate');
+                }
             }
         }
 
         $decision = self::decide($form, $data);
+        $invites  = (int)$form->settings['invites_per_code'];
 
-        // A code's sign-up claims one of its invites: the insert takes a slot, and the unique
-        // key refuses a slot someone else holds, so the next one is tried. A declined sign-up
-        // holds no invite.
-        $invites = (int)$form->settings['invites_per_code'];
-        $slots   = $placement_code !== '' && $decision !== 'rejected' ? range(1, $invites) : [null];
-
-        $submission_id = 0;
-        foreach ($slots as $slot) {
-            // An invite someone already holds is skipped, so the database is not asked to refuse it.
-            if ($slot !== null && SNN_T_Placements::slot_taken($placement_code, $slot)) continue;
-
-            $submission_id = SNN_T_Submissions::create([
-                'form_id' => (int)$form->id,
-                'status'  => $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending'),
-                'name'    => $name,
-                'email'   => $email,
-                'data'    => $data,
-                'ip'      => SNN_T_Tickets::client_ip(),
-                'placement_code' => $placement_code,
-                'placement_slot' => $slot,
-            ]);
-            if ($submission_id || $slot === null || !SNN_T_Placements::slot_taken($placement_code, $slot)) break;
+        // A code's sign-up claims one of its invites for each person on it. A declined sign-up holds none.
+        if ($placement_code !== '' && $decision !== 'rejected') {
+            $left = SNN_T_Placements::left($placement_code, $invites);
+            if ($left < $people) {
+                self::bounce($redirect, $form_id, $left === 0 ? 'code_used' : 'short');
+            }
         }
 
-        if (!$submission_id) {
-            $used = $placement_code !== '' && SNN_T_Placements::left($placement_code, $invites) === 0;
-            self::bounce($redirect, $form_id, $used ? 'code_used' : 'error');
+        $ids = self::create_sign_ups($form, $decision, $holders, $data, $placement_code);
+        if (!$ids) {
+            $left = $placement_code !== '' ? SNN_T_Placements::left($placement_code, $invites) : 0;
+            if ($placement_code !== '' && $left === 0) self::bounce($redirect, $form_id, 'code_used');
+            if ($placement_code !== '' && $left < $people) self::bounce($redirect, $form_id, 'short');
+            self::bounce($redirect, $form_id, 'error');
         }
 
+        // The first record carries the notices for the whole sign-up.
+        $first = $ids[0];
         if ($decision === 'approved') {
-            SNN_T_Submissions::approve($submission_id, 0, $form->settings['approval_mode'] === 'conditional' ? __('Matched your rules', 'snn-tickets') : '');
+            $reason = $form->settings['approval_mode'] === 'conditional' ? __('Matched your rules', 'snn-tickets') : '';
+            foreach ($ids as $sid) SNN_T_Submissions::approve($sid, 0, $reason);
         } elseif ($decision === 'rejected') {
-            SNN_T_Submissions::reject($submission_id, 0, __('Did not match your rules', 'snn-tickets'));
+            foreach ($ids as $sid) SNN_T_Submissions::reject($sid, 0, __('Did not match your rules', 'snn-tickets'));
         } elseif ($email) {
-            // Awaiting review: acknowledge receipt now, the ticket comes later.
+            // Awaiting review: acknowledge receipt now, the tickets come later.
             SNN_T_Mailer::send_event_email('confirmation', (int)$form->list_id, [
                 'name'          => $name,
                 'email'         => $email,
                 'form_name'     => $form->name,
                 'fields'        => $data,
-                'submission_id' => $submission_id,
+                'submission_id' => $first,
             ]);
         }
 
-        self::notify_admin($form, $submission_id, $name, $email, $decision);
+        self::notify_admin($form, $first, $name, $email, $decision);
 
         if ($form->settings['redirect_url']) {
             if (self::$ajax) wp_send_json_success(['final' => true, 'redirect' => $form->settings['redirect_url']]);
@@ -956,6 +961,116 @@ class SNN_T_Forms {
         }
 
         return [$data, $errors, $name, $email];
+    }
+
+    /**
+     * The people a sign-up issues tickets for, in form order.
+     *
+     * A "Name on the ticket" field with a name in it is one ticket. The "Ticket goes here"
+     * field in the same position is that ticket's address. A name without one, or a form
+     * without addresses, uses the buyer's address, which is the first one. A form with no
+     * names still gets one ticket, as it always has.
+     *
+     * @param string $buyer the sign-up's own address
+     * @return array<int, array{name: string, email: string}>
+     */
+    public static function holders($form, $data, $buyer) {
+        $names     = [];
+        $addresses = [];
+        foreach ($form->fields as $field) {
+            $value = $data[$field['key']] ?? '';
+            $text  = is_array($value) ? '' : (string)$value;
+            if (($field['map_to'] ?? '') === 'name')  $names[]     = $text;
+            if (($field['map_to'] ?? '') === 'email') $addresses[] = $text;
+        }
+
+        $out = [];
+        foreach ($names as $i => $name) {
+            if (trim($name) === '') continue;
+            $address = $addresses[$i] ?? '';
+            $out[]   = ['name' => $name, 'email' => $address !== '' ? $address : $buyer];
+        }
+        return $out ?: [['name' => '', 'email' => $buyer]];
+    }
+
+    /** The distinct addresses the tickets of a sign-up go to. */
+    private static function ticket_emails($holders) {
+        $out = [];
+        foreach ($holders as $h) {
+            if ($h['email'] !== '' && !in_array($h['email'], $out, true)) $out[] = $h['email'];
+        }
+        return $out;
+    }
+
+    /** Has this address signed up for the form already, or hold a ticket for the event? */
+    private static function has_signed_up($form, $email) {
+        global $wpdb;
+        $subs = SNN_T_DB::submissions();
+        $dupe = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$subs} WHERE form_id = %d AND email = %s AND status IN ('approved','pending')",
+            (int)$form->id, $email
+        ));
+        return $dupe > 0 || SNN_T_Tickets::count_active_for_email((int)$form->list_id, $email) > 0;
+    }
+
+    /** Is there a place for $people more tickets? */
+    private static function has_room($form, $people) {
+        $max = (int)$form->settings['max_tickets'];
+        return $max <= 0 || self::issued_count($form) + $people <= $max;
+    }
+
+    /**
+     * Save one sign-up record per person who gets a ticket. Each record is a sign-up of its
+     * own, so approval, People, spot counts and claims keep to one person and one ticket per
+     * record. With a placement code, each record claims an invite nobody else holds. The
+     * unique key refuses a taken invite, so the next free one is tried. If a record cannot be
+     * saved, the ones already saved are removed, and nothing is left half done.
+     *
+     * @param array $holders from holders()
+     * @return int[] the record ids, or [] when the sign-up could not be saved
+     */
+    public static function create_sign_ups($form, $decision, $holders, $data, $placement_code) {
+        $status  = $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending');
+        // A declined sign-up holds no invite, but still keeps its code, as it always has.
+        $claim   = $placement_code !== '' && $decision !== 'rejected';
+        $invites = (int)$form->settings['invites_per_code'];
+        $ids     = [];
+
+        foreach ($holders as $holder) {
+            $base = [
+                'form_id'        => (int)$form->id,
+                'status'         => $status,
+                'name'           => $holder['name'],
+                'email'          => $holder['email'],
+                'data'           => $data,
+                'ip'             => SNN_T_Tickets::client_ip(),
+                'placement_code' => $placement_code,
+            ];
+
+            $sid = 0;
+            if ($claim) {
+                for ($slot = 1; $slot <= $invites && !$sid; $slot++) {
+                    // An invite someone already holds is skipped, so the database is not asked to refuse it.
+                    if (SNN_T_Placements::slot_taken($placement_code, $slot)) continue;
+                    $sid = SNN_T_Submissions::create($base + ['placement_slot' => $slot]);
+                    // Refused for any reason other than a taken invite: another invite will not help.
+                    if (!$sid && !SNN_T_Placements::slot_taken($placement_code, $slot)) break;
+                }
+            } else {
+                $sid = SNN_T_Submissions::create($base + ['placement_slot' => null]);
+            }
+
+            if (!$sid) {
+                global $wpdb;
+                foreach ($ids as $made) {
+                    $wpdb->delete(SNN_T_DB::submissions(), ['id' => (int)$made], ['%d']);
+                }
+                return [];
+            }
+            $ids[] = $sid;
+        }
+
+        return $ids;
     }
 
     private static function submit_rate_ok() {

@@ -19,7 +19,7 @@ The **Tickets** menu has five entries. On a WooCommerce site shop managers can u
 Each **event page** has these tabs (Sell tickets only when WooCommerce is active):
 
 - **People**: everyone in one list. Sign-ups waiting for approval, tickets, check-ins, cancelled and declined, with filters, search, bulk actions, and a side panel per person (answers, ticket, history, private note). Add one person, import a spreadsheet, make blank tickets, email everyone, download the list.
-- **Sign-up form**: questions, who gets a ticket (everyone / you approve / rules with a "Try it" tester), spot limit, messages, form colour.
+- **Sign-up form**: questions, who gets a ticket (everyone / you approve / rules with a "Try it" tester), spot limit, messages, form colour. One sign-up can issue several tickets: mark each name question "Name on the ticket" and each address "Ticket goes here". Each filled name gets its own ticket, sent to the address in the same position, or to the first address when there is none.
 - **Sell tickets**: ticket types (WooCommerce products) with price, quantity and how many people each admits; add, reprice, stop and restart sales without leaving the event.
 - **Emails**: the event's own ticket, "we got your request", "sorry, no spot" and notice-to-you emails, already written, with a live preview, test send and a shared template library.
 - **Door**: live check-in count, recent check-ins with undo, and a QR that opens the scanner on a phone.
@@ -42,9 +42,9 @@ Every event is live as soon as it's created:
 
 ### Sign-up forms
 - Question types: short and long answer, dropdown, pick one, pick several, "I agree" box, email, phone, number, date, hidden value
-- Name and email are fixed questions, so tickets always reach someone; every other answer becomes an email chip
+- Name and email are the default ticket questions, so tickets reach someone. Any text or email question can be marked for the ticket too; every other answer becomes an email chip
 - One ticket per email, spot limit (people waiting hold a spot), "spots left", closed/full message
-- **Sell Placement codes** (needs the Sell Placement plugin active): the link carries `?code=SP3K7Q9`; only codes that exist there and are not cancelled or suspended can sign up, and each code gives a set number of invites (two by default). Each sign-up uses one, and the link shows how many are left. The sign-up keeps the code, shown in the person's History
+- **Sell Placement codes** (needs the Sell Placement plugin active): the link carries `?code=SP3K7Q9`; only codes that exist there and are not cancelled or suspended can sign up, and each code gives a set number of invites (two by default). Each person who signs up uses one, and the link shows how many are left. The sign-up keeps the code, shown in the person's History
 - Submits in the background with errors under each field; works without JavaScript
 - Spam protection: honeypot, minimum fill time, per-IP throttle
 

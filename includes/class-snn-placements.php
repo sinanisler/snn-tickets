@@ -5,7 +5,7 @@
  * A form can ask for the placement code from its link (?code=SP3K7Q9) when
  * the Sell Placement plugin is active. The code must exist there and must not
  * be cancelled or suspended. It gives a set number of invites (the form's
- * "Invites per code"). Each sign-up uses one, and the database refuses a
+ * "Invites per code"). Each person signed up uses one, and the database refuses a
  * sign-up once every invite is taken.
  *
  * Without Sell Placement nothing can be checked, so a form that requires
