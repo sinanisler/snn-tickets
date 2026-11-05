@@ -702,6 +702,10 @@ class SNN_T_Forms {
         .snn-ticket-form input[type=date],.snn-ticket-form textarea,
         .snn-ticket-form select{width:100%;padding:8px 10px;border:1px solid #c3c4c7;border-radius:6px;
             font:inherit;background:#fff;color:inherit;box-sizing:border-box}
+        /* One-line boxes are a fixed 32px tall, whatever line height the theme sets. Text areas keep growing. */
+        .snn-ticket-form input[type=text],.snn-ticket-form input[type=email],
+        .snn-ticket-form input[type=tel],.snn-ticket-form input[type=number],
+        .snn-ticket-form input[type=date],.snn-ticket-form select{height:32px;padding:0 10px;line-height:normal}
         .snn-ticket-form input:focus,.snn-ticket-form textarea:focus,.snn-ticket-form select:focus{outline:2px solid var(--snn-accent);outline-offset:1px;border-color:var(--snn-accent)}
         .snn-ticket-form textarea{resize:vertical}
         .snn-ticket-form .snn-choices{display:block}
