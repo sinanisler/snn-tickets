@@ -712,7 +712,7 @@ class SNN_T_Events_Admin {
 
         $answers = [];
         if ($form) foreach ($form->fields as $f) {
-            if (in_array($f['map_to'], ['name', 'email'], true) || $f['type'] === 'consent') continue;
+            if (in_array($f['map_to'], ['name', 'email'], true) || $f['type'] === 'consent' || $f['type'] === 'divider') continue;
             $answers['{field:' . $f['key'] . '}'] = $f['label'];
         }
         $unused = ($mail === 'confirmation' && $mode === 'auto') || ($mail === 'rejection' && $mode === 'auto');

@@ -307,15 +307,41 @@
         + '<option value="email"' + (f.map_to === 'email' ? ' selected' : '') + '>' + esc(t('ticketGoes', 'Ticket goes here')) + '</option></select></label>';
     }
 
+    function isDivider(f) { return f.type === 'divider'; }
+    // The first name and the first address are the buyer's. Only the first address is always needed.
+    function firstOf(role, f) { return f.map_to === role && fields.filter(function (x) { return x.map_to === role; })[0] === f; }
+    function requiredSwitch(f) {
+      var fixed = firstOf('email', f), help = '';
+      if (fixed) help = t('firstAddressHelp', 'Always needed, so the ticket reaches someone.');
+      else if (!f.required && f.map_to === 'name' && !firstOf('name', f)) help = t('optionalNameHelp', 'Left empty, no ticket is made for this name.');
+      else if (!f.required && f.map_to === 'email') help = t('optionalAddressHelp', 'Left empty, the ticket goes to the first address.');
+      return '<label class="snn-switch"><input type="checkbox" data-k="required"' + (f.required || fixed ? ' checked' : '') + (fixed ? ' disabled' : '') + '><i></i>' + esc(t('required', 'Required')) + '</label>'
+        + (help ? '<span class="snn-muted snn-small">' + esc(help) + '</span>' : '');
+    }
+    // A divider asks nothing: only its line is set here.
+    function dividerBody(f, i) {
+      var style = f.style || 'solid';
+      return '<div class="snn-qb"><div class="snn-grid2">'
+        + '<label class="snn-field"><span>' + esc(t('colour', 'Colour')) + '</span><input type="color" data-k="color" value="' + esc(f.color || '#c3c4c7') + '"></label>'
+        + '<label class="snn-field"><span>' + esc(t('thickness', 'Height (px)')) + '</span><input type="number" min="1" max="20" data-k="height" value="' + esc(f.height || 1) + '"></label></div>'
+        + '<label class="snn-field"><span>' + esc(t('lineStyle', 'Style')) + '</span><select data-k="style">'
+        + ['solid', 'dashed', 'dotted'].map(function (s) { return '<option value="' + s + '"' + (s === style ? ' selected' : '') + '>' + esc(t(s, s)) + '</option>'; }).join('')
+        + '</select></label>'
+        + '<p class="snn-muted snn-small" style="margin:0">' + esc(t('dividerHelp', 'A line that splits the form in two. It asks nothing, so it has no answer.')) + '</p>'
+        + '<div class="snn-row"><span class="snn-spacer"></span><button type="button" class="button button-small" data-dup="' + i + '">' + esc(t('duplicate', 'Duplicate')) + '</button>'
+        + '<button type="button" class="button button-small button-link-delete" data-del="' + i + '">' + esc(t('remove', 'Remove')) + '</button></div></div>';
+    }
+
     function renderQuestions() {
       if (!listEl) return;
       listEl.innerHTML = fields.map(function (f, i) {
         var head = '<div class="snn-qh" data-q="' + i + '">'
           + '<span class="ord"><button type="button" data-up="' + i + '" aria-label="' + esc(t('moveUp', 'Move up')) + '">▲</button><button type="button" data-down="' + i + '" aria-label="' + esc(t('moveDown', 'Move down')) + '">▼</button></span>'
-          + '<span class="lbl">' + esc(f.label || t('untitled', 'Untitled question')) + (f.required ? ' <span class="snn-req">*</span>' : '') + '</span>'
+          + '<span class="lbl">' + esc(isDivider(f) ? t('dividerLabel', 'Line across the form') : (f.label || t('untitled', 'Untitled question'))) + (f.required ? ' <span class="snn-req">*</span>' : '') + '</span>'
           + (locked(f) ? '<span class="snn-chip info">🔒 ' + esc(f.map_to === 'name' ? t('ticketName', 'Name on the ticket') : t('ticketGoes', 'Ticket goes here')) + '</span>' : '<span class="t">' + esc(TYPES[f.type] || f.type) + '</span>')
           + '</div>';
         if (i !== open) return '<div class="snn-qc">' + head + '</div>';
+        if (isDivider(f)) return '<div class="snn-qc open" data-i="' + i + '">' + head + dividerBody(f, i) + '</div>';
         var b = '<div class="snn-qb"><label class="snn-field"><span>' + esc(t('question', 'Question')) + '</span><input type="text" data-k="label" value="' + esc(f.label) + '"></label>';
         if (locked(f) || f.type === 'text' || f.type === 'email') b += roleField(f);
         if (locked(f)) {
@@ -323,7 +349,7 @@
             + '<label class="snn-field"><span>' + esc(t('hint', 'Hint inside the box')) + ' <small>' + esc(t('optional', '(optional)')) + '</small></span><input type="text" data-k="placeholder" value="' + esc(f.placeholder || '') + '"></label>';
         } else {
           b += '<div class="snn-grid2"><label class="snn-field"><span>' + esc(t('answerType', 'Answer type')) + '</span><select data-k="type">'
-            + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === f.type ? ' selected' : '') + '>' + esc(TYPES[k]) + '</option>'; }).join('') + '</select></label>';
+            + Object.keys(TYPES).filter(function (k) { return k !== 'divider'; }).map(function (k) { return '<option value="' + k + '"' + (k === f.type ? ' selected' : '') + '>' + esc(TYPES[k]) + '</option>'; }).join('') + '</select></label>';
           if (f.type === 'hidden') {
             b += '<label class="snn-field"><span>' + esc(t('value', 'Value')) + '</span><input type="text" data-k="default" value="' + esc(f['default'] || '') + '"></label></div>'
               + '<p class="snn-muted snn-small" style="margin:0">' + esc(t('hiddenHelp')) + '</p>';
@@ -338,10 +364,11 @@
               + '<label class="snn-field"><span>' + esc(t('prefilled', 'Pre-filled answer')) + '</span><input type="text" data-k="default" value="' + esc(f['default'] || '') + '"></label>'
               + '<p class="snn-muted snn-small" style="margin:0">' + esc(t('chipHelp', 'In emails this answer is the chip')) + ' <span class="snn-tag">' + esc(f.label) + '</span></p></div></details>';
           }
-          b += '<div class="snn-row">' + (f.type !== 'hidden' ? '<label class="snn-switch"><input type="checkbox" data-k="required"' + (f.required ? ' checked' : '') + '><i></i>' + esc(t('required', 'Required')) + '</label>' : '')
-            + '<span class="snn-spacer"></span><button type="button" class="button button-small" data-dup="' + i + '">' + esc(t('duplicate', 'Duplicate')) + '</button>'
-            + '<button type="button" class="button button-small button-link-delete" data-del="' + i + '">' + esc(t('remove', 'Remove')) + '</button></div>';
         }
+        // Name and address questions get the same row, so a second name or address can be made optional.
+        b += '<div class="snn-row">' + (f.type !== 'hidden' ? requiredSwitch(f) : '')
+          + '<span class="snn-spacer"></span><button type="button" class="button button-small" data-dup="' + i + '">' + esc(t('duplicate', 'Duplicate')) + '</button>'
+          + '<button type="button" class="button button-small button-link-delete" data-del="' + i + '">' + esc(t('remove', 'Remove')) + '</button></div>';
         return '<div class="snn-qc open" data-i="' + i + '">' + head + b + '</div></div>';
       }).join('');
       renderRules();
@@ -368,7 +395,8 @@
         var dup = e.target.closest('[data-dup]');
         if (dup) {
           var d = +dup.getAttribute('data-dup'), copy = JSON.parse(JSON.stringify(fields[d]));
-          copy.label += ' ' + t('copySuffix', '(copy)'); copy.key = uniqueKey(copy.label, -1); copy.map_to = ''; delete copy._saved;
+          if (!isDivider(copy)) copy.label += ' ' + t('copySuffix', '(copy)');
+          copy.key = uniqueKey(isDivider(copy) ? 'divider' : copy.label, -1); copy.map_to = ''; delete copy._saved;
           fields.splice(d + 1, 0, copy); open = d + 1; renderQuestions(); changed(); return;
         }
         var h = e.target.closest('[data-q]');
@@ -409,10 +437,13 @@
       }).join('');
       addEl.addEventListener('click', function (e) {
         var b = e.target.closest('[data-add]'); if (!b) return;
-        var type = b.getAttribute('data-add'), label = (cfg.newLabels || {})[type] || TYPES[type];
-        fields.push({key: uniqueKey(label, -1), type: type, label: label, placeholder: '', required: 0,
-          options: NEEDS.indexOf(type) !== -1 ? [t('opt1', 'Option 1'), t('opt2', 'Option 2')] : [], map_to: '', 'default': type === 'hidden' ? 'website' : ''});
+        var type = b.getAttribute('data-add'), label = type === 'divider' ? '' : ((cfg.newLabels || {})[type] || TYPES[type]);
+        var added = {key: uniqueKey(type === 'divider' ? 'divider' : label, -1), type: type, label: label, placeholder: '', required: 0,
+          options: NEEDS.indexOf(type) !== -1 ? [t('opt1', 'Option 1'), t('opt2', 'Option 2')] : [], map_to: '', 'default': type === 'hidden' ? 'website' : ''};
+        if (type === 'divider') { added.color = '#c3c4c7'; added.height = 1; added.style = 'solid'; }
+        fields.push(added);
         open = fields.length - 1; renderQuestions(); changed();
+        if (type === 'divider') return;
         var inp = $('.snn-qc.open input', listEl); if (inp) { inp.focus(); inp.select(); }
       });
     }
@@ -420,7 +451,8 @@
     /* ---- rules ---- */
     function renderRules() {
       if (!rulesEl) return;
-      var fopts = function (sel) { return fields.map(function (f) { return '<option value="' + esc(f.key) + '"' + (f.key === sel ? ' selected' : '') + '>' + esc(f.label || f.key) + '</option>'; }).join(''); };
+      var asked = fields.filter(function (f) { return !isDivider(f); });
+      var fopts = function (sel) { return asked.map(function (f) { return '<option value="' + esc(f.key) + '"' + (f.key === sel ? ' selected' : '') + '>' + esc(f.label || f.key) + '</option>'; }).join(''); };
       var used = {};
       settings.rules.forEach(function (r) { used[r.field] = true; });
       rulesEl.innerHTML = '<div class="snn-rules">'
@@ -487,7 +519,7 @@
         var d = e.target.closest('[data-rdel]');
         if (d) { settings.rules.splice(+d.getAttribute('data-rdel'), 1); renderRules(); changed(); }
         if (e.target.closest('[data-radd]')) {
-          var em = fields.filter(function (f) { return f.map_to === 'email'; })[0] || fields[0];
+          var em = fields.filter(function (f) { return f.map_to === 'email'; })[0] || fields.filter(function (f) { return !isDivider(f); })[0];
           settings.rules.push({field: em ? em.key : '', op: em && em.map_to === 'email' ? 'ends_with' : 'equals', value: ''});
           renderRules(); changed();
         }
@@ -522,6 +554,7 @@
       if (Number(settings.show_remaining) && Number(settings.max_tickets) > 0) h += '<p style="margin:0;font-weight:700;color:' + esc(color) + '">' + esc((t('spotsLeft', '%d spots left')).replace('%d', settings.max_tickets)) + '</p>';
       fields.forEach(function (f) {
         if (f.type === 'hidden') return;
+        if (isDivider(f)) { h += '<hr style="border:0;border-top:' + (Number(f.height) || 1) + 'px ' + esc(f.style || 'solid') + ' ' + esc(f.color || '#c3c4c7') + ';margin:18px 0">'; return; }
         var star = f.required ? ' <span class="snn-req">*</span>' : '', lab = esc(f.label || t('question', 'Question'));
         if (f.type === 'consent') { h += '<div class="snn-pf"><span class="ol"><i></i>' + lab + star + '</span></div>'; return; }
         h += '<div class="snn-pf"><span class="lb">' + lab + star + '</span>';

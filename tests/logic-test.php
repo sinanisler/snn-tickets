@@ -603,6 +603,73 @@ check(SNN_T_Forms::sanitize_settings(['group_short_message' => '  Too many  '])[
 
 $GLOBALS['wpdb'] = $saved_wpdb;
 
+/* ================= dividers, same addresses, optional people ================= */
+section('Dividers, same addresses and optional people');
+
+$div = SNN_T_Forms::sanitize_fields([
+    ['type' => 'divider', 'color' => '#FF0000', 'height' => 4, 'style' => 'dashed', 'required' => 1, 'label' => ''],
+    ['type' => 'divider', 'color' => 'red', 'height' => 99, 'style' => 'wiggly'],
+    ['label' => '', 'type' => 'text'],
+]);
+check(count($div) === 2, 'a divider needs no label, and an unlabelled question is still dropped');
+check($div[0]['type'] === 'divider' && $div[0]['key'] === 'divider', 'a divider gets the key "divider"');
+check($div[0]['color'] === '#ff0000' && $div[0]['height'] === 4 && $div[0]['style'] === 'dashed', 'colour, height and style are kept, colour in lower case');
+check($div[0]['required'] === 0, 'a divider is never required');
+check($div[1]['key'] === 'divider_2', 'a second divider gets its own key');
+check($div[1]['color'] === '#c3c4c7' && $div[1]['height'] === 20 && $div[1]['style'] === 'solid', 'a bad colour and style fall back, a height is capped at 20');
+
+$addr = SNN_T_Forms::sanitize_fields([
+    ['key' => 'mail',  'label' => 'Mail',   'type' => 'email', 'map_to' => 'email', 'required' => 0],
+    ['key' => 'mail2', 'label' => 'Mail 2', 'type' => 'email', 'map_to' => 'email', 'required' => 0],
+    ['key' => 'guest', 'label' => 'Guest',  'type' => 'text',  'map_to' => 'name',  'required' => 0],
+]);
+check($addr[0]['required'] === 1, 'the first address is always required, so tickets reach someone');
+check($addr[1]['required'] === 0, 'a second address can be optional');
+check($addr[2]['required'] === 0, 'a second name can be optional');
+
+$people_form = (object)[
+    'id' => 8, 'list_id' => 3, 'name' => 'Trip', 'status' => 'active',
+    'fields' => SNN_T_Forms::sanitize_fields([
+        ['key' => 'name',       'label' => 'Name',        'type' => 'text',  'required' => 1, 'map_to' => 'name'],
+        ['key' => 'email',      'label' => 'Email',       'type' => 'email', 'required' => 1, 'map_to' => 'email'],
+        ['key' => 'line',       'type' => 'divider'],
+        ['key' => 'guest',      'label' => 'Guest',       'type' => 'text',  'map_to' => 'name'],
+        ['key' => 'guest_mail', 'label' => 'Guest email', 'type' => 'email', 'map_to' => 'email'],
+    ]),
+    'settings' => array_merge(SNN_T_Forms::default_settings(), ['one_per_email' => 1]),
+];
+
+[$d1, $e1, , ] = SNN_T_Forms::collect($people_form, ['name' => 'Ana', 'email' => 'ana@x.test', 'guest' => 'Ben', 'guest_mail' => 'ANA@x.test']);
+check(isset($e1['guest_mail']) && !isset($e1['email']), 'an address typed twice on one sign-up is refused under the second field');
+check(!array_key_exists('line', $d1) && !isset($e1['line']), 'a divider has no answer and no error');
+
+[$d2, $e2, , ] = SNN_T_Forms::collect($people_form, ['name' => 'Ana', 'email' => 'ana@x.test', 'guest' => 'Ben', 'guest_mail' => 'ben@y.test']);
+check($e2 === [] && $d2['guest_mail'] === 'ben@y.test', 'two different addresses are fine');
+
+[, $e3, , ] = SNN_T_Forms::collect($people_form, ['name' => 'Ana', 'email' => 'ana@x.test', 'guest' => 'Ben', 'guest_mail' => '']);
+check($e3 === [], 'an empty second address is fine: its ticket goes to the first address');
+
+// An address already signed up, or holding a ticket, is refused under its own field.
+$GLOBALS['wpdb']->rows = ['var' => '1'];
+$taken = SNN_T_Forms::taken_addresses($people_form, ['email' => 'ana@x.test', 'guest_mail' => '']);
+check(isset($taken['email']) && !isset($taken['guest_mail']), 'an address already signed up is refused under its own field');
+check($taken['email'] === SNN_T_Forms::default_settings()['duplicate_message'], 'the refusal uses the form\'s duplicate message');
+$off = clone $people_form;
+$off->settings['one_per_email'] = 0;
+check(SNN_T_Forms::taken_addresses($off, ['email' => 'ana@x.test']) === [], 'with "one ticket per email" off, a known address is allowed');
+$GLOBALS['wpdb']->rows = [];
+check(SNN_T_Forms::taken_addresses($people_form, ['email' => 'new@x.test']) === [], 'a new address is not refused');
+
+// A divider draws its line and asks nothing.
+ob_start();
+SNN_T_Forms::render_field(['key' => 'line', 'type' => 'divider', 'label' => '', 'placeholder' => '', 'required' => 0, 'options' => [], 'map_to' => '', 'color' => '#ff0000', 'height' => 4, 'style' => 'dashed'], null, '');
+$line_html = ob_get_clean();
+check(strpos($line_html, 'border-top:4px dashed #ff0000') !== false, 'a divider draws a line with its height, style and colour');
+check(strpos($line_html, 'name=') === false, 'a divider has no answer field');
+ob_start();
+SNN_T_Forms::render_field(['key' => 'line', 'type' => 'divider', 'label' => '', 'placeholder' => '', 'required' => 0, 'options' => [], 'map_to' => '', 'color' => 'javascript:x', 'height' => 1, 'style' => 'solid'], null, '');
+check(strpos(ob_get_clean(), 'border-top:1px solid #c3c4c7') !== false, 'a divider with a bad colour uses the default colour');
+
 /* ================= results ================= */
 
 // tidy the temp upload dir

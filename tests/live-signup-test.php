@@ -430,7 +430,7 @@ $code = fixture_placement('awaiting')->code;
 $open = open_form($url, $code);
 $same = test_email('same');
 t_check(submit_form($open, $same) === 'approved', 'the first sign-up with an email is approved');
-t_check(submit_form($open, $same) === 'duplicate', 'the same email again is refused as a duplicate');
+t_check(submit_form($open, $same) === 'invalid', 'the same email again is refused under its own field');
 t_check(SNN_T_Placements::left($code, 2) === 1, 'the refused duplicate does not use an invite', (string)SNN_T_Placements::left($code, 2));
 
 t_section('Approval by hand: pending holds an invite, declined gives it back');

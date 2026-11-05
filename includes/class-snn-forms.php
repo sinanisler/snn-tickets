@@ -40,6 +40,8 @@ class SNN_T_Forms {
             'number'   => __('Number', 'snn-tickets'),
             'date'     => __('Date', 'snn-tickets'),
             'hidden'   => __('Hidden value', 'snn-tickets'),
+            // A line that splits the form. It asks nothing, so it has no answer.
+            'divider'  => __('Divider', 'snn-tickets'),
         ];
     }
 
@@ -203,16 +205,16 @@ class SNN_T_Forms {
         $types = self::field_types();
 
         foreach ((array)$fields as $f) {
+            $type  = isset($types[$f['type'] ?? '']) ? $f['type'] : 'text';
             $label = sanitize_text_field($f['label'] ?? '');
-            if ($label === '') continue;
-
-            $type = isset($types[$f['type'] ?? '']) ? $f['type'] : 'text';
+            // A divider asks nothing, so it needs no label.
+            if ($label === '' && $type !== 'divider') continue;
 
             $key = sanitize_key($f['key'] ?? '');
             if ($key === '') {
                 $key = sanitize_key(sanitize_title($label));
             }
-            if ($key === '') $key = 'field';
+            if ($key === '') $key = $type === 'divider' ? 'divider' : 'field';
             // Keys address fields in rules and {field:key} tags, so they
             // have to stay unique.
             $base = $key; $n = 2;
@@ -229,7 +231,7 @@ class SNN_T_Forms {
             // A name is typed as text and a ticket address as an email field, so the answer is always the right kind.
             if (($map_to === 'name' && $type !== 'text') || ($map_to === 'email' && $type !== 'email')) $map_to = '';
 
-            $out[] = [
+            $row = [
                 'key'         => $key,
                 'type'        => $type,
                 'label'       => $label,
@@ -239,6 +241,22 @@ class SNN_T_Forms {
                 'map_to'      => $map_to,
                 'default'     => sanitize_text_field($f['default'] ?? ''),
             ];
+            if ($type === 'divider') {
+                $row['required'] = 0;
+                $color = strtolower(trim((string)($f['color'] ?? '')));
+                $row['color']  = preg_match('/^#[0-9a-f]{6}$/', $color) ? $color : '#c3c4c7';
+                $row['height'] = max(1, min(20, (int)($f['height'] ?? 1)));
+                $row['style']  = in_array($f['style'] ?? '', ['solid', 'dashed', 'dotted'], true) ? $f['style'] : 'solid';
+            }
+            $out[] = $row;
+        }
+
+        // The first address is the buyer's. Tickets must reach someone, so it is always required.
+        foreach ($out as $i => $row) {
+            if ($row['map_to'] === 'email') {
+                $out[$i]['required'] = 1;
+                break;
+            }
         }
 
         return $out;
@@ -552,6 +570,15 @@ class SNN_T_Forms {
             return;
         }
 
+        if ($field['type'] === 'divider') {
+            $color  = preg_match('/^#[0-9a-f]{6}$/', (string)($field['color'] ?? '')) ? $field['color'] : '#c3c4c7';
+            $height = max(1, min(20, (int)($field['height'] ?? 1)));
+            $style  = in_array($field['style'] ?? '', ['solid', 'dashed', 'dotted'], true) ? $field['style'] : 'solid';
+            echo '<div class="snn-field-divider" data-key="' . esc_attr($field['key']) . '">'
+               . '<hr class="snn-divider" style="border:0;border-top:' . $height . 'px ' . $style . ' ' . esc_attr($color) . '"></div>';
+            return;
+        }
+
         echo '<div class="snn-field snn-field-' . esc_attr($field['type'])
            . ' snn-field-key-' . esc_attr($field['key'])
            . ($required ? ' snn-field-required' : '')
@@ -647,6 +674,8 @@ class SNN_T_Forms {
         .snn-ticket-form .snn-form-submit button{padding:12px 24px;border:0;border-radius:6px;
             background:var(--snn-accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
         .snn-ticket-form .snn-form-submit button:hover{filter:brightness(1.15)}
+        .snn-ticket-form .snn-field-divider{margin:22px 0}
+        .snn-ticket-form .snn-divider{width:100%;margin:0}
         .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}
         .snn-hp{position:absolute!important;left:-9999px!important;height:1px;overflow:hidden}
         .snn-form-remaining{font-weight:600;color:var(--snn-accent)}
@@ -835,13 +864,10 @@ class SNN_T_Forms {
             }
         }
 
-        // One registration per email address: every address that would get a ticket is checked.
-        if ($form->settings['one_per_email']) {
-            foreach (self::ticket_emails($holders) as $address) {
-                if (self::has_signed_up($form, $address)) {
-                    self::bounce($redirect, $form_id, 'duplicate');
-                }
-            }
+        // One registration per email address: an address already signed up is refused under its own field.
+        $taken = self::taken_addresses($form, $data);
+        if ($taken) {
+            self::bounce_with_errors($redirect, $form_id, $taken, $data);
         }
 
         $decision = self::decide($form, $data);
@@ -904,6 +930,8 @@ class SNN_T_Forms {
         $email  = '';
 
         foreach ($form->fields as $field) {
+            if ($field['type'] === 'divider') continue;
+
             $key   = $field['key'];
             $value = $raw[$key] ?? ($field['type'] === 'checkbox' ? [] : '');
             $error = '';
@@ -947,6 +975,18 @@ class SNN_T_Forms {
 
             if ($field['map_to'] === 'name'  && $name === '')  $name  = is_array($value) ? '' : (string)$value;
             if ($field['map_to'] === 'email' && $email === '') $email = is_array($value) ? '' : (string)$value;
+        }
+
+        // Each address can be on a sign-up once: two tickets to one inbox must be two different addresses.
+        $seen_addresses = [];
+        foreach ($form->fields as $field) {
+            $key = $field['key'];
+            if (($field['map_to'] ?? '') !== 'email' || isset($errors[$key]) || empty($data[$key])) continue;
+            $address = strtolower((string)$data[$key]);
+            if (isset($seen_addresses[$address])) {
+                $errors[$key] = __('This address is already on this sign-up. Please use a different one.', 'snn-tickets');
+            }
+            $seen_addresses[$address] = true;
         }
 
         // A form with no field mapped to email cannot deliver a ticket.
@@ -993,15 +1033,6 @@ class SNN_T_Forms {
         return $out ?: [['name' => '', 'email' => $buyer]];
     }
 
-    /** The distinct addresses the tickets of a sign-up go to. */
-    private static function ticket_emails($holders) {
-        $out = [];
-        foreach ($holders as $h) {
-            if ($h['email'] !== '' && !in_array($h['email'], $out, true)) $out[] = $h['email'];
-        }
-        return $out;
-    }
-
     /** Has this address signed up for the form already, or hold a ticket for the event? */
     private static function has_signed_up($form, $email) {
         global $wpdb;
@@ -1011,6 +1042,26 @@ class SNN_T_Forms {
             (int)$form->id, $email
         ));
         return $dupe > 0 || SNN_T_Tickets::count_active_for_email((int)$form->list_id, $email) > 0;
+    }
+
+    /**
+     * Addresses on the sign-up that already have a sign-up or a ticket for this event, as
+     * errors under their own fields. Only checked while "one ticket per email" is on.
+     *
+     * @return array<string, string> errors keyed by field key
+     */
+    public static function taken_addresses($form, $data) {
+        $errors = [];
+        if (empty($form->settings['one_per_email'])) return $errors;
+
+        foreach ($form->fields as $field) {
+            $key = $field['key'];
+            if (($field['map_to'] ?? '') !== 'email' || empty($data[$key]) || !is_string($data[$key])) continue;
+            if (self::has_signed_up($form, $data[$key])) {
+                $errors[$key] = $form->settings['duplicate_message'];
+            }
+        }
+        return $errors;
     }
 
     /** Is there a place for $people more tickets? */

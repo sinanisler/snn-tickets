@@ -267,9 +267,14 @@ class SNN_T_Claims {
         if (!empty($errors['_'])) echo '<div class="snn-form-notice snn-err" role="alert">' . esc_html($errors['_']) . '</div>';
         wp_nonce_field(self::NONCE . $key, '_snn_claim');
         echo '<div class="snn-hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="snn_website" tabindex="-1" autocomplete="off"></label></div>';
+        // The address the buyer typed goes into the first address question only; the others are for the guest.
+        $first_address = null;
+        foreach ($form->fields as $field) {
+            if (($field['map_to'] ?? '') === 'email') { $first_address = $field['key']; break; }
+        }
         foreach ($form->fields as $field) {
             $value = $old[$field['key']] ?? null;
-            if ($value === null && $ticket->claim_email !== '' && $field['map_to'] === 'email') $value = $ticket->claim_email;
+            if ($value === null && $ticket->claim_email !== '' && $field['key'] === $first_address) $value = $ticket->claim_email;
             SNN_T_Forms::render_field($field, $value, $errors[$field['key']] ?? '');
         }
         echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">' . esc_html(SNN_T_Texts::get('claim_submit')) . '</button></p>';
