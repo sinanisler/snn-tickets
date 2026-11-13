@@ -285,6 +285,6 @@ class SNN_T_Claims {
 
     private static function wrap($html) {
         return '<div class="snn-event-page snn-claim-page">' . $html . '</div>'
-            . '<style>.snn-event-page{max-width:640px;margin:0 auto;padding:32px 16px 48px}.snn-event-when{margin:0 0 6px;font-size:.85em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.snn-event-title{margin:0 0 6px}.snn-event-where{margin:0 0 20px;opacity:.8}</style>';
+            . '<style>.snn-event-page{max-width:960px;margin:0 auto;padding:32px 16px 48px}.snn-event-when{margin:0 0 6px;font-size:.85em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.snn-event-title{margin:0 0 6px}.snn-event-where{margin:0 0 20px;opacity:.8}</style>';
     }
 }

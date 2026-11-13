@@ -205,7 +205,7 @@ class SNN_T_Router {
                 : '<p class="snn-form-notice snn-warn">' . esc_html__('Sign-ups are not open for this event.', 'snn-tickets') . '</p>';
         }
         $out .= '</div>';
-        $out .= '<style>.snn-event-page{max-width:640px;margin:0 auto;padding:32px 16px 48px}.snn-event-when{margin:0 0 6px;font-size:.85em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.snn-event-title{margin:0 0 6px}.snn-event-where{margin:0 0 20px;opacity:.8}.snn-event-desc{margin:0 0 24px}</style>';
+        $out .= '<style>.snn-event-page{max-width:960px;margin:0 auto;padding:32px 16px 48px}.snn-event-when{margin:0 0 6px;font-size:.85em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.snn-event-title{margin:0 0 6px}.snn-event-where{margin:0 0 20px;opacity:.8}.snn-event-desc{margin:0 0 24px}</style>';
         return $out;
     }
 
