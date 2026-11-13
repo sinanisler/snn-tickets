@@ -4843,3 +4843,16 @@ msgstr ""
 #: includes/class-snn-events-admin.php:628
 msgid "When all invites for the placement code are used"
 msgstr ""
+
+#: includes/class-snn-forms.php
+msgid "Add person"
+msgstr ""
+
+#: includes/class-snn-forms.php
+msgid "Remove last person"
+msgstr ""
+
+#: includes/class-snn-forms.php
+#, php-format
+msgid "Person %s"
+msgstr ""

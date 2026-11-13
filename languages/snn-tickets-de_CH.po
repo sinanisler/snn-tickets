@@ -3369,3 +3369,16 @@ msgstr "Wenn der Platzierungscode nicht gültig ist"
 
 msgid "When all invites for the placement code are used"
 msgstr "Wenn alle Einladungen für den Platzierungscode verwendet sind"
+
+#: includes/class-snn-forms.php
+msgid "Add person"
+msgstr "Person hinzufügen"
+
+#: includes/class-snn-forms.php
+msgid "Remove last person"
+msgstr "Letzte Person entfernen"
+
+#: includes/class-snn-forms.php
+#, php-format
+msgid "Person %s"
+msgstr "Person %s"
