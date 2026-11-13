@@ -689,70 +689,50 @@ if (!function_exists('wp_add_inline_script')) { function wp_add_inline_script() 
 $seat_form = (object)[
     'id' => 9, 'list_id' => 3, 'name' => 'Trip', 'status' => 'active',
     'fields' => SNN_T_Forms::sanitize_fields([
-        ['key' => 'name',       'label' => 'Your name',   'type' => 'text',  'required' => 1, 'map_to' => 'name'],
-        ['key' => 'email',      'label' => 'Your email',  'type' => 'email', 'required' => 1, 'map_to' => 'email'],
-        ['key' => 'guest',      'label' => 'Guest name',  'type' => 'text',  'map_to' => 'name'],
-        ['key' => 'guest_mail', 'label' => 'Guest email', 'type' => 'email', 'map_to' => 'email'],
+        ['key' => 'name',  'label' => 'Name (Person 1)',  'type' => 'text',  'required' => 1, 'map_to' => 'name'],
+        ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => 1, 'map_to' => 'email'],
+        ['key' => 'agree', 'label' => 'I agree', 'type' => 'consent', 'required' => 1],
     ]),
     'settings' => array_merge(SNN_T_Forms::default_settings(), ['require_placement_code' => 1, 'invites_per_code' => 2]),
 ];
-$ana = (object)['name' => 'Ana', 'email' => 'ana@x.test'];
-$ben = (object)['name' => 'Ben', 'email' => 'ben@x.test'];
-$cy  = (object)['name' => 'Cy',  'email' => 'cy@x.test'];
-
-$GLOBALS['wpdb']->rows = ['results' => []];
-check(SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9') === [], 'nobody on the code: nothing is locked');
-$GLOBALS['wpdb']->rows = ['results' => [$ana]];
-$one = SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9');
-check(count($one) === 1 && $one[0]['name_key'] === 'name' && $one[0]['email_key'] === 'email' && $one[0]['name'] === 'Ana' && $one[0]['email'] === 'ana@x.test',
-      'one person on the code locks the first name and address');
-$GLOBALS['wpdb']->rows = ['results' => [$ana, $ben]];
-check(SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9') === [], 'two people fill both seats, so the next visitor gets a fresh form');
-$GLOBALS['wpdb']->rows = ['results' => [$ana, $ben, $cy]];
-$round2 = SNN_T_Forms::locked_people($seat_form, 'SP3K7Q9');
-check(count($round2) === 1 && $round2[0]['name'] === 'Cy', 'a third person starts a new round and locks the first seat');
-$GLOBALS['wpdb']->rows = ['results' => [$ana]];
-$one_seat = (object)['id' => 10, 'fields' => SNN_T_Forms::sanitize_fields([['key' => 'name', 'label' => 'Name', 'type' => 'text', 'map_to' => 'name']])];
-check(SNN_T_Forms::locked_people($one_seat, 'SP3K7Q9') === [], 'a one-seat form never locks its only seat: the next visitor gets a fresh form');
-check(SNN_T_Forms::locked_people($seat_form, '') === [], 'no code, nothing is locked');
-
-// The form as a visitor sees it: the first seat is taken, the second is open.
-$GLOBALS['wpdb']->rows = ['var' => '1', 'results' => [$ana]];
-$_GET['code'] = 'SP3K7Q9';
 $render = new ReflectionMethod('SNN_T_Forms', 'render_form');
 $render->setAccessible(true);
-ob_start();
-$render->invoke(null, $seat_form);
-$page = ob_get_clean();
-unset($_GET['code']);
-preg_match('/<input[^>]*name="snn_field\[name\]"[^>]*>/', $page, $m_name);
-preg_match('/<input[^>]*name="snn_field\[guest\]"[^>]*>/', $page, $m_guest);
-check(isset($m_name[0]) && strpos($m_name[0], 'value="Ana"') !== false && strpos($m_name[0], 'readonly') !== false,
-      'the person on the code shows read-only in the first seat');
-check(strpos($page, 'name="snn_field[email]"') !== false && preg_match('/<input[^>]*name="snn_field\[email\]"[^>]*readonly/', $page) === 1,
-      'their address shows read-only too');
-check(isset($m_guest[0]) && strpos($m_guest[0], 'readonly') === false && strpos($m_guest[0], 'required') === false,
-      'the open seat is an ordinary, optional field');
-check(substr_count($page, 'Signed up with this code') === 2, 'each locked field says it was signed up with this code');
-check(strpos($page, 'name="snn_locked" value="1"') !== false, 'the form remembers how many people were locked');
 
-// Nobody on the code: a fresh form, nothing locked.
+// Two invites left: one person, plus "+ Add person" for one more.
 $GLOBALS['wpdb']->rows = ['var' => '0', 'results' => []];
 $_GET['code'] = 'SP3K7Q9';
 ob_start();
 $render->invoke(null, $seat_form);
-$fresh = ob_get_clean();
+$page = ob_get_clean();
 unset($_GET['code']);
-check(strpos($fresh, 'readonly') === false && strpos($fresh, 'name="snn_locked" value="0"') !== false, 'with nobody on the code, the form is fresh');
+check(strpos($page, 'data-snn-add') !== false && strpos($page, 'data-max="2"') !== false, 'two invites left: the form offers "+ Add person" up to 2 people');
+check(strpos($page, 'name="snn_field[name_p__N__]"') !== false && strpos($page, 'Name (Person __N__)') !== false, 'the template copies the name field and numbers its label');
+check(strpos($page, 'Email (Person __N__)') !== false, 'a label without a number gets one');
+check(strpos($page, 'name="snn_field[name_p2]"') === false, 'nobody is added until the visitor asks');
+check(strpos($page, 'snn_locked') === false && strpos($page, 'readonly') === false, 'nothing is locked or shown from earlier sign-ups');
 
-// Submitting: the seats on the code are skipped, and the open seat is what counts.
-$GLOBALS['wpdb']->rows = [];
-[$sd, $se, $sn, $sm] = SNN_T_Forms::collect($seat_form, ['guest' => 'Ben', 'guest_mail' => 'ben@y.test'], ['name', 'email']);
-check(!isset($se['name']) && !isset($se['email']), 'a seat already on the code is not asked again: no required error');
-check($sd['name'] === '' && $sd['email'] === '' && $sd['guest'] === 'Ben', 'the seat on the code is left empty for this sign-up');
-check($sm === 'ben@y.test', 'the open seat\'s address becomes the sign-up\'s address');
-$skipped_holders = SNN_T_Forms::holders($seat_form, $sd, $sm);
-check($skipped_holders === [['name' => 'Ben', 'email' => 'ben@y.test']], 'only the open seat gets a ticket');
+// One invite left: no button.
+$GLOBALS['wpdb']->rows = ['var' => '1', 'results' => []];
+$_GET['code'] = 'SP3K7Q9';
+ob_start();
+$render->invoke(null, $seat_form);
+$one_left = ob_get_clean();
+unset($_GET['code']);
+check(strpos($one_left, 'data-snn-add') === false && strpos($one_left, 'name="snn_field[name]"') !== false, 'one invite left: one person, no "+ Add person"');
+
+// Submitting with an added person: both are checked and both get a ticket.
+check(SNN_T_Forms::posted_people($seat_form, ['name' => 'A']) === 1, 'no added people: one person');
+$raw2 = ['name' => 'Ana', 'email' => 'ana@x.test', 'name_p2' => 'Ben', 'email_p2' => 'ben@x.test', 'agree' => '1'];
+check(SNN_T_Forms::posted_people($seat_form, $raw2) === 2, 'an added person is counted');
+$exp = clone $seat_form;
+$exp->fields = SNN_T_Forms::expand_fields($seat_form, 2);
+check(array_column($exp->fields, 'key') === ['name', 'email', 'name_p2', 'email_p2', 'agree'], 'added people sit right after the first person');
+[$sd, $se, $sn, $sm] = SNN_T_Forms::collect($exp, $raw2);
+check(!$se && SNN_T_Forms::holders($exp, $sd, $sm) === [['name' => 'Ana', 'email' => 'ana@x.test'], ['name' => 'Ben', 'email' => 'ben@x.test']], 'each person gets their own ticket at their own address');
+[, $se2] = SNN_T_Forms::collect($exp, ['name' => 'Ana', 'email' => 'ana@x.test', 'name_p2' => '', 'email_p2' => '', 'agree' => '1']);
+check(isset($se2['name_p2'], $se2['email_p2']), 'an added person left empty is asked for, under their own fields');
+[, $se3] = SNN_T_Forms::collect($exp, ['name' => 'Ana', 'email' => 'ana@x.test', 'name_p2' => 'Ben', 'email_p2' => 'ANA@x.test', 'agree' => '1']);
+check(isset($se3['email_p2']), 'an added person cannot reuse the first address');
 
 // The "I agree" box keeps its link; other questions stay plain text.
 $agree_form = SNN_T_Forms::sanitize_fields([

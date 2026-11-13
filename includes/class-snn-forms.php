@@ -516,10 +516,8 @@ class SNN_T_Forms {
             }
         }
 
-        // People already on this code are shown first, locked. This visit fills the seats after them.
-        $locked = $code !== '' ? self::locked_people($form, $code) : [];
-
         // With a code, its invites replace the event's spot count.
+        $left = 0;
         if ($code !== '') {
             $left = SNN_T_Placements::left($code, $invites);
             echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d ticket left', '%d tickets left', $left, 'snn-tickets'), $left)) . '</p>';
@@ -545,8 +543,6 @@ class SNN_T_Forms {
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
         echo '<input type="hidden" name="snn_t" value="' . esc_attr(time()) . '">';
         if ($code !== '') echo '<input type="hidden" name="snn_placement_code" value="' . esc_attr($code) . '">';
-        // How many people the code already had when this form was shown; checked again on submit.
-        echo '<input type="hidden" name="snn_locked" value="' . count($locked) . '">';
         wp_nonce_field(self::NONCE, 'snn_nonce');
 
         // Honeypot: a real person never fills this in.
@@ -554,25 +550,32 @@ class SNN_T_Forms {
            . '<label>Leave this field empty<input type="text" name="snn_website" tabindex="-1" autocomplete="off"></label>'
            . '</div>';
 
-        $lock_values = [];
-        foreach ($locked as $p) {
-            if ($p['name_key'] !== null)  $lock_values[$p['name_key']]  = $p['name'];
-            if ($p['email_key'] !== null) $lock_values[$p['email_key']] = $p['email'];
-        }
+        // A code with more than one invite left lets the visitor add people, up to what is left.
+        // People sent back after an error without JavaScript are shown again.
+        $max_people = $code !== '' ? $left : 1;
+        $shown      = $max_people > 1 ? min($max_people, self::posted_people($form, (array)$old)) : 1;
+        $after      = self::person_anchor($form);
 
         // Only the first name and address are the buyer's, so the browser's autofill is left out of the rest.
         $seen = [];
         foreach ($form->fields as $field) {
-            if (array_key_exists($field['key'], $lock_values)) {
-                $field['required'] = 0;
-                $field['locked']   = 1;
-                self::render_field($field, $lock_values[$field['key']], '');
-                continue;
-            }
             $role = $field['map_to'] ?? '';
             if ($role !== '' && isset($seen[$role])) $field['autofill'] = false;
             $seen[$role] = true;
             self::render_field($field, $old[$field['key']] ?? null, $errors[$field['key']] ?? '');
+
+            if ($max_people > 1 && $field['key'] === $after) {
+                echo '<div class="snn-people" data-snn-people data-max="' . (int)$max_people . '">';
+                for ($n = 2; $n <= $shown; $n++) self::render_person($form, $n, (array)$old, $errors);
+                echo '</div>';
+                echo '<template data-snn-person-tpl>';
+                self::render_person($form, '__N__', [], []);
+                echo '</template>';
+                echo '<p class="snn-people-actions">'
+                   . '<button type="button" class="snn-add-person" data-snn-add' . ($shown >= $max_people ? ' hidden' : '') . '>+ ' . esc_html__('Add person', 'snn-tickets') . '</button> '
+                   . '<button type="button" class="snn-remove-person" data-snn-remove' . ($shown < 2 ? ' hidden' : '') . '>' . esc_html__('Remove last person', 'snn-tickets') . '</button>'
+                   . '</p>';
+            }
         }
 
         echo '<p class="snn-form-submit"><button type="submit" class="snn-submit-button">'
@@ -670,16 +673,13 @@ class SNN_T_Forms {
                 $auto = ['email' => 'email', 'tel' => 'tel'][$field['type']] ?? ($field['map_to'] === 'name' ? 'name' : '');
                 if (isset($field['autofill']) && $field['autofill'] === false) $auto = '';
                 echo '<label class="snn-field-label" for="' . $id . '">' . $label_html . '</label>';
-                // A seat already held on this code shows its person, read-only.
-                $locked = !empty($field['locked']);
-                echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . ($locked ? ' snn-locked' : '') . '"'
+                echo '<input class="snn-input snn-input-' . esc_attr($field['type']) . '"'
                    . ' type="' . esc_attr($field['type']) . '" id="' . $id . '" name="' . $name . '"'
                    . ' value="' . esc_attr(is_array($value) ? '' : (string)$value) . '"'
                    . ' placeholder="' . esc_attr($field['placeholder']) . '"'
-                   . ($required ? ' required' : '') . ($locked ? ' readonly' : '') . $aria
+                   . ($required ? ' required' : '') . $aria
                    . ($auto ? ' autocomplete="' . $auto . '"' : '')
                    . '>';
-                if ($locked) echo '<span class="snn-locked-note">' . esc_html__('Signed up with this code', 'snn-tickets') . '</span>';
         }
 
         echo '<span class="snn-field-error" id="' . $err_id . '"' . ($error !== '' ? '' : ' hidden') . '>' . esc_html($error) . '</span>';
@@ -720,8 +720,11 @@ class SNN_T_Forms {
         .snn-ticket-form .snn-form-submit button:hover{filter:brightness(1.15)}
         .snn-ticket-form .snn-field-divider{margin:10px 0}
         .snn-ticket-form .snn-divider{width:100%;height:0;margin:0}
-        .snn-ticket-form .snn-locked{background:#f6f7f7;color:#50575e}
-        .snn-ticket-form .snn-locked-note{display:block;font-size:.85em;color:#50575e;margin-top:4px}
+        .snn-ticket-form .snn-person-line{border-top:1px solid #c3c4c7;margin:14px 0 10px}
+        .snn-ticket-form .snn-people-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+        .snn-ticket-form .snn-people-actions button{padding:6px 14px;border:1px solid var(--snn-accent);border-radius:6px;
+            background:transparent;color:var(--snn-accent);font:inherit;font-weight:600;cursor:pointer}
+        .snn-ticket-form .snn-people-actions button[hidden]{display:none}
         .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}
         .snn-hp{position:absolute!important;left:-9999px!important;height:1px;overflow:hidden}
         .snn-form-remaining{font-weight:600;color:var(--snn-accent)}
@@ -777,6 +780,34 @@ class SNN_T_Forms {
                     n.textContent = text;
                     wrap.appendChild(n);
                     n.focus();
+                }
+
+                // "+ Add person": copies the name and address fields, up to the invites left.
+                var people = form.querySelector('[data-snn-people]');
+                if (people) {
+                    var tpl = form.querySelector('[data-snn-person-tpl]');
+                    var add = form.querySelector('[data-snn-add]');
+                    var rem = form.querySelector('[data-snn-remove]');
+                    var max = parseInt(people.getAttribute('data-max'), 10) || 1;
+                    function count(){ return people.querySelectorAll('.snn-person').length + 1; }
+                    function sync(){ add.hidden = count() >= max; rem.hidden = count() < 2; }
+                    add.addEventListener('click', function(){
+                        if (count() >= max) return;
+                        var holder = document.createElement('div');
+                        holder.innerHTML = tpl.innerHTML.split('__N__').join(String(count() + 1));
+                        var p = holder.firstElementChild;
+                        people.appendChild(p);
+                        sync();
+                        var i = p.querySelector('input');
+                        if (i) i.focus();
+                    });
+                    rem.addEventListener('click', function(){
+                        var all = people.querySelectorAll('.snn-person');
+                        if (all.length) all[all.length - 1].remove();
+                        sync();
+                        add.focus();
+                    });
+                    sync();
                 }
 
                 form.addEventListener('submit', function(e){
@@ -892,19 +923,21 @@ class SNN_T_Forms {
             }
         }
 
-        // People already on this code keep their seats: they were shown locked, and are not taken again.
-        $locked = self::locked_people($form, $placement_code);
-        $skip   = [];
-        foreach ($locked as $p) {
-            if ($p['name_key'] !== null)  $skip[] = $p['name_key'];
-            if ($p['email_key'] !== null) $skip[] = $p['email_key'];
-        }
-        // The form showed this many people already on the code. If that has changed, the visitor sees the form again.
-        if ((int)($_POST['snn_locked'] ?? 0) !== count($locked)) {
-            self::bounce($redirect, $form_id, 'error');
+        // People added with "+ Add person" (placement codes only) become fields of their own,
+        // so they are checked, kept and turned into tickets like the first person.
+        if ($placement_code !== '') {
+            $added = self::posted_people($form, $raw);
+            if ($added > SNN_T_Placements::left($placement_code, (int)$form->settings['invites_per_code'])) {
+                self::bounce($redirect, $form_id, 'short');
+            }
+            if ($added > 1) {
+                $form = clone $form;
+                $form->fields = self::expand_fields($form, $added);
+                self::$current_form = $form;
+            }
         }
 
-        list($data, $errors, $name, $email) = self::collect($form, $raw, $skip);
+        list($data, $errors, $name, $email) = self::collect($form, $raw);
 
         if ($errors) {
             self::bounce_with_errors($redirect, $form_id, $errors, $data);
@@ -912,14 +945,6 @@ class SNN_T_Forms {
 
         // Every person who gets a ticket takes a place, so the sign-up needs room for all of them.
         $holders = self::holders($form, $data, $email);
-        // A visit to a code that already has people on it must name at least one person.
-        if ($skip && !array_filter(array_column($holders, 'name'), 'strlen')) {
-            foreach ($form->fields as $field) {
-                if (($field['map_to'] ?? '') === 'name' && !in_array($field['key'], $skip, true)) {
-                    self::bounce_with_errors($redirect, $form_id, [$field['key'] => __('Please add the name of the person who gets this ticket.', 'snn-tickets')], $data);
-                }
-            }
-        }
         $people  = count($holders);
 
         // Capacity
@@ -989,7 +1014,7 @@ class SNN_T_Forms {
      *
      * @return array [data, errors keyed by field key, name, email]
      */
-    public static function collect($form, $raw, $skip = []) {
+    public static function collect($form, $raw) {
         $data   = [];
         $errors = [];
         $name   = '';
@@ -1000,11 +1025,6 @@ class SNN_T_Forms {
             if (in_array($field['type'], ['divider', 'html'], true)) continue;
 
             $key = $field['key'];
-            // A seat already held on this code is not asked again: it stays empty for this sign-up.
-            if (in_array($key, $skip, true)) {
-                $data[$key] = '';
-                continue;
-            }
             $value = $raw[$key] ?? ($field['type'] === 'checkbox' ? [] : '');
             $error = '';
 
@@ -1137,36 +1157,82 @@ class SNN_T_Forms {
     }
 
     /**
-     * The people already signed up with this code, shown locked in the form. A sign-up with the
-     * code fills the form's seats in order (a seat is a name and the address beside it), so the
-     * people on the code are the first seats of the current round. Once every seat has been
-     * used, the next visitor gets a fresh form.
-     *
-     * @return array<int, array{name_key: string, email_key: ?string, name: string, email: string}>
+     * The fields one person fills in: the first "Name on the ticket" field and the first
+     * "Ticket goes to this mail" field, in form order. "+ Add person" copies these.
      */
-    public static function locked_people($form, $code) {
-        if (!$form || SNN_T_Placements::normalise($code) === '') return [];
-
-        $names = [];
-        $emails = [];
+    private static function person_fields($form) {
+        $out  = [];
+        $seen = [];
         foreach ($form->fields as $field) {
-            if (($field['map_to'] ?? '') === 'name')  $names[]  = $field['key'];
-            if (($field['map_to'] ?? '') === 'email') $emails[] = $field['key'];
+            $role = $field['map_to'] ?? '';
+            if (in_array($role, ['name', 'email'], true) && !isset($seen[$role])) {
+                $seen[$role] = true;
+                $out[] = $field;
+            }
         }
-        $seats = count($names);
-        if ($seats === 0) return [];
+        return $out;
+    }
 
-        $held  = SNN_T_Placements::held($code);
-        $round = count($held) % $seats;
+    /** The key of the field the added people go after, or '' when the form has no person fields. */
+    private static function person_anchor($form) {
+        $fields = self::person_fields($form);
+        return $fields ? (string)$fields[count($fields) - 1]['key'] : '';
+    }
 
-        $out = [];
-        foreach (array_slice($held, count($held) - $round) as $i => $row) {
-            $out[] = [
-                'name_key'  => $names[$i],
-                'email_key' => $emails[$i] ?? null,
-                'name'      => (string)$row->name,
-                'email'     => (string)$row->email,
-            ];
+    /** Person $n's copy of a person field. $n may be "__N__", the placeholder in the template. */
+    private static function person_copy($field, $n) {
+        $label = (string)$field['label'];
+        $label = preg_match('/\b1\b/', $label)
+            ? preg_replace('/\b1\b/', (string)$n, $label, 1)
+            : $label . ' (' . sprintf(__('Person %s', 'snn-tickets'), $n) . ')';
+        $field['key']      = $field['key'] . '_p' . $n;
+        $field['label']    = $label;
+        $field['autofill'] = false;
+        $field['default']  = '';
+        return $field;
+    }
+
+    /** Print person $n: a line, then their name and address. */
+    private static function render_person($form, $n, $old, $errors) {
+        echo '<div class="snn-person" data-n="' . esc_attr($n) . '"><div class="snn-person-line" role="separator"></div>';
+        foreach (self::person_fields($form) as $field) {
+            $copy = self::person_copy($field, $n);
+            self::render_field($copy, $old[$copy['key']] ?? null, $errors[$copy['key']] ?? '');
+        }
+        echo '</div>';
+    }
+
+    /**
+     * How many people a sign-up names: 1, plus each added person posted.
+     * Added people are numbered 2, 3, ... without gaps.
+     */
+    public static function posted_people($form, $raw) {
+        $fields = self::person_fields($form);
+        $raw    = (array)$raw;
+        $n      = 1;
+        while ($fields && $n < 100) {
+            $next = false;
+            foreach ($fields as $field) {
+                if (array_key_exists($field['key'] . '_p' . ($n + 1), $raw)) $next = true;
+            }
+            if (!$next) break;
+            $n++;
+        }
+        return $n;
+    }
+
+    /** The form's fields with people 2..$people added right after the first person's fields. */
+    public static function expand_fields($form, $people) {
+        $after  = self::person_anchor($form);
+        $person = self::person_fields($form);
+        $out    = [];
+        foreach ($form->fields as $field) {
+            $out[] = $field;
+            if ($after !== '' && $field['key'] === $after) {
+                for ($n = 2; $n <= $people; $n++) {
+                    foreach ($person as $pf) $out[] = self::person_copy($pf, $n);
+                }
+            }
         }
         return $out;
     }
