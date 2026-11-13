@@ -424,6 +424,30 @@ check(SNN_T_Placements::admin_url('sp3k7q9') === 'https://tickets.example/wp-adm
       'a known code links to its Sell Placement page');
 check(SNN_T_Placements::admin_url('NOPE123') === '', 'an unknown code has no link');
 check(SNN_T_Placements::admin_url('') === '', 'an empty code has no link');
+
+// Order links from the buyer email: 2 invites for every normal ticket in the order, Gutscheine left out.
+function spl_get_order_placements($order_id) {
+    if ((int)$order_id !== 5077) return [];
+    return [
+        (object)['code' => 'SPTKA01', 'is_gift' => 0, 'status' => 'approved'],
+        (object)['code' => 'SPTKB02', 'is_gift' => 0, 'status' => 'awaiting'],
+        (object)['code' => 'SPGFT03', 'is_gift' => 1, 'status' => 'awaiting'],
+        (object)['code' => 'SPCAN04', 'is_gift' => 0, 'status' => 'cancelled'],
+    ];
+}
+$GLOBALS['wpdb']->rows = [];
+check(SNN_T_Placements::pool('', 5077, 'ticket') === null, 'an order link without a code is missing');
+check(SNN_T_Placements::pool('SP3K7Q9') === ['SP3K7Q9'], 'a plain code link gives that one code');
+check(SNN_T_Placements::pool('SPGFT03,SPTKA01', 5077, 'gift') === ['SPGFT03'], 'a gift-only type keeps the plain one-code rule');
+$pool = SNN_T_Placements::pool('SPTKA01,SPTKB02,SPGFT03', 5077, 'ticket,gift');
+check($pool === ['SPTKA01', 'SPTKB02'], 'an order link pools the normal tickets, without the gift or cancelled ones');
+check(SNN_T_Placements::left_pool($pool, 2) === 4, '2 tickets x 2 invites = 4 sign-ups');
+check(SNN_T_Placements::check_pool($pool, 2) === 'ok', 'the pooled order link is ok');
+check(SNN_T_Placements::pool('NOPE123', 5077, 'ticket') === [], 'an order ID without one of its codes is refused');
+check(SNN_T_Placements::check_pool([], 2) === 'invalid', 'an empty pool is invalid');
+check(SNN_T_Placements::check_pool(null, 2) === 'missing', 'no pool is missing');
+check(SNN_T_Forms::placement_link(['code' => 'sp-a1, spb2', 'orderid' => '12x', 'placement_type' => 'Ticket,Gift'])
+      === ['code' => 'spa1,spb2', 'order_id' => 12, 'type' => 'ticket,gift'], 'link parameters are cleaned');
 $GLOBALS['wpdb']->rows = [];
 
 $gated = SNN_T_Forms::sanitize_settings(['require_placement_code' => 'yes', 'invites_used_message' => '  All used  ', 'invites_per_code' => '3']);

@@ -503,8 +503,10 @@ class SNN_T_Forms {
         $code = '';
         if (!empty($form->settings['require_placement_code'])) {
             $invites = (int)$form->settings['invites_per_code'];
-            $code    = SNN_T_Placements::normalise(isset($_GET['code']) ? wp_unslash($_GET['code']) : '');
-            $state   = SNN_T_Placements::check($code, $invites);
+            $link    = self::placement_link($_GET);
+            $pool    = SNN_T_Placements::pool($link['code'], $link['order_id'], $link['type']);
+            $state   = SNN_T_Placements::check_pool($pool, $invites);
+            $code    = $pool ? $pool[0] : '';
             if ($state !== 'ok') {
                 // A refused sign-up comes back with its message already shown above.
                 if (!in_array($result, ['code_invalid', 'code_used'], true)) {
@@ -519,7 +521,7 @@ class SNN_T_Forms {
         // With a code, its invites replace the event's spot count.
         $left = 0;
         if ($code !== '') {
-            $left = SNN_T_Placements::left($code, $invites);
+            $left = SNN_T_Placements::left_pool($pool, $invites);
             echo '<p class="snn-form-remaining">' . esc_html(sprintf(_n('%d ticket left', '%d tickets left', $left, 'snn-tickets'), $left)) . '</p>';
         } elseif (!empty($form->settings['show_remaining']) && (int)$form->settings['max_tickets'] > 0) {
             $left = max(0, (int)$form->settings['max_tickets'] - self::issued_count($form));
@@ -542,7 +544,13 @@ class SNN_T_Forms {
         echo '<input type="hidden" name="form_id" value="' . (int)$form->id . '">';
         echo '<input type="hidden" name="redirect_to" value="' . esc_attr(self::current_url()) . '">';
         echo '<input type="hidden" name="snn_t" value="' . esc_attr(time()) . '">';
-        if ($code !== '') echo '<input type="hidden" name="snn_placement_code" value="' . esc_attr($code) . '">';
+        if ($code !== '') {
+            echo '<input type="hidden" name="snn_placement_code" value="' . esc_attr($link['code']) . '">';
+            if ($link['order_id']) {
+                echo '<input type="hidden" name="snn_order_id" value="' . (int)$link['order_id'] . '">';
+                echo '<input type="hidden" name="snn_placement_type" value="' . esc_attr($link['type']) . '">';
+            }
+        }
         wp_nonce_field(self::NONCE, 'snn_nonce');
 
         // Honeypot: a real person never fills this in.
@@ -914,8 +922,10 @@ class SNN_T_Forms {
         // Placement code: checked again here, the hidden field is only a convenience.
         $placement_code = '';
         if (!empty($form->settings['require_placement_code'])) {
-            $placement_code = SNN_T_Placements::normalise(isset($_POST['snn_placement_code']) ? wp_unslash($_POST['snn_placement_code']) : '');
-            $state = SNN_T_Placements::check($placement_code, (int)$form->settings['invites_per_code']);
+            $link  = self::placement_link($_POST, 'snn_placement_code', 'snn_order_id', 'snn_placement_type');
+            $pool  = SNN_T_Placements::pool($link['code'], $link['order_id'], $link['type']);
+            $state = SNN_T_Placements::check_pool($pool, (int)$form->settings['invites_per_code']);
+            $placement_code = $pool ? $pool : '';
             if ($state !== 'ok') {
                 self::bounce($redirect, $form_id, $state === 'used' ? 'code_used' : 'code_invalid');
             }
@@ -925,7 +935,7 @@ class SNN_T_Forms {
         // so they are checked, kept and turned into tickets like the first person.
         if ($placement_code !== '') {
             $added = self::posted_people($form, $raw);
-            if ($added > SNN_T_Placements::left($placement_code, (int)$form->settings['invites_per_code'])) {
+            if ($added > SNN_T_Placements::left_pool($placement_code, (int)$form->settings['invites_per_code'])) {
                 self::bounce($redirect, $form_id, 'short');
             }
             if ($added > 1) {
@@ -964,7 +974,7 @@ class SNN_T_Forms {
 
         // A code's sign-up claims one of its invites for each person on it. A declined sign-up holds none.
         if ($placement_code !== '' && $decision !== 'rejected') {
-            $left = SNN_T_Placements::left($placement_code, $invites);
+            $left = SNN_T_Placements::left_pool($placement_code, $invites);
             if ($left < $people) {
                 self::bounce($redirect, $form_id, $left === 0 ? 'code_used' : 'short');
             }
@@ -972,7 +982,7 @@ class SNN_T_Forms {
 
         $ids = self::create_sign_ups($form, $decision, $holders, $data, $placement_code);
         if (!$ids) {
-            $left = $placement_code !== '' ? SNN_T_Placements::left($placement_code, $invites) : 0;
+            $left = $placement_code !== '' ? SNN_T_Placements::left_pool($placement_code, $invites) : 0;
             if ($placement_code !== '' && $left === 0) self::bounce($redirect, $form_id, 'code_used');
             if ($placement_code !== '' && $left < $people) self::bounce($redirect, $form_id, 'short');
             self::bounce($redirect, $form_id, 'error');
@@ -1241,6 +1251,16 @@ class SNN_T_Forms {
         return $max <= 0 || self::issued_count($form) + $people <= $max;
     }
 
+    /** The placement code, order ID and placement type a link or a posted form carries. */
+    public static function placement_link($src, $code_key = 'code', $order_key = 'orderid', $type_key = 'placement_type') {
+        $get = function ($k) use ($src) { return isset($src[$k]) && is_scalar($src[$k]) ? (string)wp_unslash($src[$k]) : ''; };
+        return [
+            'code'     => substr(preg_replace('/[^A-Za-z0-9,]/', '', $get($code_key)), 0, 400),
+            'order_id' => max(0, (int)$get($order_key)),
+            'type'     => substr(preg_replace('/[^a-z,]/', '', strtolower($get($type_key))), 0, 40),
+        ];
+    }
+
     /**
      * Save one sign-up record per person who gets a ticket. Each record is a sign-up of its
      * own, so approval, People, spot counts and claims keep to one person and one ticket per
@@ -1254,7 +1274,8 @@ class SNN_T_Forms {
     public static function create_sign_ups($form, $decision, $holders, $data, $placement_code) {
         $status  = $decision === 'approved' ? 'approved' : ($decision === 'rejected' ? 'rejected' : 'pending');
         // A declined sign-up holds no invite, but still keeps its code, as it always has.
-        $claim   = $placement_code !== '' && $decision !== 'rejected';
+        $pool    = is_array($placement_code) ? array_values($placement_code) : ($placement_code !== '' ? [$placement_code] : []);
+        $claim   = $pool && $decision !== 'rejected';
         $invites = (int)$form->settings['invites_per_code'];
         $ids     = [];
 
@@ -1266,17 +1287,21 @@ class SNN_T_Forms {
                 'email'          => $holder['email'],
                 'data'           => $data,
                 'ip'             => SNN_T_Tickets::client_ip(),
-                'placement_code' => $placement_code,
+                'placement_code' => $pool ? $pool[0] : '',
             ];
 
             $sid = 0;
             if ($claim) {
-                for ($slot = 1; $slot <= $invites && !$sid; $slot++) {
-                    // An invite someone already holds is skipped, so the database is not asked to refuse it.
-                    if (SNN_T_Placements::slot_taken($placement_code, $slot)) continue;
-                    $sid = SNN_T_Submissions::create($base + ['placement_slot' => $slot]);
-                    // Refused for any reason other than a taken invite: another invite will not help.
-                    if (!$sid && !SNN_T_Placements::slot_taken($placement_code, $slot)) break;
+                // An order link holds several codes: their invites are used one code after the other.
+                foreach ($pool as $code) {
+                    for ($slot = 1; $slot <= $invites && !$sid; $slot++) {
+                        // An invite someone already holds is skipped, so the database is not asked to refuse it.
+                        if (SNN_T_Placements::slot_taken($code, $slot)) continue;
+                        $sid = SNN_T_Submissions::create(['placement_code' => $code] + $base + ['placement_slot' => $slot]);
+                        // Refused for any reason other than a taken invite: another invite will not help.
+                        if (!$sid && !SNN_T_Placements::slot_taken($code, $slot)) break 2;
+                    }
+                    if ($sid) break;
                 }
             } else {
                 $sid = SNN_T_Submissions::create($base + ['placement_slot' => null]);
