@@ -722,8 +722,6 @@ class SNN_T_Forms {
         .snn-ticket-form .snn-divider{width:100%;height:0;margin:0}
         .snn-ticket-form .snn-person-line{border-top:1px solid #c3c4c7;margin:14px 0 10px}
         .snn-ticket-form .snn-people-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
-        .snn-ticket-form .snn-people-actions button{padding:6px 14px;border:1px solid var(--snn-accent);border-radius:6px;
-            background:transparent;color:var(--snn-accent);font:inherit;font-weight:600;cursor:pointer}
         .snn-ticket-form .snn-people-actions button[hidden]{display:none}
         .snn-ticket-form .snn-form-submit button[disabled]{opacity:.6;cursor:progress}
         .snn-hp{position:absolute!important;left:-9999px!important;height:1px;overflow:hidden}
