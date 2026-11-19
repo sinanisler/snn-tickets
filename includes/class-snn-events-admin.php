@@ -1042,6 +1042,9 @@ class SNN_T_Events_Admin {
             if ($p->kind === 't') {
                 $r = SNN_T_Tickets::update_contact($p->id, $name, $email);
                 SNN_T_Tickets::set_note($p->id, $note);
+                // An admin who names a ticket that waits for a name settles it: its pass-on link stops working.
+                $t = SNN_T_Tickets::get($p->id);
+                if (!is_wp_error($r) && $t && trim((string)$t->name) !== '' && SNN_T_Claims::is_open($t)) SNN_T_Claims::close($t->id);
             } else {
                 $r = SNN_T_Submissions::update_contact($p->id, $name, $email);
                 SNN_T_Submissions::set_note($p->id, $note);

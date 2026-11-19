@@ -66,6 +66,12 @@ class SNN_T_Claims {
         self::set($id, ['holder' => self::OPEN, 'claim_key' => self::new_key(), 'claim_email' => '']);
     }
 
+    /** A ticket that waits for a name got one some other way (an admin typed it): drop its link. */
+    public static function close($id) {
+        self::set($id, ['holder' => '', 'claim_key' => '', 'claim_email' => '']);
+        do_action('snn_tickets_claim_changed', (int)$id);
+    }
+
     /**
      * Email a ticket's link to someone. A new key each time, so an address
      * typed wrongly the first time cannot claim it later.
