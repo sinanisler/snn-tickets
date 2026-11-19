@@ -543,6 +543,9 @@ class SNN_T_Events_Admin {
                                     <a class="snn-small" href="<?php echo esc_url(admin_url('admin.php?page=snn-tickets-emails&tab=log&view=' . (int)$m->id)); ?>"><?php esc_html_e('View', 'snn-tickets'); ?></a>
                                     <time><?php echo esc_html($m->to_email); ?> · <?php echo SNN_T_Admin::when($m->sent_at ?: $m->created_at); ?></time></li>
                             <?php endforeach; ?>
+                            <?php if (!empty($p->gaway)): ?>
+                                <li class="warn"><b><?php esc_html_e('Passed on by the buyer', 'snn-tickets'); ?></b> · <?php esc_html_e('the name was removed and the ticket waits for a guest to fill it in', 'snn-tickets'); ?><time><?php echo SNN_T_Admin::when($p->gaway); ?></time></li>
+                            <?php endif; ?>
                             <?php if ($p->vc > 0): ?>
                                 <li class="<?php echo $p->vc > 1 ? 'warn' : 'ok'; ?>"><b><?php echo esc_html($p->vc > 1 ? sprintf(__('Checked in · scanned %d times', 'snn-tickets'), $p->vc) : __('Checked in', 'snn-tickets')); ?></b><time><?php echo esc_html(sprintf(__('Last scan %s', 'snn-tickets'), wp_strip_all_tags(SNN_T_Admin::when($p->lv)))); ?></time></li>
                             <?php endif; ?>

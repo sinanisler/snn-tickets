@@ -43,11 +43,12 @@ class SNN_T_People {
                    '' AS reason, t.order_id AS oid, t.holder AS holder,
                    (t.emailed = 'order' OR EXISTS (SELECT 1 FROM {$q} q WHERE q.ticket_id = t.id AND q.role = 'order' AND q.status IN ('pending','sending','sent'))) AS omine,
                    (t.order_id > 0 AND (EXISTS (SELECT 1 FROM {$t} o WHERE o.order_id = t.order_id AND o.emailed = 'order')
-                     OR EXISTS (SELECT 1 FROM {$q} q JOIN {$t} o ON o.id = q.ticket_id WHERE o.order_id = t.order_id AND q.role = 'order' AND q.status IN ('pending','sending','sent')))) AS oany
+                     OR EXISTS (SELECT 1 FROM {$q} q JOIN {$t} o ON o.id = q.ticket_id WHERE o.order_id = t.order_id AND q.role = 'order' AND q.status IN ('pending','sending','sent')))) AS oany,
+                   t.given_away_at AS gaway
             FROM {$t} t LEFT JOIN {$s} sd ON sd.id = t.submission_id
             WHERE t.list_id = %d
             UNION ALL
-            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0, '', 0, 0
+            SELECT 's', s.id, s.name, s.email, s.status, 0, NULL, s.created_at, '', 'form', s.id, s.data, 0, 0, s.decision_reason, 0, '', 0, 0, NULL
             FROM {$s} s JOIN {$f} f ON f.id = s.form_id
             WHERE f.list_id = %d AND (s.ticket_id IS NULL OR s.ticket_id = 0) AND s.status IN ('pending','rejected')
         ", (int)$list_id, (int)$list_id);

@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 class SNN_T_DB {
 
     const DB_VERSION_OPTION = 'snn_tickets_db_version';
-    const DB_VERSION        = '10';
+    const DB_VERSION        = '11';
 
     public static function lists() {
         global $wpdb;
@@ -89,6 +89,7 @@ class SNN_T_DB {
             claimed_key VARCHAR(64) DEFAULT '' NOT NULL,
             emailed VARCHAR(10) DEFAULT '' NOT NULL,
             emailed_at DATETIME NULL,
+            given_away_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY ticket_code (ticket_code),

@@ -1146,6 +1146,9 @@ JS
     /** The buyer's own ticket can still become a gift: not used yet, and its ticket type allows passing on. */
     public static function can_give_away($order, $t) {
         if (!$t || $t->status !== 'active' || SNN_T_Claims::is_open($t) || (int)$t->validate_count > 0) return false;
+        // Named at purchase (a guest block was filled in): the buyer already chose who it is for.
+        // Such tickets often carry the buyer's own address, a parent's for a child, so the email alone does not make it theirs.
+        if (!empty($t->submission_id)) return false;
         if ($t->email !== self::buyer_email($order)) return false;
         $item = $t->order_item_id ? $order->get_item((int)$t->order_item_id) : null;
         return $item && self::item_passes($item);
@@ -1159,7 +1162,7 @@ JS
         if (!self::can_give_away($order, $t)) return new WP_Error('snn_giveaway', __('This ticket cannot be passed on.', 'snn-tickets'));
         SNN_T_Claims::open((int)$t->id);
         global $wpdb;
-        $wpdb->update(SNN_T_DB::tickets(), ['name' => ''], ['id' => (int)$t->id]);
+        $wpdb->update(SNN_T_DB::tickets(), ['name' => '', 'given_away_at' => current_time('mysql')], ['id' => (int)$t->id]);
         do_action('snn_tickets_claim_changed', (int)$t->id);
         return true;
     }
@@ -1258,7 +1261,9 @@ JS
                     echo '<strong>' . esc_html(SNN_T_Texts::get('sent', ['email' => $t->claim_email])) . '</strong><br><small>' . esc_html(SNN_T_Texts::get('sent_hint')) . '</small>';
                     echo '<div class="snn-mt-actions">' . $form($t, 'resend', SNN_T_Texts::get('resend')) . $form($t, 'takeback', SNN_T_Texts::get('takeback')) . '</div>';
                 } elseif ($t->email === $buyer) {
-                    echo '<strong>' . esc_html($t->name !== '' ? $t->name : SNN_T_Texts::get('your_ticket')) . '</strong> <small>' . esc_html(SNN_T_Texts::get('you')) . '</small>';
+                    // A ticket named at purchase is the guest's, even when it is sent to the buyer's address.
+                    echo '<strong>' . esc_html($t->name !== '' ? $t->name : SNN_T_Texts::get('your_ticket')) . '</strong>'
+                        . (empty($t->submission_id) ? ' <small>' . esc_html(SNN_T_Texts::get('you')) . '</small>' : '');
                     echo '<div class="snn-mt-actions"><a class="button" href="' . esc_url(SNN_T_Router::ticket_url($t->ticket_code)) . '">' . esc_html(SNN_T_Texts::get('open')) . '</a> <a href="' . esc_url(SNN_T_Files::url('pdf', $t->ticket_code)) . '">PDF</a>'
                         . (self::can_give_away($order, $t) ? ' ' . $form($t, 'giveaway', SNN_T_Texts::get('giveaway')) : '') . '</div>';
                 } else {
